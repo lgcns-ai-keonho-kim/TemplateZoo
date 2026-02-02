@@ -1,3 +1,26 @@
+# AGENTS.md 
+AGENTS.md
+
+# --- Windows / WSL / macOS specifics ---
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# Windows
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# WSL (Windows에서 복사해올 때 생기는 Zone.Identifier 파일)
+*:Zone.Identifier
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
