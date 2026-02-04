@@ -1,0 +1,51 @@
+"""
+목적: shared 패키지의 공개 API를 제공한다.
+설명: 하위 공통 모듈에 대한 접근 포인트를 제공한다.
+디자인 패턴: 퍼사드
+참조: src/base_template/shared/exceptions, src/base_template/shared/logging, src/base_template/shared/runtime
+"""
+
+from .exceptions import BaseAppException, ExceptionDetail
+from .logging import (
+    InMemoryLogger,
+    LogContext,
+    LogLevel,
+    LogRecord,
+    Logger,
+    LogRepository,
+    create_default_logger,
+)
+from .runtime import (
+    InMemoryQueue,
+    QueueConfig,
+    QueueItem,
+    RedisQueue,
+    TaskRecord,
+    ThreadPool,
+    ThreadPoolConfig,
+    Worker,
+    WorkerConfig,
+    WorkerState,
+)
+
+__all__ = [
+    "BaseAppException",
+    "ExceptionDetail",
+    "LogContext",
+    "LogLevel",
+    "LogRecord",
+    "Logger",
+    "LogRepository",
+    "InMemoryLogger",
+    "create_default_logger",
+    "QueueConfig",
+    "QueueItem",
+    "InMemoryQueue",
+    "RedisQueue",
+    "WorkerConfig",
+    "WorkerState",
+    "Worker",
+    "ThreadPoolConfig",
+    "TaskRecord",
+    "ThreadPool",
+]

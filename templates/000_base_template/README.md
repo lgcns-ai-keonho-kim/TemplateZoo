@@ -49,5 +49,5 @@ uv sync
 # uv로 main.py를 실행
 uv run python3 src/<project_name>/api/main.py
 # 또는 uvicorn으로 실행
-uv run uvicorn <project_name>.main:app --host 0.0.0.0 --port 8000 --reload 
+uv run uvicorn <project_name>.api.main:app --host 0.0.0.0 --port 8000 --reload 
 ```
