@@ -1,11 +1,8 @@
 # BASE TEMPLATE
 
-MODIFIED: 2026-02-02
-
 ## PROJECT OVERVIEW
 
 - 이 프로젝트는 추후 서비스 구현 예제를 위한 Boilerplate입니다.
-  
 - 이 프로젝트를 복제하신 이후, 셋업 과정에서 다음의 과정을 거치세요.
 
 ```text
