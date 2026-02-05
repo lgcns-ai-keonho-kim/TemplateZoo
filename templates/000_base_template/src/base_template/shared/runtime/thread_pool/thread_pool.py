@@ -10,8 +10,8 @@ from __future__ import annotations
 from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Callable, List, Optional, TypeVar
 
-from ...logging import Logger, create_default_logger
-from .model import TaskRecord, ThreadPoolConfig
+from base_template.shared.logging import Logger, create_default_logger
+from base_template.shared.runtime.thread_pool.model import TaskRecord, ThreadPoolConfig
 
 T = TypeVar("T")
 

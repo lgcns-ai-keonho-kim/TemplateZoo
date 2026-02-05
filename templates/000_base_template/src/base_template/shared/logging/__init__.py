@@ -5,8 +5,10 @@
 참조: src/base_template/shared/logging/logger.py, src/base_template/shared/logging/models.py
 """
 
-from .logger import InMemoryLogger, LogRepository, Logger, create_default_logger
-from .models import LogContext, LogLevel, LogRecord
+from base_template.shared.logging.db_repository import DBLogRepository
+from base_template.shared.logging.llm_repository import LLMLogRepository
+from base_template.shared.logging.logger import InMemoryLogger, LogRepository, Logger, create_default_logger
+from base_template.shared.logging.models import LogContext, LogLevel, LogRecord
 
 __all__ = [
     "LogContext",
@@ -15,5 +17,7 @@ __all__ = [
     "Logger",
     "LogRepository",
     "InMemoryLogger",
+    "DBLogRepository",
+    "LLMLogRepository",
     "create_default_logger",
 ]

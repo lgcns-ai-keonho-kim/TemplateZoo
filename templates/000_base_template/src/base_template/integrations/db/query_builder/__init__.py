@@ -5,8 +5,8 @@
 참조: src/base_template/integrations/db/query_builder/read_builder.py
 """
 
-from .delete_builder import DeleteBuilder
-from .read_builder import ReadBuilder
-from .write_builder import WriteBuilder
+from base_template.integrations.db.query_builder.delete_builder import DeleteBuilder
+from base_template.integrations.db.query_builder.read_builder import ReadBuilder
+from base_template.integrations.db.query_builder.write_builder import WriteBuilder
 
 __all__ = ["ReadBuilder", "WriteBuilder", "DeleteBuilder"]

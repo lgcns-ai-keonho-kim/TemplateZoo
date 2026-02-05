@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from ..base.engine import BaseDBEngine
-from ..base.models import CollectionSchema, FieldSource, Query
-from ..base.query_builder import QueryBuilder
+from base_template.integrations.db.base.engine import BaseDBEngine
+from base_template.integrations.db.base.models import CollectionSchema, FieldSource, Query
+from base_template.integrations.db.base.query_builder import QueryBuilder
 
 
 class DeleteBuilder:

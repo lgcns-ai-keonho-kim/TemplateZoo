@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from typing import Optional, Sequence
 
-from ..base.engine import BaseDBEngine
-from ..base.models import CollectionSchema, Document
+from base_template.integrations.db.base.engine import BaseDBEngine
+from base_template.integrations.db.base.models import CollectionSchema, Document
 
 
 class WriteBuilder:

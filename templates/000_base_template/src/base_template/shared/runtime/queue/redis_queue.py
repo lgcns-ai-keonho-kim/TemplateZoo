@@ -13,8 +13,8 @@ import time
 from datetime import datetime, timezone
 from typing import Optional
 
-from ...logging import Logger, create_default_logger
-from .model import QueueConfig, QueueItem
+from base_template.shared.logging import Logger, create_default_logger
+from base_template.shared.runtime.queue.model import QueueConfig, QueueItem
 
 try:
     import redis

@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Iterable, List, Optional
 
-from .models import LogContext, LogLevel, LogRecord
+from base_template.shared.logging.models import LogContext, LogLevel, LogRecord
 
 
 class LogRepository(ABC):

@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from ....shared.logging import Logger, create_default_logger
-from ..base.engine import BaseDBEngine
-from ..base.models import (
+from base_template.shared.logging import Logger, create_default_logger
+from base_template.integrations.db.base.engine import BaseDBEngine
+from base_template.integrations.db.base.models import (
     CollectionSchema,
     ColumnSpec,
     Document,

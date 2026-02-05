@@ -5,9 +5,11 @@
 참조: src/base_template/shared/exceptions, src/base_template/shared/logging, src/base_template/shared/runtime
 """
 
-from .exceptions import BaseAppException, ExceptionDetail
-from .logging import (
+from base_template.shared.exceptions import BaseAppException, ExceptionDetail
+from base_template.shared.logging import (
+    DBLogRepository,
     InMemoryLogger,
+    LLMLogRepository,
     LogContext,
     LogLevel,
     LogRecord,
@@ -15,7 +17,7 @@ from .logging import (
     LogRepository,
     create_default_logger,
 )
-from .runtime import (
+from base_template.shared.runtime import (
     InMemoryQueue,
     QueueConfig,
     QueueItem,
@@ -37,6 +39,8 @@ __all__ = [
     "Logger",
     "LogRepository",
     "InMemoryLogger",
+    "DBLogRepository",
+    "LLMLogRepository",
     "create_default_logger",
     "QueueConfig",
     "QueueItem",

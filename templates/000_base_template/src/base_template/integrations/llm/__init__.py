@@ -5,6 +5,6 @@
 참조: src/base_template/integrations/llm/client.py
 """
 
-from .client import LLMClient
+from base_template.integrations.llm.client import LLMClient
 
 __all__ = ["LLMClient"]

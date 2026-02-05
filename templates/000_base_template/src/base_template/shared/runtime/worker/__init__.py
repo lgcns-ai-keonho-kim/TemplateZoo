@@ -5,7 +5,7 @@
 참조: src/base_template/shared/runtime/worker/model.py, src/base_template/shared/runtime/worker/worker.py
 """
 
-from .model import WorkerConfig, WorkerState
-from .worker import Worker
+from base_template.shared.runtime.worker.model import WorkerConfig, WorkerState
+from base_template.shared.runtime.worker.worker import Worker
 
 __all__ = ["WorkerConfig", "WorkerState", "Worker"]

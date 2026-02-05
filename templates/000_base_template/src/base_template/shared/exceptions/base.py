@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from .models import ExceptionDetail
+from base_template.shared.exceptions.models import ExceptionDetail
 
 
 class BaseAppException(Exception):

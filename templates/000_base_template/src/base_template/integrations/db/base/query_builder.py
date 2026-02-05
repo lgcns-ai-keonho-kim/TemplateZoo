@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from .models import (
+from base_template.integrations.db.base.models import (
     FieldSource,
     FilterCondition,
     FilterExpression,

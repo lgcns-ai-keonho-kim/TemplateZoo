@@ -10,7 +10,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from .models import (
+from base_template.integrations.db.base.models import (
     CollectionSchema,
     ColumnSpec,
     Document,

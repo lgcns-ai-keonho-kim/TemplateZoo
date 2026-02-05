@@ -5,8 +5,8 @@
 참조: src/base_template/integrations/db/base/models.py, src/base_template/integrations/db/base/engine.py
 """
 
-from .engine import BaseDBEngine
-from .models import (
+from base_template.integrations.db.base.engine import BaseDBEngine
+from base_template.integrations.db.base.models import (
     CollectionInfo,
     CollectionSchema,
     ColumnSpec,
@@ -24,9 +24,9 @@ from .models import (
     VectorSearchResponse,
     VectorSearchResult,
 )
-from .pool import BaseConnectionPool
-from .query_builder import QueryBuilder
-from .session import BaseSession
+from base_template.integrations.db.base.pool import BaseConnectionPool
+from base_template.integrations.db.base.query_builder import QueryBuilder
+from base_template.integrations.db.base.session import BaseSession
 
 __all__ = [
     "CollectionInfo",

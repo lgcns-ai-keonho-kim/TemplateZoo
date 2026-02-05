@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional, Sequence
 
-from .base.engine import BaseDBEngine
-from .base.models import (
+from base_template.integrations.db.base.engine import BaseDBEngine
+from base_template.integrations.db.base.models import (
     CollectionSchema,
     ColumnSpec,
     Document,
@@ -18,9 +18,9 @@ from .base.models import (
     VectorSearchRequest,
     VectorSearchResponse,
 )
-from .query_builder.delete_builder import DeleteBuilder
-from .query_builder.read_builder import ReadBuilder
-from .query_builder.write_builder import WriteBuilder
+from base_template.integrations.db.query_builder.delete_builder import DeleteBuilder
+from base_template.integrations.db.query_builder.read_builder import ReadBuilder
+from base_template.integrations.db.query_builder.write_builder import WriteBuilder
 
 
 class DBClient:

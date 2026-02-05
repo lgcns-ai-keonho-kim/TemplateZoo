@@ -5,9 +5,9 @@
 참조: src/base_template/shared/runtime/queue, src/base_template/shared/runtime/worker, src/base_template/shared/runtime/thread_pool
 """
 
-from .queue import InMemoryQueue, QueueConfig, QueueItem, RedisQueue
-from .thread_pool import TaskRecord, ThreadPool, ThreadPoolConfig
-from .worker import Worker, WorkerConfig, WorkerState
+from base_template.shared.runtime.queue import InMemoryQueue, QueueConfig, QueueItem, RedisQueue
+from base_template.shared.runtime.thread_pool import TaskRecord, ThreadPool, ThreadPoolConfig
+from base_template.shared.runtime.worker import Worker, WorkerConfig, WorkerState
 
 __all__ = [
     "QueueConfig",

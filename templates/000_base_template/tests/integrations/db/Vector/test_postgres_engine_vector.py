@@ -13,7 +13,7 @@ from typing import List
 import pytest
 
 from base_template.integrations.db import DBClient
-from base_template.integrations.db.base import Vector
+from base_template.integrations.db.base import Vector, VectorSearchRequest
 from base_template.integrations.db.engines.postgres import PostgresEngine
 
 
@@ -41,12 +41,12 @@ def test_postgres_engine_vector_search() -> None:
     ]
     client.upsert(table, documents)
 
-    response = (
-        client.read(table)
-        .vector([0.1, 0.2, 0.3])
-        .top_k(3)
-        .fetch_vector()
+    request = VectorSearchRequest(
+        collection=table,
+        vector=Vector(values=[0.1, 0.2, 0.3]),
+        top_k=3,
     )
+    response = client.vector_search(request)
     assert response.total >= 1
 
     engine.delete_collection(table)

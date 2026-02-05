@@ -13,7 +13,7 @@ from typing import List
 import pytest
 
 from base_template.integrations.db import DBClient
-from base_template.integrations.db.base import Vector
+from base_template.integrations.db.base import Vector, VectorSearchRequest
 from base_template.integrations.db.engines.redis import RedisEngine
 
 
@@ -36,12 +36,12 @@ def test_redis_engine_vector_search() -> None:
     ]
     client.upsert(collection, documents)
 
-    response = (
-        client.read(collection)
-        .vector([0.1, 0.2, 0.3])
-        .top_k(3)
-        .fetch_vector()
+    request = VectorSearchRequest(
+        collection=collection,
+        vector=Vector(values=[0.1, 0.2, 0.3]),
+        top_k=3,
     )
+    response = client.vector_search(request)
     assert response.total >= 1
     assert response.results[0].document.doc_id == "doc-1"
 

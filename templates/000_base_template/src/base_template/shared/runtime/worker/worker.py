@@ -10,9 +10,9 @@ from __future__ import annotations
 import threading
 from typing import Callable, Optional
 
-from ...logging import Logger, create_default_logger
-from ..queue import InMemoryQueue, QueueItem
-from .model import WorkerConfig, WorkerState
+from base_template.shared.logging import Logger, create_default_logger
+from base_template.shared.runtime.queue import InMemoryQueue, QueueItem
+from base_template.shared.runtime.worker.model import WorkerConfig, WorkerState
 
 Handler = Callable[[QueueItem], None]
 

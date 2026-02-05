@@ -5,7 +5,7 @@
 참조: src/base_template/shared/runtime/thread_pool/model.py, src/base_template/shared/runtime/thread_pool/thread_pool.py
 """
 
-from .model import TaskRecord, ThreadPoolConfig
-from .thread_pool import ThreadPool
+from base_template.shared.runtime.thread_pool.model import TaskRecord, ThreadPoolConfig
+from base_template.shared.runtime.thread_pool.thread_pool import ThreadPool
 
 __all__ = ["TaskRecord", "ThreadPoolConfig", "ThreadPool"]

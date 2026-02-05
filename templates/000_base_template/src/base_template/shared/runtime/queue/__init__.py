@@ -5,8 +5,8 @@
 참조: src/base_template/shared/runtime/queue/model.py, src/base_template/shared/runtime/queue/in_memory_queue.py, src/base_template/shared/runtime/queue/redis_queue.py
 """
 
-from .model import QueueConfig, QueueItem
-from .in_memory_queue import InMemoryQueue
-from .redis_queue import RedisQueue
+from base_template.shared.runtime.queue.model import QueueConfig, QueueItem
+from base_template.shared.runtime.queue.in_memory_queue import InMemoryQueue
+from base_template.shared.runtime.queue.redis_queue import RedisQueue
 
 __all__ = ["QueueConfig", "QueueItem", "InMemoryQueue", "RedisQueue"]

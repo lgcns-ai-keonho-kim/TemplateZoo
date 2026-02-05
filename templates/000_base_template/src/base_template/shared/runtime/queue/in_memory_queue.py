@@ -10,8 +10,8 @@ from __future__ import annotations
 import queue as queue_module
 from typing import Optional
 
-from ...logging import Logger, create_default_logger
-from .model import QueueConfig, QueueItem
+from base_template.shared.logging import Logger, create_default_logger
+from base_template.shared.runtime.queue.model import QueueConfig, QueueItem
 
 
 class InMemoryQueue:

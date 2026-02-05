@@ -13,7 +13,7 @@ from typing import List
 import pytest
 
 from base_template.integrations.db import DBClient
-from base_template.integrations.db.base import Vector
+from base_template.integrations.db.base import Vector, VectorSearchRequest
 from base_template.integrations.db.engines.elasticsearch import ElasticSearchEngine
 
 
@@ -37,12 +37,12 @@ def test_elasticsearch_engine_vector_search() -> None:
     client.upsert(index_name, documents)
 
     try:
-        response = (
-            client.read(index_name)
-            .vector([0.1, 0.2, 0.3])
-            .top_k(3)
-            .fetch_vector()
+        request = VectorSearchRequest(
+            collection=index_name,
+            vector=Vector(values=[0.1, 0.2, 0.3]),
+            top_k=3,
         )
+        response = client.vector_search(request)
     except Exception:
         engine.delete_collection(index_name)
         client.close()

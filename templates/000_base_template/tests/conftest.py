@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 from pathlib import Path
@@ -74,25 +73,6 @@ def _build_redis_url() -> str | None:
     return f"redis://{host}:{port}/{db}"
 
 
-def _build_mysql_dsn_json() -> str | None:
-    """MySQL DSN JSON 문자열을 조합한다."""
-
-    host = os.getenv("MYSQL_HOST", "127.0.0.1")
-    port_raw = os.getenv("MYSQL_PORT", "3306")
-    user = os.getenv("MYSQL_USER")
-    password = os.getenv("MYSQL_PW")
-    database = os.getenv("MYSQL_DATABASE")
-    if not all([host, port_raw, user, password, database]):
-        return None
-    port = int(port_raw) if port_raw.isdigit() else port_raw
-    payload = {
-        "host": host,
-        "port": port,
-        "user": user,
-        "password": password,
-        "database": database,
-    }
-    return json.dumps(payload)
 
 
 def _build_elasticsearch_hosts() -> str | None:
@@ -112,7 +92,6 @@ def _prepare_default_env() -> None:
     _set_if_missing("POSTGRES_DSN", _build_postgres_dsn())
     _set_if_missing("MONGODB_URI", _build_mongodb_uri())
     _set_if_missing("REDIS_URL", _build_redis_url())
-    _set_if_missing("MYSQL_DSN_JSON", _build_mysql_dsn_json())
     _set_if_missing("ELASTICSEARCH_HOSTS", _build_elasticsearch_hosts())
 
 

@@ -5,18 +5,17 @@
 참조: src/base_template/integrations/db/engines
 """
 
-from .client import DBClient
-from .query_builder import DeleteBuilder
-from .engines import (
+from base_template.integrations.db.client import DBClient
+from base_template.integrations.db.query_builder import DeleteBuilder
+from base_template.integrations.db.engines import (
     ElasticSearchEngine,
     MongoDBEngine,
-    MySQLEngine,
     PostgresEngine,
     RedisEngine,
     SqliteVectorEngine,
 )
-from .query_builder import ReadBuilder
-from .query_builder import WriteBuilder
+from base_template.integrations.db.query_builder import ReadBuilder
+from base_template.integrations.db.query_builder import WriteBuilder
 
 __all__ = [
     "DBClient",
@@ -28,5 +27,4 @@ __all__ = [
     "ElasticSearchEngine",
     "MongoDBEngine",
     "PostgresEngine",
-    "MySQLEngine",
 ]

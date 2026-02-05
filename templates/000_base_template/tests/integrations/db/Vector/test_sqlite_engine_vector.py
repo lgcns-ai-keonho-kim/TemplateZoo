@@ -12,7 +12,7 @@ from typing import List
 import pytest
 
 from base_template.integrations.db import DBClient
-from base_template.integrations.db.base import Vector
+from base_template.integrations.db.base import Vector, VectorSearchRequest
 from base_template.integrations.db.engines.sqlite import SqliteVectorEngine
 
 
@@ -35,12 +35,12 @@ def test_sqlite_engine_vector_search(tmp_path) -> None:
     ]
     client.upsert("vectors", documents)
 
-    response = (
-        client.read("vectors")
-        .vector([0.1, 0.2, 0.3])
-        .top_k(3)
-        .fetch_vector()
+    request = VectorSearchRequest(
+        collection="vectors",
+        vector=Vector(values=[0.1, 0.2, 0.3]),
+        top_k=3,
     )
+    response = client.vector_search(request)
     assert response.total >= 1
     assert response.results[0].document.doc_id == "doc-1"
     client.close()
