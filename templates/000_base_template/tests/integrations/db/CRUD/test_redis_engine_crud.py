@@ -2,7 +2,7 @@
 목적: Redis 엔진의 기본 CRUD 동작을 검증한다.
 설명: 실제 Redis 환경에서 문서 저장/조회/삭제 흐름을 확인한다.
 디자인 패턴: 테스트 케이스
-참조: src/base_template/integrations/db/engines/redis.py
+참조: src/base_template/integrations/db/engines/redis/engine.py
 """
 
 from __future__ import annotations

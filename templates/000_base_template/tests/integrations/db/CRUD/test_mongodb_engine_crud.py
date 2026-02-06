@@ -2,7 +2,7 @@
 목적: MongoDB 엔진의 기본 CRUD 동작을 검증한다.
 설명: 실제 MongoDB 환경에서 컬렉션/문서 작업을 확인한다.
 디자인 패턴: 테스트 케이스
-참조: src/base_template/integrations/db/engines/mongodb.py
+참조: src/base_template/integrations/db/engines/mongodb/engine.py
 """
 
 from __future__ import annotations
@@ -133,6 +133,7 @@ def _doc(doc_id: str, payload: dict):
 def _mongodb_params() -> dict | None:
     uri = os.getenv("MONGODB_URI")
     db_name = os.getenv("MONGODB_DB")
+    auth_db = os.getenv("MONGODB_AUTH_DB") or None
     host = os.getenv("MONGODB_HOST")
     port_raw = os.getenv("MONGODB_PORT", "27017")
     user = os.getenv("MONGODB_USER")
@@ -148,7 +149,15 @@ def _mongodb_params() -> dict | None:
             "port": int(port_raw),
             "user": user,
             "password": password,
+            "auth_source": auth_db,
         }
     if uri:
-        return {"uri": uri, "database": db_name}
+        params = {"uri": uri, "database": db_name, "auth_source": auth_db}
+        return _drop_none(params)
     return None
+
+
+def _drop_none(params: dict) -> dict:
+    """None 값 파라미터를 제거한다."""
+
+    return {key: value for key, value in params.items() if value is not None}

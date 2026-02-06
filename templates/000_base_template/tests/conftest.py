@@ -7,14 +7,18 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 import os
 from pathlib import Path
 
+import pytest
 from dotenv import load_dotenv
 
 
 _LOGGER = logging.getLogger("tests")
+_OLLAMA_BASE_URL = "http://127.0.0.1:11434"
+_OLLAMA_EMBED_MODEL = "embeddinggemma:300m-qat-q8_0"
 
 
 def _load_env_files() -> None:
@@ -56,8 +60,12 @@ def _build_mongodb_uri() -> str | None:
     port = os.getenv("MONGODB_PORT", "27017")
     user = os.getenv("MONGODB_USER")
     password = os.getenv("MONGODB_PW")
+    auth_db = os.getenv("MONGODB_AUTH_DB") or os.getenv("MONGODB_DB")
     if user and password:
-        return f"mongodb://{user}:{password}@{host}:{port}"
+        base = f"mongodb://{user}:{password}@{host}:{port}"
+        if auth_db:
+            return f"{base}/?authSource={auth_db}"
+        return base
     return f"mongodb://{host}:{port}"
 
 
@@ -97,6 +105,32 @@ def _prepare_default_env() -> None:
 
 _load_env_files()
 _prepare_default_env()
+
+
+def _build_ollama_embeddings():
+    """테스트용 Ollama 임베딩 클라이언트를 생성한다."""
+
+    try:
+        from langchain_ollama import OllamaEmbeddings
+    except ImportError:
+        pytest.skip("langchain-ollama 패키지가 필요합니다.")
+
+    kwargs = {"model": _OLLAMA_EMBED_MODEL}
+    signature = inspect.signature(OllamaEmbeddings)
+    if "base_url" in signature.parameters:
+        kwargs["base_url"] = _OLLAMA_BASE_URL
+    elif "url" in signature.parameters:
+        kwargs["url"] = _OLLAMA_BASE_URL
+    elif "host" in signature.parameters:
+        kwargs["host"] = _OLLAMA_BASE_URL
+    return OllamaEmbeddings(**kwargs)
+
+
+@pytest.fixture(scope="session")
+def ollama_embeddings():
+    """Ollama 임베딩 클라이언트를 반환한다."""
+
+    return _build_ollama_embeddings()
 
 
 def pytest_sessionstart(session) -> None:  # noqa: D401 - pytest 훅 시그니처 유지

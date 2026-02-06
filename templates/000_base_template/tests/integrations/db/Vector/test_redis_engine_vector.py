@@ -2,7 +2,7 @@
 목적: Redis 엔진의 벡터 검색 동작을 검증한다.
 설명: 실제 Redis 환경에서 벡터 검색을 확인한다.
 디자인 패턴: 테스트 케이스
-참조: src/base_template/integrations/db/engines/redis.py
+참조: src/base_template/integrations/db/engines/redis/engine.py
 """
 
 from __future__ import annotations
@@ -17,28 +17,39 @@ from base_template.integrations.db.base import Vector, VectorSearchRequest
 from base_template.integrations.db.engines.redis import RedisEngine
 
 
-def test_redis_engine_vector_search() -> None:
+def test_redis_engine_vector_search(ollama_embeddings) -> None:
     """Redis 벡터 검색(코사인 유사도 기반)을 검증한다."""
 
     params = _redis_params()
     if not params:
         pytest.skip("REDIS_URL 또는 REDIS_* 환경 변수가 필요합니다.")
 
+    embeddings = ollama_embeddings
+    texts = ["바람이 부는 날", "햇살이 좋은 날"]
+    try:
+        vectors = embeddings.embed_documents(texts)
+        query_vector = embeddings.embed_query(texts[0])
+    except Exception as exc:  # noqa: BLE001 - 외부 의존 실패 대응
+        pytest.skip(f"Ollama 임베딩 호출에 실패했습니다: {exc}")
+    if not vectors or not query_vector:
+        pytest.skip("임베딩 결과가 비어 있습니다.")
+    dimension = len(vectors[0])
+
     engine = RedisEngine(**params, enable_vector=True)
     client = DBClient(engine)
     client.connect()
     collection = _collection_name("vectors")
-    client.create_collection(_collection_schema(collection, dimension=3))
+    client.create_collection(_collection_schema(collection, dimension=dimension))
 
     documents = [
-        _doc("doc-1", {"name": "A"}, vector=[0.1, 0.2, 0.3]),
-        _doc("doc-2", {"name": "B"}, vector=[0.9, 0.8, 0.7]),
+        _doc("doc-1", {"text": texts[0]}, vector=vectors[0]),
+        _doc("doc-2", {"text": texts[1]}, vector=vectors[1]),
     ]
     client.upsert(collection, documents)
 
     request = VectorSearchRequest(
         collection=collection,
-        vector=Vector(values=[0.1, 0.2, 0.3]),
+        vector=Vector(values=query_vector),
         top_k=3,
     )
     response = client.vector_search(request)

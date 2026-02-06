@@ -3,6 +3,11 @@ AGENTS.md
 PLAN.md
 .codex/
 
+# CERTS
+**/certs/*
+!certs/README.md
+
+
 # --- Windows / WSL / macOS specifics ---
 
 # macOS

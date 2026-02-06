@@ -2,7 +2,7 @@
 목적: PostgreSQL 엔진의 벡터 검색 동작을 검증한다.
 설명: PGVector 확장이 준비된 환경에서 벡터 검색을 확인한다.
 디자인 패턴: 테스트 케이스
-참조: src/base_template/integrations/db/engines/postgres.py
+참조: src/base_template/integrations/db/engines/postgres/engine.py
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from base_template.integrations.db.base import Vector, VectorSearchRequest
 from base_template.integrations.db.engines.postgres import PostgresEngine
 
 
-def test_postgres_engine_vector_search() -> None:
+def test_postgres_engine_vector_search(ollama_embeddings) -> None:
     """PostgreSQL 벡터 검색 동작을 검증한다."""
 
     params = _postgres_params()
@@ -25,25 +25,36 @@ def test_postgres_engine_vector_search() -> None:
     if not params or not enable_vector:
         pytest.skip("POSTGRES_ENABLE_VECTOR 및 POSTGRES_* 환경 변수가 필요합니다.")
 
+    embeddings = ollama_embeddings
+    texts = ["커피 향이 진한 아침", "비 오는 날의 산책"]
+    try:
+        vectors = embeddings.embed_documents(texts)
+        query_vector = embeddings.embed_query(texts[0])
+    except Exception as exc:  # noqa: BLE001 - 외부 의존 실패 대응
+        pytest.skip(f"Ollama 임베딩 호출에 실패했습니다: {exc}")
+    if not vectors or not query_vector:
+        pytest.skip("임베딩 결과가 비어 있습니다.")
+    dimension = len(vectors[0])
+
     engine = PostgresEngine(**params)
     client = DBClient(engine)
     client.connect()
     table = _collection_name("vectors")
     try:
-        client.create_collection(_collection_schema(table, dimension=3))
+        client.create_collection(_collection_schema(table, dimension=dimension))
     except Exception:
         engine.close()
         pytest.skip("PGVector 확장이 준비되지 않았습니다.")
 
     documents = [
-        _doc("doc-1", {"name": "A"}, vector=[0.1, 0.2, 0.3]),
-        _doc("doc-2", {"name": "B"}, vector=[0.9, 0.8, 0.7]),
+        _doc("doc-1", {"text": texts[0]}, vector=vectors[0]),
+        _doc("doc-2", {"text": texts[1]}, vector=vectors[1]),
     ]
     client.upsert(table, documents)
 
     request = VectorSearchRequest(
         collection=table,
-        vector=Vector(values=[0.1, 0.2, 0.3]),
+        vector=Vector(values=query_vector),
         top_k=3,
     )
     response = client.vector_search(request)

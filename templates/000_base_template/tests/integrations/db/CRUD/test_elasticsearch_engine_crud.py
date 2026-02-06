@@ -2,7 +2,7 @@
 목적: Elasticsearch 엔진의 기본 CRUD 동작을 검증한다.
 설명: 실제 Elasticsearch 환경에서 인덱스/문서 작업을 확인한다.
 디자인 패턴: 테스트 케이스
-참조: src/base_template/integrations/db/engines/elasticsearch.py
+참조: src/base_template/integrations/db/engines/elasticsearch/engine.py
 """
 
 from __future__ import annotations
@@ -48,6 +48,8 @@ def test_elasticsearch_engine_basic_crud() -> None:
 
     _log_step("문서 저장", doc_id="doc-1")
     client.upsert(index_name, [_doc("doc-1", {"status": "ACTIVE"})])
+    _log_step("인덱스 리프레시", name=index_name)
+    engine.refresh_collection(index_name)
     _log_step("문서 조회", doc_id="doc-1")
     loaded = engine.get(index_name, "doc-1")
     assert loaded is not None
@@ -71,23 +73,57 @@ def _elasticsearch_params() -> dict | None:
     scheme = os.getenv("ELASTICSEARCH_SCHEME", "http")
     user = os.getenv("ELASTICSEARCH_USER")
     password = os.getenv("ELASTICSEARCH_PW")
+    ca_certs = os.getenv("ELASTICSEARCH_CA_CERTS")
+    verify_certs = _parse_bool(os.getenv("ELASTICSEARCH_VERIFY_CERTS"))
+    ssl_fingerprint = os.getenv("ELASTICSEARCH_SSL_FINGERPRINT")
     if host:
         if not port_raw.isdigit():
             return None
-        return {
+        params = {
             "host": host,
             "port": int(port_raw),
             "scheme": scheme,
             "user": user,
             "password": password,
+            "ca_certs": ca_certs,
+            "verify_certs": verify_certs,
+            "ssl_assert_fingerprint": ssl_fingerprint,
         }
+        return _drop_none(params)
     raw = os.getenv("ELASTICSEARCH_HOSTS")
     if not raw:
         return None
     hosts = [item.strip() for item in raw.split(",") if item.strip()]
     if not hosts:
         return None
-    return {"hosts": hosts}
+    params = {
+        "hosts": hosts,
+        "ca_certs": ca_certs,
+        "verify_certs": verify_certs,
+        "ssl_assert_fingerprint": ssl_fingerprint,
+    }
+    return _drop_none(params)
+
+
+def _parse_bool(value: str | None) -> bool | None:
+    """문자열을 bool로 변환한다."""
+
+    if value is None:
+        return None
+    normalized = value.strip().lower()
+    if not normalized:
+        return None
+    if normalized in {"1", "true", "yes", "y", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "n", "off"}:
+        return False
+    return None
+
+
+def _drop_none(params: dict) -> dict:
+    """None 값 파라미터를 제거한다."""
+
+    return {key: value for key, value in params.items() if value is not None}
 
 
 def _collection_schema(name: str, dimension: int | None):

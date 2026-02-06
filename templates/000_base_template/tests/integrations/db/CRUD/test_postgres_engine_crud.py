@@ -2,7 +2,7 @@
 목적: PostgreSQL 엔진의 기본 CRUD 동작을 검증한다.
 설명: 실제 PostgreSQL 환경에서 테이블/문서 작업을 확인한다.
 디자인 패턴: 테스트 케이스
-참조: src/base_template/integrations/db/engines/postgres.py
+참조: src/base_template/integrations/db/engines/postgres/engine.py
 """
 
 from __future__ import annotations

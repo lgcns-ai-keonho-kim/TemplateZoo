@@ -2,7 +2,7 @@
 목적: SQLite 엔진의 기본 CRUD 동작을 검증한다.
 설명: sqlite-vec 비활성화 상태에서 테이블 CRUD 흐름을 확인한다.
 디자인 패턴: 테스트 케이스
-참조: src/base_template/integrations/db/engines/sqlite.py
+참조: src/base_template/integrations/db/engines/sqlite/engine.py
 """
 
 from __future__ import annotations

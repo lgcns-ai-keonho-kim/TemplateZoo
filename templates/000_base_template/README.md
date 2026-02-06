@@ -47,3 +47,28 @@ uv run python3 src/<project_name>/api/main.py
 # 또는 uvicorn으로 실행
 uv run uvicorn <project_name>.api.main:app --host 0.0.0.0 --port 8000 --reload 
 ```
+
+## TESTING
+
+- 테스트 실행은 `uv run pytest`를 사용합니다.
+- 벡터 테스트는 **Ollama 임베딩 모델을 하드코딩**해서 사용합니다.
+- 모델: `embeddinggemma:300m-qat-q8_0`
+- 기본 접속 URL: `http://127.0.0.1:11434`
+- 설정 위치: `tests/conftest.py`
+- sqlite-vec 사용을 위해 Python은 확장 로딩을 활성화한 빌드가 필요합니다.
+- PGVector는 DB마다 확장을 활성화해야 합니다.
+
+```bash
+PYTHON_CONFIGURE_OPTS="--enable-loadable-sqlite-extensions" pyenv install 3.13.9
+pyenv local 3.13.9
+
+uv run pytest
+```
+
+```bash
+sudo -u postgres psql -d playground
+```
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
