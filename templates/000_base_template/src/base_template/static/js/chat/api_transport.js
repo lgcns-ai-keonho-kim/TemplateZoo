@@ -2,7 +2,7 @@
   목적: Chat API 연동 전송 계층 제공
   설명: 세션/메시지/삭제/태스크 API 호출과 SSE 스트림 수신 로직을 캡슐화
   디자인 패턴: 어댑터 패턴
-  참조: src/base_template/api/chat/routers/chat.py
+  참조: src/base_template/api/chat/routers/router.py
 */
 (function () {
   'use strict';

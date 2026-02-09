@@ -360,7 +360,7 @@ class ChatTaskManager:
             state.assistant_message = self._to_message_response(assistant_message)
             self._set_status(state, TaskStatus.COMPLETED, completed_at=utc_now())
         except BaseAppException as error:
-            state.error_message = error.message
+            state.error_message = self._format_base_error_message(error)
             self._set_status(state, TaskStatus.FAILED, completed_at=utc_now())
         except Exception as error:  # noqa: BLE001
             state.error_message = str(error)
@@ -379,6 +379,14 @@ class ChatTaskManager:
             sequence=message.sequence,
             created_at=message.created_at,
         )
+
+    def _format_base_error_message(self, error: BaseAppException) -> str:
+        """도메인 예외를 UI 노출용 단일 문자열로 변환한다."""
+
+        cause = str(error.detail.cause or "").strip()
+        if not cause:
+            return error.message
+        return f"{error.message} (cause={cause})"
 
     def _set_status(
         self,

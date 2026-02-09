@@ -14,6 +14,7 @@ from langgraph.graph import END, StateGraph
 from base_template.core.chat.models import ChatMessage
 from base_template.core.chat.nodes import ChatReplyNode
 from base_template.core.chat.state import ChatGraphState
+from base_template.shared.exceptions import BaseAppException, ExceptionDetail
 from base_template.shared.logging import Logger, create_default_logger
 
 
@@ -40,21 +41,26 @@ class ChatGraph:
         user_message: str,
         history: list[ChatMessage],
     ) -> str:
-        """대화 상태를 그래프에 전달해 답변을 생성한다."""
+        """대화 상태를 그래프에 전달해 스트림 결과를 단일 문자열로 합친다."""
 
         self._logger.info("Chat 그래프 실행")
-        result = self._graph.invoke(
-            {
-                "session_id": session_id,
-                "user_message": user_message,
-                "history": history,
-                "assistant_message": "",
-            }
+        chunks = [
+            chunk
+            for chunk in self.stream(
+                session_id=session_id,
+                user_message=user_message,
+                history=history,
+            )
+            if chunk
+        ]
+        answer = "".join(chunks).strip()
+        if answer:
+            return answer
+        detail = ExceptionDetail(
+            code="CHAT_STREAM_EMPTY",
+            cause="chat graph stream produced empty content",
         )
-        answer = result.get("assistant_message", "")
-        if not isinstance(answer, str):
-            return str(answer)
-        return answer
+        raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)
 
     def stream(
         self,

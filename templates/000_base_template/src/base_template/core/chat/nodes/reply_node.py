@@ -1,6 +1,6 @@
 """
 목적: Chat 응답 생성 노드를 제공한다.
-설명: 대화 이력을 LangChain 메시지로 변환해 LLM 호출 후 답변 문자열을 반환한다.
+설명: 대화 이력을 LangChain 메시지로 변환해 LLM 스트리밍으로 답변을 생성한다.
 디자인 패턴: 어댑터 패턴
 참조: src/base_template/integrations/llm/client.py, src/base_template/core/chat/state/graph_state.py
 """
@@ -15,10 +15,10 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from langchain_core.prompts import PromptTemplate
 
 from base_template.core.chat.models import ChatMessage, ChatRole
-from base_template.core.chat.nodes.echo_model import EchoChatModel
 from base_template.core.chat.prompts import SYSTEM_PROMPT
 from base_template.core.chat.state import ChatGraphState
 from base_template.integrations.llm import LLMClient
+from base_template.shared.exceptions import BaseAppException, ExceptionDetail
 from base_template.shared.logging import Logger, create_default_logger
 
 
@@ -33,30 +33,42 @@ class ChatReplyNode:
     ) -> None:
         self._logger = logger or create_default_logger("ChatReplyNode")
         self._system_prompt_template = system_prompt_template
-        self._llm_client = llm_client or self._build_default_llm_client()
+        self._llm_client = llm_client
 
     def run(self, state: ChatGraphState) -> dict[str, str]:
         """그래프 상태를 받아 어시스턴트 답변을 생성한다."""
 
-        messages = self._build_messages(state)
-
         self._logger.info("Chat Reply 노드 실행")
-        result = self._llm_client.invoke(messages)
-        content = self._extract_text(result)
+        chunks = [chunk for chunk in self.stream(state) if chunk]
+        content = "".join(chunks).strip()
+        if not content:
+            detail = ExceptionDetail(
+                code="CHAT_STREAM_EMPTY",
+                cause="reply node stream produced empty content",
+            )
+            raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)
         return {"assistant_message": content}
 
     def stream(self, state: ChatGraphState) -> Iterator[str]:
         """그래프 상태를 받아 어시스턴트 응답을 토큰 단위로 생성한다."""
 
         messages = self._build_messages(state)
+        llm_client = self._get_llm_client()
         self._logger.info("Chat Reply 노드 스트리밍 실행")
-        for chunk in self._llm_client.stream(messages):
+        for chunk in llm_client.stream(messages):
             text = self._extract_text(chunk)
             if text:
                 yield text
 
+    def _get_llm_client(self) -> LLMClient:
+        """LLM 클라이언트를 지연 초기화해 반환한다."""
+
+        if self._llm_client is None:
+            self._llm_client = self._build_default_llm_client()
+        return self._llm_client
+
     def _build_default_llm_client(self) -> LLMClient:
-        model = self._build_env_model() or EchoChatModel(logger=self._logger)
+        model = self._build_env_model()
         return LLMClient(
             model=model,
             name="chat-core-llm",
@@ -65,35 +77,54 @@ class ChatReplyNode:
             log_response=False,
         )
 
-    def _build_env_model(self) -> Optional[BaseChatModel]:
-        provider = os.getenv("CHAT_LLM_PROVIDER", "gemini").strip().lower()
-        if provider in {"", "echo"}:
-            return None
+    def _build_env_model(self) -> BaseChatModel:
+        provider = os.getenv("CHAT_LLM_PROVIDER", "gemini").strip().lower() or "gemini"
         if provider == "openai":
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
-                self._logger.warning("OPENAI_API_KEY가 없어 Echo 모델로 대체합니다.")
-                return None
+                detail = ExceptionDetail(
+                    code="CHAT_LLM_CONFIG_ERROR",
+                    cause="OPENAI_API_KEY is missing",
+                )
+                raise BaseAppException("OPENAI_API_KEY 환경 변수가 필요합니다.", detail)
             try:
                 from langchain_openai import ChatOpenAI
-            except ImportError:
-                self._logger.warning("langchain_openai 모듈이 없어 Echo 모델로 대체합니다.")
-                return None
+            except ImportError as error:
+                detail = ExceptionDetail(
+                    code="CHAT_LLM_DEPENDENCY_ERROR",
+                    cause="langchain_openai is not installed",
+                )
+                raise BaseAppException(
+                    "langchain_openai 의존성이 필요합니다.",
+                    detail,
+                    error,
+                ) from error
             model_name = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
             return ChatOpenAI(model=model_name, api_key=api_key, temperature=0.2)
 
         if provider == "gemini":
             api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
             if not api_key:
-                self._logger.warning("GEMINI_API_KEY가 없어 Echo 모델로 대체합니다.")
-                return None
+                detail = ExceptionDetail(
+                    code="CHAT_LLM_CONFIG_ERROR",
+                    cause="GEMINI_API_KEY or GOOGLE_API_KEY is missing",
+                )
+                raise BaseAppException(
+                    "GEMINI_API_KEY 또는 GOOGLE_API_KEY 환경 변수가 필요합니다.",
+                    detail,
+                )
             try:
                 from langchain_google_genai import ChatGoogleGenerativeAI
-            except ImportError:
-                self._logger.warning(
-                    "langchain_google_genai 모듈이 없어 Echo 모델로 대체합니다."
+            except ImportError as error:
+                detail = ExceptionDetail(
+                    code="CHAT_LLM_DEPENDENCY_ERROR",
+                    cause="langchain_google_genai is not installed",
                 )
-                return None
+                raise BaseAppException(
+                    "langchain_google_genai 의존성이 필요합니다.",
+                    detail,
+                    error,
+                ) from error
             model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
             return ChatGoogleGenerativeAI(
                 model=model_name,
@@ -101,9 +132,14 @@ class ChatReplyNode:
                 temperature=0.2,
             )
 
-        if provider:
-            self._logger.warning("지원하지 않는 CHAT_LLM_PROVIDER입니다. Echo 모델을 사용합니다.")
-        return None
+        detail = ExceptionDetail(
+            code="CHAT_LLM_PROVIDER_INVALID",
+            cause=f"provider={provider}",
+        )
+        raise BaseAppException(
+            "지원하지 않는 CHAT_LLM_PROVIDER 값입니다. gemini 또는 openai를 사용하세요.",
+            detail,
+        )
 
     def _history_to_langchain(self, history: list[ChatMessage]) -> list[BaseMessage]:
         lc_messages: list[BaseMessage] = []

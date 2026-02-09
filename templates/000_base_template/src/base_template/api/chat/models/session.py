@@ -2,7 +2,7 @@
 목적: Chat 세션 API 모델을 정의한다.
 설명: 세션 생성/목록 조회 요청과 응답 모델을 Pydantic으로 제공한다.
 디자인 패턴: 데이터 전송 객체(DTO)
-참조: src/base_template/api/chat/routers/chat.py
+참조: src/base_template/api/chat/routers/router.py
 """
 
 from __future__ import annotations

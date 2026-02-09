@@ -2,7 +2,7 @@
 목적: UI 메시지 조회 API 모델을 정의한다.
 설명: 세션별 메시지 이력 렌더링에 필요한 응답 모델을 제공한다.
 디자인 패턴: 데이터 전송 객체(DTO)
-참조: src/base_template/api/ui/routers/chat.py
+참조: src/base_template/api/ui/routers/router.py
 """
 
 from __future__ import annotations

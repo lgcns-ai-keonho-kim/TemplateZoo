@@ -92,9 +92,19 @@ class LLMClient(BaseChatModel):
         self._logger = self._build_logger(name, logger, log_repository)
 
     def chat(self, messages: Sequence[BaseMessage], **kwargs: Any) -> BaseMessage:
-        """메시지 기반 동기 호출을 수행한다."""
+        """메시지 기반 동기 스트리밍 호출을 수행한다."""
 
-        return self.invoke(list(messages), **kwargs)
+        merged: list[str] = []
+        for chunk in self.stream(list(messages), **kwargs):
+            message_chunk = self._to_message_chunk(chunk)
+            text = self._to_text(message_chunk.content)
+            if text:
+                merged.append(text)
+        content = "".join(merged).strip()
+        if not content:
+            detail = ExceptionDetail(code="LLM_STREAM_EMPTY", cause="chat stream produced empty content")
+            raise BaseAppException("LLM 스트리밍 결과가 비어 있습니다.", detail)
+        return AIMessage(content=content)
 
     @property
     def _llm_type(self) -> str:
@@ -197,6 +207,9 @@ class LLMClient(BaseChatModel):
             for chunk in self._iter_stream_chunks(messages, stop, run_manager, kwargs):
                 yield self._to_generation_chunk(chunk)
             completed = True
+        except BaseAppException as error:
+            self._log_error("stream", error, start)
+            raise
         except Exception as error:  # noqa: BLE001 - 외부 라이브러리 오류 캡처
             self._log_error("stream", error, start)
             detail = ExceptionDetail(code="LLM_STREAM_ERROR", cause=str(error))
@@ -219,6 +232,9 @@ class LLMClient(BaseChatModel):
             async for chunk in self._aiter_stream_chunks(messages, stop, run_manager, kwargs):
                 yield self._to_generation_chunk(chunk)
             completed = True
+        except BaseAppException as error:
+            self._log_error("astream", error, start)
+            raise
         except Exception as error:  # noqa: BLE001 - 외부 라이브러리 오류 캡처
             self._log_error("astream", error, start)
             detail = ExceptionDetail(code="LLM_ASTREAM_ERROR", cause=str(error))
@@ -286,18 +302,24 @@ class LLMClient(BaseChatModel):
         run_manager: CallbackManagerForLLMRun | None,
         kwargs: dict[str, Any],
     ) -> Iterator[Any]:
-        """내부 모델 스트리밍 구현 유무에 따라 적절한 경로를 선택한다."""
+        """내부 모델의 네이티브 스트리밍 구현만 사용한다."""
 
         stream_impl = getattr(type(self._model), "_stream", None)
-        if stream_impl is not None and stream_impl is not BaseChatModel._stream:
-            yield from self._model._stream(
-                messages,
-                stop=stop,
-                run_manager=run_manager,
-                **kwargs,
+        if stream_impl is None or stream_impl is BaseChatModel._stream:
+            detail = ExceptionDetail(
+                code="LLM_STREAM_NOT_SUPPORTED",
+                cause=f"model={type(self._model).__name__}",
             )
-            return
-        yield from self._model.stream(messages, stop=stop, **kwargs)
+            raise BaseAppException(
+                "현재 모델은 네이티브 스트리밍을 지원하지 않습니다.",
+                detail,
+            )
+        yield from self._model._stream(
+            messages,
+            stop=stop,
+            run_manager=run_manager,
+            **kwargs,
+        )
 
     async def _aiter_stream_chunks(
         self,
@@ -306,19 +328,24 @@ class LLMClient(BaseChatModel):
         run_manager: AsyncCallbackManagerForLLMRun | None,
         kwargs: dict[str, Any],
     ) -> AsyncIterator[Any]:
-        """내부 모델 비동기 스트리밍 구현 유무에 따라 경로를 선택한다."""
+        """내부 모델의 네이티브 비동기 스트리밍 구현만 사용한다."""
 
         astream_impl = getattr(type(self._model), "_astream", None)
-        if astream_impl is not None and astream_impl is not BaseChatModel._astream:
-            async for chunk in self._model._astream(
-                messages,
-                stop=stop,
-                run_manager=run_manager,
-                **kwargs,
-            ):
-                yield chunk
-            return
-        async for chunk in self._model.astream(messages, stop=stop, **kwargs):
+        if astream_impl is None or astream_impl is BaseChatModel._astream:
+            detail = ExceptionDetail(
+                code="LLM_ASTREAM_NOT_SUPPORTED",
+                cause=f"model={type(self._model).__name__}",
+            )
+            raise BaseAppException(
+                "현재 모델은 네이티브 비동기 스트리밍을 지원하지 않습니다.",
+                detail,
+            )
+        async for chunk in self._model._astream(
+            messages,
+            stop=stop,
+            run_manager=run_manager,
+            **kwargs,
+        ):
             yield chunk
 
     def _log_start(
@@ -505,3 +532,22 @@ class LLMClient(BaseChatModel):
                 id=getattr(chunk, "id", None),
             )
         return AIMessageChunk(content=str(chunk))
+
+    def _to_text(self, content: Any) -> str:
+        """메시지 콘텐츠를 문자열로 정규화한다."""
+
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            chunks: list[str] = []
+            for item in content:
+                if isinstance(item, str):
+                    chunks.append(item)
+                elif isinstance(item, dict):
+                    text = item.get("text")
+                    if text is not None:
+                        chunks.append(str(text))
+                else:
+                    chunks.append(str(item))
+            return "".join(chunks)
+        return str(content)

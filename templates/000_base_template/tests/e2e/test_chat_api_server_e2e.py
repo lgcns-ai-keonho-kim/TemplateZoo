@@ -2,7 +2,7 @@
 목적: Chat API 서버 E2E 테스트를 제공한다.
 설명: 실제 uvicorn 서버에 HTTP 요청을 보내 세션/큐/스트림/상태/결과 흐름을 검증한다.
 디자인 패턴: 블랙박스 E2E 테스트
-참조: tests/e2e/conftest.py, src/base_template/api/chat/routers/chat.py
+참조: tests/e2e/conftest.py, src/base_template/api/chat/routers/router.py
 """
 
 from __future__ import annotations

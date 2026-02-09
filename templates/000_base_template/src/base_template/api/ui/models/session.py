@@ -2,7 +2,7 @@
 목적: UI 세션 조회 API 모델을 정의한다.
 설명: UI 초기 렌더링과 세션 삭제 응답에 필요한 모델을 제공한다.
 디자인 패턴: 데이터 전송 객체(DTO)
-참조: src/base_template/api/ui/routers/chat.py
+참조: src/base_template/api/ui/routers/router.py
 """
 
 from __future__ import annotations

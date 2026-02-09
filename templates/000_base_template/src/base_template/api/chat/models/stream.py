@@ -2,7 +2,7 @@
 목적: Chat 스트림 이벤트 모델을 정의한다.
 설명: SSE 스트림 이벤트 타입과 페이로드 모델을 Pydantic으로 제공한다.
 디자인 패턴: 데이터 전송 객체(DTO)
-참조: src/base_template/api/chat/routers/chat.py
+참조: src/base_template/api/chat/routers/router.py
 """
 
 from __future__ import annotations

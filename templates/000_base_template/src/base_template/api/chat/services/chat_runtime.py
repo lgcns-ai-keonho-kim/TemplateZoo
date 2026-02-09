@@ -216,7 +216,7 @@ class ChatRuntime:
             exclude_message_id=user_message_id,
             max_sequence=(user_sequence - 1) if user_sequence is not None else None,
         )
-        assistant_content = self._stream_or_invoke(
+        assistant_content = self._stream_only_response(
             session_id=session.session_id,
             user_message=user_message_content,
             history=history,
@@ -271,35 +271,47 @@ class ChatRuntime:
             return filtered[-window:]
         return filtered
 
-    def _stream_or_invoke(
+    def _stream_only_response(
         self,
         session_id: str,
         user_message: str,
         history: list[ChatMessage],
         on_chunk: Optional[Callable[[str], None]] = None,
     ) -> str:
-        """스트리밍을 우선 시도하고 비어 있으면 invoke로 보완한다."""
+        """LLM 스트리밍만 사용해 답변 본문을 생성한다."""
 
         chunks: list[str] = []
-        for chunk in self._graph.stream(
-            session_id=session_id,
-            user_message=user_message,
-            history=history,
-        ):
-            if not chunk:
-                continue
-            chunks.append(chunk)
-            if on_chunk is not None:
-                on_chunk(chunk)
+        try:
+            for chunk in self._graph.stream(
+                session_id=session_id,
+                user_message=user_message,
+                history=history,
+            ):
+                normalized_chunk = str(chunk or "")
+                if not normalized_chunk:
+                    continue
+                chunks.append(normalized_chunk)
+                if on_chunk is not None:
+                    on_chunk(normalized_chunk)
+        except BaseAppException:
+            raise
+        except Exception as error:  # noqa: BLE001 - 스트리밍 예외를 도메인 예외로 변환한다.
+            detail = ExceptionDetail(code="CHAT_STREAM_ERROR", cause=str(error))
+            raise BaseAppException(
+                "스트리밍 응답 생성에 실패했습니다.",
+                detail,
+                error,
+            ) from error
+
         content = "".join(chunks).strip()
         if content:
             return content
-        invoked = self._graph.invoke(
-            session_id=session_id,
-            user_message=user_message,
-            history=history,
+
+        detail = ExceptionDetail(
+            code="CHAT_STREAM_EMPTY",
+            cause="stream returned empty content",
         )
-        return invoked.strip()
+        raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)
 
     def _ensure_memory_loaded(self, session_id: str) -> None:
         """세션 메모리가 비어 있으면 저장소에서 로드한다."""
