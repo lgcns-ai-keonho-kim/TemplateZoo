@@ -66,7 +66,3 @@ for target in README.md pyproject.toml uv.lock src; do
 done
 
 echo "완료: 프로젝트명/패키지명 변경 및 문자열 치환을 마쳤습니다."
-
-# 안전하게 자기 자신을 정리한다.
-SELF_PATH="${BASH_SOURCE[0]}"
-rm -f "$SELF_PATH"
