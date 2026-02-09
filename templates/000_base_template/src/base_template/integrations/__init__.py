@@ -8,12 +8,12 @@
 from base_template.integrations.db import (
     DBClient,
     DeleteBuilder,
-    ElasticSearchEngine,
+    ElasticsearchEngine,
     MongoDBEngine,
     PostgresEngine,
     ReadBuilder,
     RedisEngine,
-    SqliteVectorEngine,
+    SQLiteEngine,
     WriteBuilder,
 )
 from base_template.integrations.llm import LLMClient
@@ -23,9 +23,9 @@ __all__ = [
     "ReadBuilder",
     "WriteBuilder",
     "DeleteBuilder",
-    "SqliteVectorEngine",
+    "SQLiteEngine",
     "RedisEngine",
-    "ElasticSearchEngine",
+    "ElasticsearchEngine",
     "MongoDBEngine",
     "PostgresEngine",
     "LLMClient",

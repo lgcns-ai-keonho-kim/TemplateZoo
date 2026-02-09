@@ -1,6 +1,6 @@
 /*
   목적: 간단한 마크다운 렌더링 제공
-  설명: 제목, 리스트, 인라인 강조, 코드 블록 등 핵심 기능만 지원 (신뢰된 HTML 허용 가능)
+  설명: 제목, 리스트, 인라인 강조, 코드 블록 등 핵심 기능만 지원 (입력 HTML은 이스케이프 처리)
   디자인 패턴: 함수형 유틸 모듈
   참조: js/utils/syntax_highlighting/highlight_core.js
 */
@@ -15,8 +15,7 @@
   /** @param {string} text */
   function renderInline(text, options) {
     var raw = String(text);
-    var allowHtml = options && options.allowHtml === true;
-    var escaped = allowHtml ? raw : escapeHtml(raw);
+    var escaped = escapeHtml(raw);
     escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
     escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     escaped = escaped.replace(/\*([^*]+)\*/g, '<em>$1</em>');

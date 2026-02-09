@@ -52,7 +52,7 @@ except ImportError:  # pragma: no cover - 환경 의존 로딩
     sqlite_vec = None
 
 
-class SqliteVectorEngine(BaseDBEngine):
+class SQLiteEngine(BaseDBEngine):
     """sqlite-vec 기반 SQLite 엔진 구현체."""
 
     def __init__(
@@ -61,7 +61,7 @@ class SqliteVectorEngine(BaseDBEngine):
         logger: Optional[Logger] = None,
         enable_vector: bool = True,
     ) -> None:
-        self._logger = logger or create_default_logger("SqliteVectorEngine")
+        self._logger = logger or create_default_logger("SQLiteEngine")
         self._enable_vector = enable_vector
         self._identifier = SQLIdentifierHelper()
         self._vector_codec = SqliteVectorCodec(sqlite_vec)

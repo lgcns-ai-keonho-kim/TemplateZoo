@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
 from typing import Optional
 
@@ -29,6 +30,7 @@ class SqliteConnectionManager:
         self._sqlite_vec = sqlite_vec_module
         self._connection: Optional[sqlite3.Connection] = None
         self._supports_vector_search = enable_vector
+        self._busy_timeout_ms = self._read_busy_timeout_ms()
 
     @property
     def supports_vector_search(self) -> bool:
@@ -41,8 +43,13 @@ class SqliteConnectionManager:
 
         if self._connection is not None:
             return
-        self._connection = sqlite3.connect(self._database_path)
+        self._connection = sqlite3.connect(
+            self._database_path,
+            timeout=self._busy_timeout_ms / 1000.0,
+            check_same_thread=False,
+        )
         self._connection.row_factory = sqlite3.Row
+        self._apply_pragmas()
         if self._enable_vector:
             self._load_sqlite_vec()
         self._logger.info("SQLite 연결이 초기화되었습니다.")
@@ -71,3 +78,22 @@ class SqliteConnectionManager:
         connection.enable_load_extension(True)
         self._sqlite_vec.load(connection)
         connection.enable_load_extension(False)
+
+    def _apply_pragmas(self) -> None:
+        """동시성 친화 SQLite PRAGMA를 적용한다."""
+
+        connection = self.ensure_connection()
+        connection.execute(f"PRAGMA busy_timeout={self._busy_timeout_ms}")
+        try:
+            connection.execute("PRAGMA journal_mode=WAL")
+            connection.execute("PRAGMA synchronous=NORMAL")
+        except sqlite3.DatabaseError as error:
+            self._logger.warning(f"SQLite PRAGMA 적용 경고: {error}")
+
+    def _read_busy_timeout_ms(self) -> int:
+        raw = os.getenv("SQLITE_BUSY_TIMEOUT_MS", "5000")
+        try:
+            value = int(raw)
+        except ValueError:
+            return 5000
+        return max(0, value)

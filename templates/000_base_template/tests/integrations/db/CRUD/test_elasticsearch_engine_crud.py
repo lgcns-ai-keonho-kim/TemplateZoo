@@ -13,7 +13,7 @@ import os
 import pytest
 
 from base_template.integrations.db import DBClient
-from base_template.integrations.db.engines.elasticsearch import ElasticSearchEngine
+from base_template.integrations.db.engines.elasticsearch import ElasticsearchEngine
 
 
 _LOGGER = logging.getLogger("tests.crud")
@@ -37,7 +37,7 @@ def test_elasticsearch_engine_basic_crud() -> None:
         pytest.skip("ELASTICSEARCH_HOSTS 또는 ELASTICSEARCH_* 환경 변수가 필요합니다.")
 
     _log_step("엔진 생성", mode="direct" if "hosts" not in params else "hosts")
-    engine = ElasticSearchEngine(**params)
+    engine = ElasticsearchEngine(**params)
     _log_step("클라이언트 생성")
     client = DBClient(engine)
     _log_step("연결 시작")

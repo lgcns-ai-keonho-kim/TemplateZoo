@@ -18,7 +18,7 @@ from langchain_core.callbacks import (
     CallbackManagerForLLMRun,
 )
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage, BaseMessageChunk
 from langchain_core.outputs import ChatGenerationChunk, ChatResult
 
 from base_template.shared.exceptions import BaseAppException, ExceptionDetail
@@ -91,7 +91,7 @@ class LLMClient(BaseChatModel):
         self._log_repository = log_repository
         self._logger = self._build_logger(name, logger, log_repository)
 
-    def chat(self, messages: Sequence[BaseMessage], **kwargs: Any) -> ChatResult:
+    def chat(self, messages: Sequence[BaseMessage], **kwargs: Any) -> BaseMessage:
         """메시지 기반 동기 호출을 수행한다."""
 
         return self.invoke(list(messages), **kwargs)
@@ -102,6 +102,40 @@ class LLMClient(BaseChatModel):
         if base_type:
             return f"logged-{base_type}"
         return "logged-chat-model"
+
+    def bind_tools(
+        self,
+        tools: Sequence[dict[str, Any] | type | Callable[..., Any] | Any],
+        *,
+        tool_choice: str | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """도구 바인딩을 내부 모델에 위임한다."""
+
+        try:
+            return self._model.bind_tools(tools, tool_choice=tool_choice, **kwargs)
+        except NotImplementedError as error:
+            raise NotImplementedError("주입된 모델은 bind_tools를 지원하지 않습니다.") from error
+
+    def with_structured_output(
+        self,
+        schema: dict[str, Any] | type,
+        *,
+        include_raw: bool = False,
+        **kwargs: Any,
+    ) -> Any:
+        """구조화 출력 래핑을 내부 모델에 위임한다."""
+
+        try:
+            return self._model.with_structured_output(
+                schema,
+                include_raw=include_raw,
+                **kwargs,
+            )
+        except NotImplementedError as error:
+            raise NotImplementedError(
+                "주입된 모델은 with_structured_output을 지원하지 않습니다."
+            ) from error
 
     def _generate(
         self,
@@ -160,14 +194,8 @@ class LLMClient(BaseChatModel):
         self._log_start("stream", messages, stop, True, kwargs)
         completed = False
         try:
-            iterator = self._model._stream(
-                messages,
-                stop=stop,
-                run_manager=run_manager,
-                **kwargs,
-            )
-            for chunk in iterator:
-                yield chunk
+            for chunk in self._iter_stream_chunks(messages, stop, run_manager, kwargs):
+                yield self._to_generation_chunk(chunk)
             completed = True
         except Exception as error:  # noqa: BLE001 - 외부 라이브러리 오류 캡처
             self._log_error("stream", error, start)
@@ -188,14 +216,8 @@ class LLMClient(BaseChatModel):
         self._log_start("astream", messages, stop, True, kwargs)
         completed = False
         try:
-            async_iterator = self._model._astream(
-                messages,
-                stop=stop,
-                run_manager=run_manager,
-                **kwargs,
-            )
-            async for chunk in async_iterator:
-                yield chunk
+            async for chunk in self._aiter_stream_chunks(messages, stop, run_manager, kwargs):
+                yield self._to_generation_chunk(chunk)
             completed = True
         except Exception as error:  # noqa: BLE001 - 외부 라이브러리 오류 캡처
             self._log_error("astream", error, start)
@@ -257,6 +279,48 @@ class LLMClient(BaseChatModel):
             auto_connect=auto_connect,
         )
 
+    def _iter_stream_chunks(
+        self,
+        messages: list[BaseMessage],
+        stop: list[str] | None,
+        run_manager: CallbackManagerForLLMRun | None,
+        kwargs: dict[str, Any],
+    ) -> Iterator[Any]:
+        """내부 모델 스트리밍 구현 유무에 따라 적절한 경로를 선택한다."""
+
+        stream_impl = getattr(type(self._model), "_stream", None)
+        if stream_impl is not None and stream_impl is not BaseChatModel._stream:
+            yield from self._model._stream(
+                messages,
+                stop=stop,
+                run_manager=run_manager,
+                **kwargs,
+            )
+            return
+        yield from self._model.stream(messages, stop=stop, **kwargs)
+
+    async def _aiter_stream_chunks(
+        self,
+        messages: list[BaseMessage],
+        stop: list[str] | None,
+        run_manager: AsyncCallbackManagerForLLMRun | None,
+        kwargs: dict[str, Any],
+    ) -> AsyncIterator[Any]:
+        """내부 모델 비동기 스트리밍 구현 유무에 따라 경로를 선택한다."""
+
+        astream_impl = getattr(type(self._model), "_astream", None)
+        if astream_impl is not None and astream_impl is not BaseChatModel._astream:
+            async for chunk in self._model._astream(
+                messages,
+                stop=stop,
+                run_manager=run_manager,
+                **kwargs,
+            ):
+                yield chunk
+            return
+        async for chunk in self._model.astream(messages, stop=stop, **kwargs):
+            yield chunk
+
     def _log_start(
         self,
         action: str,
@@ -267,7 +331,7 @@ class LLMClient(BaseChatModel):
     ) -> None:
         metadata = self._build_metadata(action, messages, stop, stream, kwargs)
         context = self._get_context()
-        self._logger.log(LogLevel.INFO, f"LLM {action} 호출 시작", context=context, metadata=metadata)
+        self._safe_log(LogLevel.INFO, f"LLM {action} 호출 시작", context=context, metadata=metadata)
 
     def _log_success(self, action: str, start: float, result: Optional[ChatResult]) -> None:
         metadata = self._base_metadata(action)
@@ -283,7 +347,7 @@ class LLMClient(BaseChatModel):
         if self._log_response and result is not None:
             metadata["result"] = self._serialize_result(result)
         context = self._get_context()
-        self._logger.log(LogLevel.INFO, f"LLM {action} 호출 성공", context=context, metadata=metadata)
+        self._safe_log(LogLevel.INFO, f"LLM {action} 호출 성공", context=context, metadata=metadata)
 
     def _log_error(self, action: str, error: Exception, start: float) -> None:
         metadata = self._base_metadata(action)
@@ -295,7 +359,7 @@ class LLMClient(BaseChatModel):
             }
         )
         context = self._get_context()
-        self._logger.log(
+        self._safe_log(
             LogLevel.ERROR,
             f"LLM {action} 호출 실패: {error}",
             context=context,
@@ -336,10 +400,30 @@ class LLMClient(BaseChatModel):
 
     def _run_background(self, fn: Callable[..., None], *args: Any) -> None:
         if self._background_runner is not None:
-            self._background_runner(fn, *args)
+            try:
+                self._background_runner(fn, *args)
+            except Exception:  # noqa: BLE001 - 백그라운드 실패가 본 호출을 깨지 않도록 보호
+                return
             return
-        thread = threading.Thread(target=fn, args=args, daemon=True)
-        thread.start()
+        try:
+            thread = threading.Thread(target=fn, args=args, daemon=True)
+            thread.start()
+        except Exception:  # noqa: BLE001 - 스레드 시작 실패가 본 호출을 깨지 않도록 보호
+            return
+
+    def _safe_log(
+        self,
+        level: LogLevel,
+        message: str,
+        context: Optional[LogContext],
+        metadata: Optional[dict],
+    ) -> None:
+        """로깅 실패가 본 호출을 깨지 않도록 보호한다."""
+
+        try:
+            self._logger.log(level, message, context=context, metadata=metadata)
+        except Exception:  # noqa: BLE001 - 로깅은 best-effort로 동작해야 한다.
+            return
 
     def _get_context(self) -> Optional[LogContext]:
         if not self._context_provider:
@@ -388,3 +472,36 @@ class LLMClient(BaseChatModel):
         if hasattr(result, "dict"):
             return result.dict()
         return {"text": str(result)}
+
+    def _to_generation_chunk(self, chunk: Any) -> ChatGenerationChunk:
+        """스트리밍 출력 객체를 ChatGenerationChunk로 정규화한다."""
+
+        if isinstance(chunk, ChatGenerationChunk):
+            return chunk
+        return ChatGenerationChunk(message=self._to_message_chunk(chunk))
+
+    def _to_message_chunk(self, chunk: Any) -> BaseMessageChunk:
+        """스트리밍 출력 객체를 BaseMessageChunk로 정규화한다."""
+
+        if isinstance(chunk, BaseMessageChunk):
+            return chunk
+        if isinstance(chunk, AIMessage):
+            return AIMessageChunk(
+                content=chunk.content,
+                additional_kwargs=chunk.additional_kwargs,
+                response_metadata=chunk.response_metadata,
+                name=chunk.name,
+                id=chunk.id,
+                tool_calls=chunk.tool_calls,
+                invalid_tool_calls=chunk.invalid_tool_calls,
+                usage_metadata=chunk.usage_metadata,
+            )
+        if isinstance(chunk, BaseMessage):
+            return AIMessageChunk(
+                content=chunk.content,
+                additional_kwargs=getattr(chunk, "additional_kwargs", {}),
+                response_metadata=getattr(chunk, "response_metadata", {}),
+                name=getattr(chunk, "name", None),
+                id=getattr(chunk, "id", None),
+            )
+        return AIMessageChunk(content=str(chunk))

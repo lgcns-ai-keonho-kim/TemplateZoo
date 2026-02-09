@@ -1,27 +1,20 @@
-# 공통 상수 가이드
+# 공통 상수 명세
 
-이 문서는 `src/base_template/shared/const/__init__.py`의 상수 집합을 설명합니다.
+이 문서는 `src/base_template/shared/const/__init__.py`의 `SharedConst`를 정의한다.
 
-**목적**
+## 상수 목록
 
-- 프로젝트 전역에서 재사용되는 기본 상수를 한 곳에서 관리합니다.
-- 설정 로더와 파일 처리 로직의 기준값을 통일합니다.
+| 상수 | 값 | 사용 목적 |
+| --- | --- | --- |
+| `DEFAULT_ENCODING` | `"utf-8"` | 파일 읽기/쓰기 기본 인코딩 |
+| `DEFAULT_TIMEZONE` | `"UTC"` | 시간대 기본값 |
+| `ENV_NESTED_DELIMITER` | `"__"` | 환경 변수 중첩 키 구분자 |
 
-**상수 목록**
+## 사용 지점
 
-- `SharedConst.DEFAULT_ENCODING`: 기본 파일 인코딩
-- `SharedConst.DEFAULT_TIMEZONE`: 기본 타임존 이름
-- `SharedConst.ENV_NESTED_DELIMITER`: 환경 변수 중첩 구분자
+- `shared/config/loader.py`에서 인코딩/환경변수 파싱 기준으로 사용한다.
+- 공통 설정 로직은 이 상수 값을 단일 진실 소스로 사용한다.
 
-**사용 예시**
+## 의존성
 
-```python
-from base_template.shared.const import SharedConst
-
-print(SharedConst.DEFAULT_ENCODING)
-```
-
-**운영 팁**
-
-- 환경 변수 규칙 변경이 필요하면 `ENV_NESTED_DELIMITER`를 기준으로 전역 변경합니다.
-- 인코딩 기본값은 설정 로더와 파일 저장소에서 함께 사용됩니다.
+`SharedConst`는 외부 의존이 없는 순수 상수 객체다.

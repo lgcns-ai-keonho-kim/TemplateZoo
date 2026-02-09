@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
   목적: 정적 채팅 UI의 진입점 제공
-  설명: 좌측 패널 + 멀티 채팅 그리드 구조를 정의
+  설명: 좌측 패널 + 단일 채팅 화면 구조를 정의
   디자인 패턴: 모듈 패턴 기반 JS 초기화
   참조: css/main.css, js/*
 -->
@@ -20,11 +20,11 @@
           <img class="header-logo" src="asset/logo.png" alt="로고" loading="eager" />
         </div>
         <div class="header-actions">
+          <button class="btn-primary btn-icon" id="addCell" type="button" aria-label="새 채팅 생성">
+            <img class="icon-lg" src="asset/icons/add.svg" alt="" />
+          </button>
           <button class="btn-ghost btn-icon" id="themeToggle" type="button" aria-label="다크 모드">
             <img class="icon" src="asset/icons/moon.svg" alt="" />
-          </button>
-          <button class="btn-primary btn-icon" id="addCell" type="button" aria-label="새 채팅 셀 추가">
-            <img class="icon-lg" src="asset/icons/add.svg" alt="" />
           </button>
         </div>
       </header>
@@ -62,7 +62,8 @@
     <script src="js/ui/theme.js"></script>
     <script src="js/ui/panel_toggle.js"></script>
     <script src="js/ui/grid_manager.js"></script>
-    <script src="js/chat/mock_transport.js"></script>
+    <script src="js/chat/api_transport.js"></script>
+    <script src="js/chat/chat_presenter.js"></script>
     <script src="js/chat/chat_cell.js"></script>
     <script src="js/core/app.js"></script>
     <script src="js/script.js"></script>

@@ -42,7 +42,7 @@ except ImportError:  # pragma: no cover - 환경 의존 로딩
     Elasticsearch = None
 
 
-class ElasticSearchEngine(BaseDBEngine):
+class ElasticsearchEngine(BaseDBEngine):
     """Elasticsearch 기반 엔진 구현체."""
 
     def __init__(
@@ -67,7 +67,7 @@ class ElasticSearchEngine(BaseDBEngine):
             elif password:
                 auth = f":{password}@"
             hosts = [f"{scheme}://{auth}{host}:{port}"]
-        self._logger = logger or create_default_logger("ElasticSearchEngine")
+        self._logger = logger or create_default_logger("ElasticsearchEngine")
         self._connection = ElasticConnectionManager(
             hosts=hosts,
             logger=self._logger,

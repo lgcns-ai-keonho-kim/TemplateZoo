@@ -5,6 +5,6 @@
 참조: src/base_template/integrations/db/engines/elasticsearch/engine.py
 """
 
-from base_template.integrations.db.engines.elasticsearch.engine import ElasticSearchEngine
+from base_template.integrations.db.engines.elasticsearch.engine import ElasticsearchEngine
 
-__all__ = ["ElasticSearchEngine"]
+__all__ = ["ElasticsearchEngine"]

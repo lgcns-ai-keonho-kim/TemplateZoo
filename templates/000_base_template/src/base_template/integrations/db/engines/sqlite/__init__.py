@@ -5,6 +5,6 @@
 참조: src/base_template/integrations/db/engines/sqlite/engine.py
 """
 
-from base_template.integrations.db.engines.sqlite.engine import SqliteVectorEngine
+from base_template.integrations.db.engines.sqlite.engine import SQLiteEngine
 
-__all__ = ["SqliteVectorEngine"]
+__all__ = ["SQLiteEngine"]

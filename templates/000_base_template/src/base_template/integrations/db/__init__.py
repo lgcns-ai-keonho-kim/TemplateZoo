@@ -8,11 +8,11 @@
 from base_template.integrations.db.client import DBClient
 from base_template.integrations.db.query_builder import DeleteBuilder
 from base_template.integrations.db.engines import (
-    ElasticSearchEngine,
+    ElasticsearchEngine,
     MongoDBEngine,
     PostgresEngine,
     RedisEngine,
-    SqliteVectorEngine,
+    SQLiteEngine,
 )
 from base_template.integrations.db.query_builder import ReadBuilder
 from base_template.integrations.db.query_builder import WriteBuilder
@@ -22,9 +22,9 @@ __all__ = [
     "ReadBuilder",
     "WriteBuilder",
     "DeleteBuilder",
-    "SqliteVectorEngine",
+    "SQLiteEngine",
     "RedisEngine",
-    "ElasticSearchEngine",
+    "ElasticsearchEngine",
     "MongoDBEngine",
     "PostgresEngine",
 ]

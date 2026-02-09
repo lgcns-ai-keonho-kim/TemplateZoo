@@ -1,6 +1,6 @@
 /*
   목적: 앱 초기화 및 전역 상태 관리
-  설명: 히스토리 패널과 그리드, 테마 모듈을 연결
+  설명: 히스토리 패널(세션 이동/삭제)과 그리드, 테마 모듈을 연결
   디자인 패턴: 퍼사드 패턴
   참조: js/ui/*, js/chat/chat_cell.js
 */
@@ -25,41 +25,77 @@
     });
   }
 
-  function scrollToCell(cellId) {
-    var cell = window.App.utils.qs('[data-cell-id="' + cellId + '"]');
-    if (cell) {
-      cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }
+  window.App.app.setActiveHistory = setActiveHistory;
 
 
-  window.App.app.onCellCreated = function (cellId, title) {
+  window.App.app.onCellCreated = function (cellId, title, preview) {
     var list = window.App.utils.qs('#historyList');
     if (!list) {
+      return;
+    }
+
+    var existing = window.App.utils.qs('.history-item[data-cell-id="' + cellId + '"]');
+    if (existing) {
+      var existingTitle = existing.querySelector('.history-title');
+      var existingPreview = existing.querySelector('.history-preview');
+      if (existingTitle && title && title.trim()) {
+        existingTitle.textContent = title;
+      }
+      if (existingPreview) {
+        existingPreview.textContent = preview && preview.trim().length > 0 ? preview : '대기 중';
+      }
+      state.history[cellId] = {
+        title: title,
+        preview: preview && preview.trim().length > 0 ? preview : '대기 중'
+      };
       return;
     }
 
     var item = window.App.utils.createEl('li', 'history-item');
     item.setAttribute('data-cell-id', cellId);
 
+    var itemHeader = window.App.utils.createEl('div', 'history-item__header');
     var itemTitle = window.App.utils.createEl('div', 'history-title');
     itemTitle.textContent = title;
+    var deleteButton = window.App.utils.createEl('button', 'history-delete-btn');
+    deleteButton.type = 'button';
+    deleteButton.setAttribute('title', '채팅 삭제');
+    deleteButton.setAttribute('aria-label', '채팅 삭제');
+    var deleteIcon = window.App.utils.createEl('img', 'icon');
+    deleteIcon.setAttribute('src', 'asset/icons/delete.svg');
+    deleteIcon.setAttribute('alt', '');
+    deleteButton.appendChild(deleteIcon);
+    itemHeader.appendChild(itemTitle);
+    itemHeader.appendChild(deleteButton);
 
     var itemPreview = window.App.utils.createEl('div', 'history-preview');
-    itemPreview.textContent = '대기 중';
+    itemPreview.textContent = preview && preview.trim().length > 0 ? preview : '대기 중';
 
-    item.appendChild(itemTitle);
+    item.appendChild(itemHeader);
     item.appendChild(itemPreview);
     list.appendChild(item);
 
     state.history[cellId] = {
       title: title,
-      preview: '대기 중'
+      preview: preview && preview.trim().length > 0 ? preview : '대기 중'
     };
 
     item.addEventListener('click', function () {
       setActiveHistory(cellId);
-      scrollToCell(cellId);
+      if (window.App.grid && typeof window.App.grid.activateSession === 'function') {
+        window.App.grid.activateSession(cellId);
+      }
+    });
+
+    deleteButton.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!window.confirm('이 채팅 세션을 삭제하시겠습니까?')) {
+        return;
+      }
+      if (window.App.grid && typeof window.App.grid.deleteSession === 'function') {
+        window.App.grid.deleteSession(cellId);
+      }
     });
 
     if (Object.keys(state.history).length === 1) {

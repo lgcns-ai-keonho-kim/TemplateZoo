@@ -1,135 +1,87 @@
-# LLM 클라이언트 가이드
+# LLM 클라이언트 명세
 
-이 문서는 `src/base_template/integrations/llm/client.py`의 `LLMClient` 사용 방법을 설명합니다.
+이 문서는 `src/base_template/integrations/llm/client.py`의 `LLMClient` 구조와 호출 계약을 정의한다.
 
-**목적**
+## 역할
 
-- LangChain의 `BaseChatModel`을 감싸 호출 로깅과 예외 처리를 표준화합니다.
-- 기존 메서드(`invoke`, `ainvoke`, `stream`, `astream`)를 그대로 제공합니다.
+`LLMClient`는 LangChain `BaseChatModel`을 감싸는 프록시 계층이다.
 
-**핵심 구성**
+- `invoke`, `ainvoke`, `stream`, `astream` 인터페이스를 그대로 유지한다.
+- 호출 시작/성공/실패 로그를 통합한다.
+- 외부 모델 예외를 `BaseAppException`으로 변환한다.
+- `bind_tools`, `with_structured_output`를 내부 모델에 위임한다.
 
-- 클래스: `LLMClient`
-- 베이스: `BaseChatModel`
-- 예외: `BaseAppException`, `ExceptionDetail`
+## 입력/출력 계약
 
-## 기본 사용법
+| 항목 | 내용 |
+| --- | --- |
+| 입력 모델 | `BaseChatModel` 구현체 |
+| 입력 메시지 | `Sequence[BaseMessage]` |
+| 출력(동기/비동기) | `ChatResult` |
+| 출력(스트리밍) | `ChatGenerationChunk` 이터레이터 |
+
+## 로깅 구성
+
+`LLMClient`는 세 가지 주입 경로를 지원한다.
+
+1. `Logger` 직접 주입
+2. `LogRepository` 직접 주입
+3. `logging_engine` 주입 (`BaseDBEngine` 또는 `Logger` 또는 `LogRepository`)
+
+`logging_engine`에 `BaseDBEngine`을 주입하면 내부에서 `DBClient`와 `LLMLogRepository`를 생성한다.
+
+## 로그 메타데이터
+
+기본 기록 필드:
+
+- `action` (`invoke`, `ainvoke`, `stream`, `astream`)
+- `model_name`, `llm_type`, `provider`
+- `duration_ms`, `success`, `error_type`
+- `usage_metadata` (토큰/비용 정보가 제공되는 모델에서만)
+
+옵션 필드:
+
+- `messages` (`log_payload=True`)
+- `result` (`log_response=True`)
+
+## 예외 변환 규칙
+
+| 동작 | 에러 코드 |
+| --- | --- |
+| 동기 호출 실패 | `LLM_INVOKE_ERROR` |
+| 비동기 호출 실패 | `LLM_AINVOKE_ERROR` |
+| 동기 스트림 실패 | `LLM_STREAM_ERROR` |
+| 비동기 스트림 실패 | `LLM_ASTREAM_ERROR` |
+
+## 의존성 방향
+
+```text
+core/chat/nodes/reply_node
+  -> integrations/llm/client.LLMClient
+     -> shared/logging
+     -> shared/exceptions
+     -> (optional) integrations/db + shared/logging/llm_repository
+```
+
+## 최소 사용 예시
 
 ```python
 from base_template.integrations.llm import LLMClient
 from base_template.shared.logging import create_default_logger
 
-logger = create_default_logger("llm")
-client = LLMClient(model=langchain_chat_model, name="llm-main", logger=logger)
+client = LLMClient(
+    model=langchain_chat_model,
+    name="chat-core-llm",
+    logger=create_default_logger("chat-llm"),
+)
 
-result = client.invoke("간단한 질문")
-```
-
-## 비동기/스트리밍 사용법
-
-```python
-# 비동기 호출
-result = await client.ainvoke("질문")
-
-# 스트리밍 호출
-for chunk in client.stream("질문"):
+result = client.invoke("안녕하세요")
+for chunk in client.stream("스트리밍 테스트"):
     print(chunk)
 ```
 
-## 로깅 정책
+## 제약
 
-- 호출 시작/성공/실패 로그를 자동으로 기록합니다.
-- 기본 메타데이터: 액션, 모델 이름, 메시지 수, stop 여부, 스트리밍 여부
-- `log_payload=True`이면 메시지 내용을 로그에 포함합니다.
-- `log_response=True`이면 결과를 로그에 포함합니다.
-
-## 로깅 엔진 주입 규칙
-
-`logging_engine`에는 다음 타입만 허용됩니다.
-
-- DB 엔진: `BaseDBEngine` 구현체
-- 로거: `Logger` 구현체
-- 저장소: `LogRepository` 구현체
-
-### DB 엔진 주입 예시
-
-```python
-from base_template.integrations.db.engines.sqlite import SqliteVectorEngine
-from base_template.integrations.llm import LLMClient
-
-engine = SqliteVectorEngine(database_path="data/db/app.sqlite")
-client = LLMClient(
-    model=langchain_chat_model,
-    name="llm-main",
-    logging_engine=engine,
-    log_collection="llm_logs",
-)
-```
-
-### 파일/메모리 로깅 예시
-
-```python
-from base_template.integrations.fs import FileLogRepository
-from base_template.shared.logging import InMemoryLogger
-
-file_repo = FileLogRepository(base_dir="data/logs")
-client = LLMClient(model=langchain_chat_model, logging_engine=file_repo)
-
-memory_logger = InMemoryLogger(name="llm")
-client = LLMClient(model=langchain_chat_model, logging_engine=memory_logger)
-```
-
-## 백그라운드 러너
-
-- 스트리밍 성공 로그는 `background_runner`로 실행됩니다.
-- 함수 시그니처는 `fn, *args` 형태입니다.
-
-```python
-def inline_runner(fn, *args):
-    fn(*args)
-
-client = LLMClient(
-    model=langchain_chat_model,
-    background_runner=inline_runner,
-)
-```
-
-## 컨텍스트 자동 주입
-
-- `context_provider`를 주입하면 사용자 ID/요청 ID를 자동으로 로그에 포함합니다.
-
-```python
-from base_template.shared.logging import LogContext
-
-def context_provider():
-    return LogContext(request_id="req-123", user_id="user-1")
-
-client = LLMClient(
-    model=langchain_chat_model,
-    context_provider=context_provider,
-)
-```
-
-## 오류 처리 규칙
-
-- 내부 호출 실패 시 `BaseAppException`으로 래핑합니다.
-- 액션별 에러 코드 예시
-  - `LLM_INVOKE_ERROR`
-  - `LLM_AINVOKE_ERROR`
-  - `LLM_STREAM_ERROR`
-  - `LLM_ASTREAM_ERROR`
-
-```python
-from base_template.shared.exceptions import BaseAppException
-
-try:
-    client.invoke("질문")
-except BaseAppException as exc:
-    print(exc.message)
-    print(exc.detail.code)
-```
-
-## 주의 사항
-
-- DB 저장소를 사용할 경우 DB 연결/스키마 준비가 필요합니다.
-- 민감한 데이터는 `log_payload`/`log_response`를 비활성화한 상태로 운영하는 것을 권장합니다.
+1. `logging_engine`에는 `DBClient`를 직접 주입하지 않는다.
+2. 로깅 저장 실패는 본 호출 흐름을 중단하지 않는다.
+3. 내부 모델이 `_stream`/`_astream`을 구현하지 않은 경우 `stream`/`astream` 경로로 자동 전환한다.

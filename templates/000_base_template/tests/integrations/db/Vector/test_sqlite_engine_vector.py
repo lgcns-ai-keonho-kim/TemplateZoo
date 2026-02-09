@@ -13,7 +13,7 @@ import pytest
 
 from base_template.integrations.db import DBClient
 from base_template.integrations.db.base import Vector, VectorSearchRequest
-from base_template.integrations.db.engines.sqlite import SqliteVectorEngine
+from base_template.integrations.db.engines.sqlite import SQLiteEngine
 
 
 def test_sqlite_engine_vector_search(tmp_path, ollama_embeddings) -> None:
@@ -35,7 +35,7 @@ def test_sqlite_engine_vector_search(tmp_path, ollama_embeddings) -> None:
     dimension = len(vectors[0])
 
     db_path = tmp_path / "vector.sqlite"
-    engine = SqliteVectorEngine(str(db_path), enable_vector=True)
+    engine = SQLiteEngine(str(db_path), enable_vector=True)
     client = DBClient(engine)
     client.connect()
     client.create_collection(_collection_schema("vectors", dimension=dimension))

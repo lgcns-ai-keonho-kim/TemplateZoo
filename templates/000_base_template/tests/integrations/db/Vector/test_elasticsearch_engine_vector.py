@@ -14,7 +14,7 @@ import pytest
 
 from base_template.integrations.db import DBClient
 from base_template.integrations.db.base import Vector, VectorSearchRequest
-from base_template.integrations.db.engines.elasticsearch import ElasticSearchEngine
+from base_template.integrations.db.engines.elasticsearch import ElasticsearchEngine
 
 
 def test_elasticsearch_engine_vector_search(ollama_embeddings) -> None:
@@ -35,7 +35,7 @@ def test_elasticsearch_engine_vector_search(ollama_embeddings) -> None:
         pytest.skip("임베딩 결과가 비어 있습니다.")
     dimension = len(vectors[0])
 
-    engine = ElasticSearchEngine(**params)
+    engine = ElasticsearchEngine(**params)
     client = DBClient(engine)
     client.connect()
     index_name = _collection_name("vectors")

@@ -5,16 +5,16 @@
 참조: src/base_template/integrations/db/engines/*/engine.py
 """
 
-from base_template.integrations.db.engines.elasticsearch import ElasticSearchEngine
+from base_template.integrations.db.engines.elasticsearch import ElasticsearchEngine
 from base_template.integrations.db.engines.mongodb import MongoDBEngine
 from base_template.integrations.db.engines.postgres import PostgresEngine
 from base_template.integrations.db.engines.redis import RedisEngine
-from base_template.integrations.db.engines.sqlite import SqliteVectorEngine
+from base_template.integrations.db.engines.sqlite import SQLiteEngine
 
 __all__ = [
-    "SqliteVectorEngine",
+    "SQLiteEngine",
     "RedisEngine",
-    "ElasticSearchEngine",
+    "ElasticsearchEngine",
     "MongoDBEngine",
     "PostgresEngine",
 ]

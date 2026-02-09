@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import threading
 from concurrent.futures import Future, ThreadPoolExecutor
 from typing import Callable, List, Optional, TypeVar
 
@@ -28,6 +29,7 @@ class ThreadPool:
         self._logger = logger or create_default_logger("ThreadPool")
         self._executor: Optional[ThreadPoolExecutor] = None
         self._futures: List[Future] = []
+        self._lock = threading.RLock()
 
     def __enter__(self) -> "ThreadPool":
         """with 문 진입 시 실행기를 생성한다."""
@@ -46,15 +48,17 @@ class ThreadPool:
     def submit(self, fn: Callable[..., T], *args, **kwargs) -> Future[T]:
         """태스크를 제출한다."""
 
-        if self._executor is None:
-            self.__enter__()
-        if self._executor is None:
-            raise RuntimeError("스레드풀이 초기화되지 않았습니다.")
-        record = TaskRecord(payload={"args": args, "kwargs": kwargs})
-        self._logger.debug(f"태스크 제출: {record.task_id}")
-        future = self._executor.submit(fn, *args, **kwargs)
-        self._futures.append(future)
-        return future
+        with self._lock:
+            if self._executor is None:
+                self.__enter__()
+            if self._executor is None:
+                raise RuntimeError("스레드풀이 초기화되지 않았습니다.")
+            record = TaskRecord(payload={"args": args, "kwargs": kwargs})
+            self._logger.debug(f"태스크 제출: {record.task_id}")
+            future = self._executor.submit(fn, *args, **kwargs)
+            self._futures.append(future)
+            future.add_done_callback(self._on_future_done)
+            return future
 
     def task(self, fn: Callable[..., T]) -> Callable[..., Future[T]]:
         """데코레이터로 태스크를 등록한다."""
@@ -67,7 +71,18 @@ class ThreadPool:
     def shutdown(self, wait: bool = True) -> None:
         """스레드풀을 종료한다."""
 
-        if self._executor:
-            self._executor.shutdown(wait=wait)
-            self._executor = None
-            self._logger.info("스레드풀이 종료되었습니다.")
+        with self._lock:
+            if self._executor:
+                self._executor.shutdown(wait=wait)
+                self._executor = None
+                self._futures.clear()
+                self._logger.info("스레드풀이 종료되었습니다.")
+
+    def _on_future_done(self, future: Future) -> None:
+        """완료된 Future를 추적 목록에서 제거한다."""
+
+        with self._lock:
+            try:
+                self._futures.remove(future)
+            except ValueError:
+                return

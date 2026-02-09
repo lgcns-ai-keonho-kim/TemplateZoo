@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 
 from base_template.integrations.db import DBClient
-from base_template.integrations.db.engines.sqlite import SqliteVectorEngine
+from base_template.integrations.db.engines.sqlite import SQLiteEngine
 
 
 _LOGGER = logging.getLogger("tests.crud")
@@ -31,7 +31,7 @@ def test_sqlite_engine_basic_crud(tmp_path) -> None:
 
     db_path = tmp_path / "test.sqlite"
     _log_step("엔진 생성", db_path=db_path)
-    engine = SqliteVectorEngine(str(db_path), enable_vector=False)
+    engine = SQLiteEngine(str(db_path), enable_vector=False)
     _log_step("클라이언트 생성")
     client = DBClient(engine)
     _log_step("연결 시작")
