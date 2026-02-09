@@ -12,13 +12,14 @@
 
   var escapeHtml = window.App.utils.escapeHtml;
   var DEFAULT_CONTEXT_WINDOW = 20;
-  var RESULT_POLL_INTERVAL_MS = 500;
+  var RESULT_POLL_INTERVAL_MS = 250;
   var MAX_RESULT_POLL_COUNT = 1000;
   var MAX_STREAM_RETRY_COUNT = 3;
   var STREAM_RETRY_DELAYS_MS = [400, 800, 1200];
-  var TYPEWRITER_MIN_CPS = 55;
-  var TYPEWRITER_MAX_CPS = 900;
-  var TYPEWRITER_TARGET_DRAIN_SECONDS = 2.2;
+  var TYPEWRITER_MIN_CPS = 42;
+  var TYPEWRITER_MAX_CPS = 140;
+  var TYPEWRITER_DONE_BOOST_MULTIPLIER = 1.6;
+  var TYPEWRITER_MAX_CHARS_PER_FRAME = 4;
   var AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 24;
   var AUTO_SCROLL_DETECT_THRESHOLD_PX = 72;
   var PROGRAMMATIC_SCROLL_GUARD_MS = 240;
@@ -57,6 +58,11 @@
 
   window.App.chatCell.create = function (cellId, title, options) {
     var presenter = window.App.chatPresenter;
+    if (!presenter || typeof presenter.renderStreamingHtml !== 'function') {
+      console.warn('[ui] chat_presenter 스크립트 버전이 맞지 않습니다. 강력 새로고침(Ctrl+Shift+R)을 권장합니다.');
+    } else if (typeof presenter.renderRealtimeStreamingHtml !== 'function') {
+      console.warn('[ui] renderRealtimeStreamingHtml 미탑재 버전입니다. fallback 렌더를 사용합니다.');
+    }
     var seed = options || {};
     var state = {
       id: cellId,
@@ -79,8 +85,7 @@
       pendingDoneText: '',
       typewriterFrameId: null,
       lastTypewriterFrameMs: 0,
-      streamingTextElement: null,
-      streamingCaretElement: null
+      typewriterCredit: 0
     };
 
     var cell = window.App.utils.createEl('section', 'chat-cell');
@@ -213,40 +218,35 @@
     }
 
     function pickTypewriterCharsPerSecond(backlog) {
-      var target = Math.ceil(backlog / TYPEWRITER_TARGET_DRAIN_SECONDS);
-      var bounded = Math.max(TYPEWRITER_MIN_CPS, Math.min(TYPEWRITER_MAX_CPS, target));
-      return bounded;
-    }
-
-    function ensureStreamingElements() {
-      if (!state.activeBubble) {
-        return;
+      if (backlog <= 40) {
+        return TYPEWRITER_MIN_CPS;
       }
-      if (
-        state.streamingTextElement &&
-        state.streamingCaretElement &&
-        state.streamingTextElement.parentNode === state.activeBubble &&
-        state.streamingCaretElement.parentNode === state.activeBubble
-      ) {
-        return;
+      if (backlog <= 160) {
+        return 58;
       }
-      state.activeBubble.innerHTML = '';
-      state.streamingTextElement = window.App.utils.createEl('div', 'streaming-text');
-      state.streamingTextElement.textContent = state.visibleText;
-      state.streamingCaretElement = window.App.utils.createEl('span', 'typing-caret');
-      state.activeBubble.appendChild(state.streamingTextElement);
-      state.activeBubble.appendChild(state.streamingCaretElement);
+      if (backlog <= 400) {
+        return 86;
+      }
+      return TYPEWRITER_MAX_CPS;
     }
 
     function renderStreamingBubble() {
       if (!state.activeBubble) {
         return;
       }
-      ensureStreamingElements();
-      if (!state.streamingTextElement) {
-        return;
+      var renderRealtime = presenter && typeof presenter.renderRealtimeStreamingHtml === 'function'
+        ? presenter.renderRealtimeStreamingHtml
+        : null;
+      var renderFallback = presenter && typeof presenter.renderStreamingHtml === 'function'
+        ? presenter.renderStreamingHtml
+        : null;
+      if (renderRealtime) {
+        state.activeBubble.innerHTML = renderRealtime(state.visibleText, true);
+      } else if (renderFallback) {
+        state.activeBubble.innerHTML = renderFallback(state.visibleText, true);
+      } else {
+        state.activeBubble.textContent = state.visibleText;
       }
-      state.streamingTextElement.textContent = state.visibleText;
       scrollMessagesToBottom(isAutoScrollFollowing());
     }
 
@@ -254,9 +254,11 @@
       if (!state.activeBubble) {
         return;
       }
-      state.streamingTextElement = null;
-      state.streamingCaretElement = null;
-      state.activeBubble.innerHTML = presenter.renderStreamingHtml(text, false);
+      if (presenter && typeof presenter.renderStreamingHtml === 'function') {
+        state.activeBubble.innerHTML = presenter.renderStreamingHtml(text, false);
+      } else {
+        state.activeBubble.textContent = String(text || '');
+      }
       scrollMessagesToBottom(isAutoScrollFollowing());
     }
 
@@ -276,16 +278,27 @@
       }
 
       var previousTs = state.lastTypewriterFrameMs || timestamp;
-      var elapsedMs = Math.max(0, timestamp - previousTs);
+      var elapsedMs = Math.max(8, Math.min(80, timestamp - previousTs));
       state.lastTypewriterFrameMs = timestamp;
 
       var backlog = state.receivedText.length - state.visibleText.length;
       if (backlog > 0) {
         var cps = pickTypewriterCharsPerSecond(backlog);
-        var step = Math.max(1, Math.floor((cps * elapsedMs) / 1000));
-        var nextLength = Math.min(state.receivedText.length, state.visibleText.length + step);
-        state.visibleText = state.receivedText.slice(0, nextLength);
-        renderStreamingBubble();
+        if (state.doneEventReceived) {
+          cps = Math.min(TYPEWRITER_MAX_CPS, Math.floor(cps * TYPEWRITER_DONE_BOOST_MULTIPLIER));
+        }
+        state.typewriterCredit += (cps * elapsedMs) / 1000;
+        var rawStep = Math.floor(state.typewriterCredit);
+        var frameStepCap = state.doneEventReceived
+          ? TYPEWRITER_MAX_CHARS_PER_FRAME + 2
+          : TYPEWRITER_MAX_CHARS_PER_FRAME;
+        var step = Math.min(backlog, frameStepCap, Math.max(0, rawStep));
+        if (step > 0) {
+          state.typewriterCredit = Math.max(0, state.typewriterCredit - step);
+          var nextLength = Math.min(state.receivedText.length, state.visibleText.length + step);
+          state.visibleText = state.receivedText.slice(0, nextLength);
+          renderStreamingBubble();
+        }
       }
 
       if (state.doneEventReceived && state.visibleText.length >= state.receivedText.length) {
@@ -297,6 +310,7 @@
         state.typewriterFrameId = window.requestAnimationFrame(handleTypewriterFrame);
       } else {
         state.lastTypewriterFrameMs = 0;
+        state.typewriterCredit = Math.min(state.typewriterCredit, 1);
       }
     }
 
@@ -305,8 +319,9 @@
         return;
       }
       if (typeof window.requestAnimationFrame !== 'function') {
+        state.visibleText = state.receivedText;
         renderStreamingBubble();
-        if (state.doneEventReceived && state.visibleText.length >= state.receivedText.length) {
+        if (state.doneEventReceived) {
           finalizeSuccess(state.pendingDoneText || state.receivedText);
         }
         return;
@@ -324,8 +339,7 @@
       state.visibleText = '';
       state.doneEventReceived = false;
       state.pendingDoneText = '';
-      state.streamingTextElement = null;
-      state.streamingCaretElement = null;
+      state.typewriterCredit = 0;
     }
 
     function finalizeSuccess(finalText) {
@@ -351,8 +365,6 @@
       var safeMessage = message && String(message).trim() ? String(message).trim() : '응답 생성에 실패했습니다.';
       if (state.activeBubble && !state.tokenBuffer) {
         state.activeBubble.innerHTML = '<p>' + escapeHtml('오류: ' + safeMessage) + '</p>';
-        state.streamingTextElement = null;
-        state.streamingCaretElement = null;
       }
       presenter.setStatus(status, '실패: ' + safeMessage, false, 'FAIL', false);
       finishSending();
@@ -648,8 +660,7 @@
       state.finalized = false;
       state.doneEventReceived = false;
       state.pendingDoneText = '';
-      state.streamingTextElement = null;
-      state.streamingCaretElement = null;
+      state.typewriterCredit = 0;
       renderStreamingBubble();
 
       window.App.apiTransport

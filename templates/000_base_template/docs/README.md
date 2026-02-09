@@ -7,7 +7,7 @@
 ```mermaid
 graph LR
     U[Client] --> M[api/main.py]
-    M --> UI[static/index.html (/ui)]
+    M --> UI[static/index.html]
     UI --> G1[static/js/ui/grid_manager.js]
     UI --> P1[static/js/chat/chat_presenter.js]
     UI --> C1[static/js/chat/chat_cell.js]
@@ -189,7 +189,7 @@ QUEUED -> RUNNING -> FAILED
 2. `PAUSED_BY_USER`: 사용자가 위로 스크롤하면 자동 추적을 중단한다.
 3. 사용자가 다시 하단 근처로 이동하면 `FOLLOWING`으로 복귀한다.
 4. 스트림 수신 버퍼와 화면 표시 버퍼를 분리해 서버 chunk 크기와 UI 표시 속도를 분리한다.
-5. 스트리밍 중간 렌더는 경량 텍스트로 제한하고, `done`에서 최종 마크다운 렌더를 확정한다.
+5. 스트리밍 중간 렌더에서도 마크다운/문법 강조를 즉시 반영하고, `done`에서 최종 렌더를 확정한다.
 6. 자동 스크롤 보정은 `requestAnimationFrame` 다중 프레임으로 수행해 레이아웃 반영 지연을 흡수한다.
 
 ### Static 스크롤 트러블슈팅

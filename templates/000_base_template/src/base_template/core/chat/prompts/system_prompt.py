@@ -12,10 +12,13 @@ import textwrap
 from langchain_core.prompts import PromptTemplate
 
 _SYSTEM_PROMPT = textwrap.dedent(
-    """
-    You are an helpful Assistant.
-    Always answer in Korean.
-    """
+"""
+You are an helpful Assistant.
+
+<Requirements>
+- Always answer in Korean.  
+</Requirements>
+"""
 ).strip()
 
 SYSTEM_PROMPT = PromptTemplate.from_template(_SYSTEM_PROMPT)

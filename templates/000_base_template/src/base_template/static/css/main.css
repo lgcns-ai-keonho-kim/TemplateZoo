@@ -766,7 +766,10 @@ html[data-theme="dark"] .btn-ghost .icon-lg {
 
 .markdown h1,
 .markdown h2,
-.markdown h3 {
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
   margin: 0 0 8px;
   font-weight: 700;
 }

@@ -60,6 +60,14 @@
     return safeMarkdown;
   };
 
+  window.App.chatPresenter.renderRealtimeStreamingHtml = function (text, withCaret) {
+    var safeMarkdown = window.App.markdown.render(String(text || ''));
+    if (withCaret) {
+      return safeMarkdown + '<span class="typing-caret"></span>';
+    }
+    return safeMarkdown;
+  };
+
   window.App.chatPresenter.setStatus = function (statusEl, text, showSpinner, stage, isActive) {
     var label = statusEl.querySelector('.status-text');
     var pill = statusEl.querySelector('.status-pill');

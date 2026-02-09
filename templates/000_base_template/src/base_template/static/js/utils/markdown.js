@@ -33,8 +33,11 @@
   }
 
   /** @param {string} code */
-  function renderCodeBlock(code, language) {
-    var highlighted = window.App.syntax.highlight(code, language);
+  function renderCodeBlock(code, language, options) {
+    var disableSyntaxHighlight = Boolean(options && options.disableSyntaxHighlight);
+    var highlighted = disableSyntaxHighlight
+      ? escapeHtml(code)
+      : window.App.syntax.highlight(code, language);
     var langClass = language ? ' language-' + escapeHtml(language) : '';
     return '<pre><code class="' + langClass + '">' + highlighted + '</code></pre>';
   }
@@ -66,7 +69,7 @@
           codeBuffer = [];
         } else {
           inCode = false;
-          html += renderCodeBlock(codeBuffer.join('\n'), codeLang);
+          html += renderCodeBlock(codeBuffer.join('\n'), codeLang, options);
           codeLang = '';
           codeBuffer = [];
         }
@@ -90,16 +93,11 @@
 
       flushList();
 
-      if (trimmed.startsWith('# ')) {
-        html += '<h1>' + renderInline(trimmed.slice(2), options) + '</h1>';
-        return;
-      }
-      if (trimmed.startsWith('## ')) {
-        html += '<h2>' + renderInline(trimmed.slice(3), options) + '</h2>';
-        return;
-      }
-      if (trimmed.startsWith('### ')) {
-        html += '<h3>' + renderInline(trimmed.slice(4), options) + '</h3>';
+      var headingMatch = /^(#{1,6})\s+(.+)$/.exec(trimmed);
+      if (headingMatch) {
+        var headingLevel = headingMatch[1].length;
+        var headingText = headingMatch[2];
+        html += '<h' + headingLevel + '>' + renderInline(headingText, options) + '</h' + headingLevel + '>';
         return;
       }
 
@@ -114,7 +112,7 @@
     flushList();
 
     if (inCode) {
-      html += renderCodeBlock(codeBuffer.join('\n'), codeLang);
+      html += renderCodeBlock(codeBuffer.join('\n'), codeLang, options);
     }
 
     return html;
