@@ -9,20 +9,15 @@ from base_template.api.chat.models.message import (
     MessageListResponse,
     MessageResponse,
 )
-from base_template.api.chat.models.queue import (
-    QueueMessageRequest,
-    QueueMessageResponse,
-)
-from base_template.api.chat.models.result import TaskResultResponse
 from base_template.api.chat.models.session import (
     CreateSessionRequest,
     CreateSessionResponse,
     SessionListResponse,
     SessionSummaryResponse,
 )
-from base_template.api.chat.models.status import TaskStatus, TaskStatusResponse
 from base_template.api.chat.models.stream import (
     StreamEventType,
+    StreamMessageRequest,
     StreamPayload,
 )
 
@@ -31,12 +26,8 @@ __all__ = [
     "CreateSessionResponse",
     "SessionSummaryResponse",
     "SessionListResponse",
-    "QueueMessageRequest",
-    "QueueMessageResponse",
-    "TaskStatus",
-    "TaskStatusResponse",
-    "TaskResultResponse",
     "StreamEventType",
+    "StreamMessageRequest",
     "StreamPayload",
     "MessageResponse",
     "MessageListResponse",

@@ -56,6 +56,31 @@ class Logger(ABC):
     def with_context(self, context: LogContext) -> "Logger":
         """컨텍스트가 합쳐진 새 로거를 반환한다."""
 
+    def debug(self, message: str, context: Optional[LogContext] = None) -> None:
+        """DEBUG 레벨 로그를 기록한다."""
+
+        self.log(LogLevel.DEBUG, message, context)
+
+    def info(self, message: str, context: Optional[LogContext] = None) -> None:
+        """INFO 레벨 로그를 기록한다."""
+
+        self.log(LogLevel.INFO, message, context)
+
+    def warning(self, message: str, context: Optional[LogContext] = None) -> None:
+        """WARNING 레벨 로그를 기록한다."""
+
+        self.log(LogLevel.WARNING, message, context)
+
+    def error(self, message: str, context: Optional[LogContext] = None) -> None:
+        """ERROR 레벨 로그를 기록한다."""
+
+        self.log(LogLevel.ERROR, message, context)
+
+    def critical(self, message: str, context: Optional[LogContext] = None) -> None:
+        """CRITICAL 레벨 로그를 기록한다."""
+
+        self.log(LogLevel.CRITICAL, message, context)
+
 
 class InMemoryLogger(Logger):
     """인메모리 로거 구현체."""

@@ -119,112 +119,142 @@
     return requestJson('DELETE', path);
   };
 
-  window.App.apiTransport.queueMessage = function (sessionId, message, contextWindow) {
+  window.App.apiTransport.streamMessage = function (sessionId, message, contextWindow, handlers) {
     var payload = {
       message: String(message || ''),
       context_window: Math.max(1, Number(contextWindow) || DEFAULT_CONTEXT_WINDOW)
     };
-    var path = '/chat/sessions/' + encodeSegment(sessionId) + '/queue';
-    return requestJson('POST', path, payload);
-  };
-
-  window.App.apiTransport.getTaskStatus = function (sessionId, taskId) {
-    var path =
-      '/chat/sessions/' +
-      encodeSegment(sessionId) +
-      '/tasks/' +
-      encodeSegment(taskId) +
-      '/status';
-    return requestJson('GET', path);
-  };
-
-  window.App.apiTransport.getTaskResult = function (sessionId, taskId) {
-    var path =
-      '/chat/sessions/' +
-      encodeSegment(sessionId) +
-      '/tasks/' +
-      encodeSegment(taskId) +
-      '/result';
-    return requestJson('GET', path);
-  };
-
-  window.App.apiTransport.streamTask = function (sessionId, taskId, handlers) {
-    var path =
-      '/chat/sessions/' +
-      encodeSegment(sessionId) +
-      '/tasks/' +
-      encodeSegment(taskId) +
-      '/stream';
-    var source = new EventSource(buildPath(path));
+    var path = '/chat/sessions/' + encodeSegment(sessionId) + '/messages/stream';
+    var controller = new AbortController();
     var closed = false;
-    var reconnectGraceMs = Math.max(0, Number(handlers && handlers.reconnectGraceMs) || 8000);
-    var errorSince = null;
+    var decoder = new TextDecoder();
+    var buffer = '';
 
     function safeClose() {
       if (closed) {
         return;
       }
       closed = true;
-      source.close();
+      controller.abort();
       if (handlers && typeof handlers.onClose === 'function') {
         handlers.onClose();
       }
     }
 
-    source.onopen = function () {
-      if (closed) {
-        return;
-      }
-      errorSince = null;
-      if (handlers && typeof handlers.onOpen === 'function') {
-        handlers.onOpen();
-      }
-    };
-
-    source.onmessage = function (event) {
-      if (closed) {
-        return;
-      }
-      errorSince = null;
-      var payload = null;
-      try {
-        payload = JSON.parse(event.data);
-      } catch (error) {
-        if (handlers && typeof handlers.onError === 'function') {
-          handlers.onError(new Error('SSE payload 파싱에 실패했습니다.'));
-        }
-        safeClose();
-        return;
-      }
-
-      if (handlers && typeof handlers.onEvent === 'function') {
-        handlers.onEvent(payload);
-      }
-
-      if (payload && (payload.type === 'done' || payload.type === 'error')) {
-        safeClose();
-      }
-    };
-
-    source.onerror = function () {
-      if (closed) {
-        return;
-      }
-      if (errorSince === null) {
-        errorSince = Date.now();
-      }
-      if (handlers && typeof handlers.onTransientError === 'function') {
-        handlers.onTransientError();
-      }
-      var elapsed = Date.now() - errorSince;
-      if (elapsed < reconnectGraceMs) {
-        return;
-      }
+    function notifyError(error) {
       if (handlers && typeof handlers.onError === 'function') {
-        handlers.onError(new Error('SSE 연결이 복구되지 않았습니다.'));
+        handlers.onError(error);
       }
       safeClose();
-    };
+    }
+
+    function parseSseChunk(raw) {
+      var lines = String(raw || '').split('\n');
+      var dataLines = [];
+      for (var i = 0; i < lines.length; i += 1) {
+        var line = lines[i];
+        if (!line || line.charAt(0) === ':') {
+          continue;
+        }
+        if (line.indexOf('data:') === 0) {
+          dataLines.push(line.slice(5).trimStart());
+        }
+      }
+      if (!dataLines.length) {
+        return null;
+      }
+      return dataLines.join('\n');
+    }
+
+    function processBuffer() {
+      while (true) {
+        var sepIndex = buffer.indexOf('\n\n');
+        if (sepIndex < 0) {
+          return;
+        }
+        var block = buffer.slice(0, sepIndex);
+        buffer = buffer.slice(sepIndex + 2);
+        var dataText = parseSseChunk(block);
+        if (!dataText) {
+          continue;
+        }
+        var parsed = null;
+        try {
+          parsed = JSON.parse(dataText);
+        } catch (error) {
+          notifyError(new Error('SSE payload 파싱에 실패했습니다.'));
+          return;
+        }
+        if (handlers && typeof handlers.onEvent === 'function') {
+          handlers.onEvent(parsed);
+        }
+        if (parsed && (parsed.type === 'done' || parsed.type === 'error')) {
+          safeClose();
+          return;
+        }
+      }
+    }
+
+    fetch(buildPath(path), {
+      method: 'POST',
+      headers: {
+        'Accept': 'text/event-stream',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    })
+      .then(function (response) {
+        if (!response.ok) {
+          return response
+            .text()
+            .then(function (text) {
+              var payload = null;
+              if (text) {
+                try {
+                  payload = JSON.parse(text);
+                } catch (ignoreError) {
+                  payload = null;
+                }
+              }
+              var message = parseErrorMessage(payload) || ('요청 처리에 실패했습니다. status=' + response.status);
+              throw new Error(message);
+            });
+        }
+        if (handlers && typeof handlers.onOpen === 'function') {
+          handlers.onOpen();
+        }
+        if (!response.body || typeof response.body.getReader !== 'function') {
+          throw new Error('스트리밍 본문을 읽을 수 없습니다.');
+        }
+        var reader = response.body.getReader();
+        function pump() {
+          return reader
+            .read()
+            .then(function (result) {
+              if (closed) {
+                return;
+              }
+              if (result.done) {
+                safeClose();
+                return;
+              }
+              buffer += decoder.decode(result.value, { stream: true });
+              processBuffer();
+              if (closed) {
+                return;
+              }
+              return pump();
+            });
+        }
+        return pump();
+      })
+      .catch(function (error) {
+        if (closed) {
+          return;
+        }
+        notifyError(error instanceof Error ? error : new Error(String(error || '스트림 요청에 실패했습니다.')));
+      });
 
     return {
       close: safeClose

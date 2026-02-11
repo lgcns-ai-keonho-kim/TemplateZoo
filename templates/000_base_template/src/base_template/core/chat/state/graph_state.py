@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 from base_template.core.chat.models import ChatMessage
 
@@ -18,4 +18,7 @@ class ChatGraphState(TypedDict):
     session_id: str
     user_message: str
     history: list[ChatMessage]
+    safeguard_result: NotRequired[str]
+    safeguard_route: NotRequired[str]
+    safeguard_reason: NotRequired[str]
     assistant_message: str

@@ -1,6 +1,6 @@
 /*
   목적: 개별 채팅 셀 UI 및 API 연동 동작을 처리한다.
-  설명: 사용자 입력, 큐 등록, SSE 스트림, 오류 복구, 리소스 정리를 구현한다.
+  설명: 사용자 입력과 단일 SSE 스트림 응답 처리, 리소스 정리를 구현한다.
   디자인 패턴: 상태 캡슐화 컴포넌트
   참조: js/chat/api_transport.js, js/chat/chat_presenter.js
 */
@@ -12,14 +12,6 @@
 
   var escapeHtml = window.App.utils.escapeHtml;
   var DEFAULT_CONTEXT_WINDOW = 20;
-  var RESULT_POLL_INTERVAL_MS = 250;
-  var MAX_RESULT_POLL_COUNT = 1000;
-  var MAX_STREAM_RETRY_COUNT = 3;
-  var STREAM_RETRY_DELAYS_MS = [400, 800, 1200];
-  var TYPEWRITER_MIN_CPS = 42;
-  var TYPEWRITER_MAX_CPS = 140;
-  var TYPEWRITER_DONE_BOOST_MULTIPLIER = 1.6;
-  var TYPEWRITER_MAX_CHARS_PER_FRAME = 4;
   var AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 24;
   var AUTO_SCROLL_DETECT_THRESHOLD_PX = 72;
   var PROGRAMMATIC_SCROLL_GUARD_MS = 240;
@@ -51,11 +43,6 @@
     pinToBottom(container);
   }
 
-  function pickStreamRetryDelay(retryCount) {
-    var index = Math.max(0, Math.min(retryCount - 1, STREAM_RETRY_DELAYS_MS.length - 1));
-    return STREAM_RETRY_DELAYS_MS[index];
-  }
-
   window.App.chatCell.create = function (cellId, title, options) {
     var presenter = window.App.chatPresenter;
     if (!presenter || typeof presenter.renderStreamingHtml !== 'function') {
@@ -72,20 +59,11 @@
       finalized: false,
       activeBubble: null,
       streamHandle: null,
-      currentTaskId: null,
       tokenBuffer: '',
       receivedText: '',
-      visibleText: '',
-      streamRetryCount: 0,
-      resultPollCount: 0,
       timers: [],
       scrollMode: SCROLL_MODE_FOLLOWING,
-      programmaticScrollUntil: 0,
-      doneEventReceived: false,
-      pendingDoneText: '',
-      typewriterFrameId: null,
-      lastTypewriterFrameMs: 0,
-      typewriterCredit: 0
+      programmaticScrollUntil: 0
     };
 
     var cell = window.App.utils.createEl('section', 'chat-cell');
@@ -168,7 +146,6 @@
         clearTimeout(timerId);
       });
       state.timers = [];
-      cancelTypewriterFrame();
     }
 
     function detachStream() {
@@ -209,27 +186,6 @@
       return created;
     }
 
-    function cancelTypewriterFrame() {
-      if (state.typewriterFrameId !== null && typeof window.cancelAnimationFrame === 'function') {
-        window.cancelAnimationFrame(state.typewriterFrameId);
-      }
-      state.typewriterFrameId = null;
-      state.lastTypewriterFrameMs = 0;
-    }
-
-    function pickTypewriterCharsPerSecond(backlog) {
-      if (backlog <= 40) {
-        return TYPEWRITER_MIN_CPS;
-      }
-      if (backlog <= 160) {
-        return 58;
-      }
-      if (backlog <= 400) {
-        return 86;
-      }
-      return TYPEWRITER_MAX_CPS;
-    }
-
     function renderStreamingBubble() {
       if (!state.activeBubble) {
         return;
@@ -241,11 +197,11 @@
         ? presenter.renderStreamingHtml
         : null;
       if (renderRealtime) {
-        state.activeBubble.innerHTML = renderRealtime(state.visibleText, true);
+        state.activeBubble.innerHTML = renderRealtime(state.receivedText, true);
       } else if (renderFallback) {
-        state.activeBubble.innerHTML = renderFallback(state.visibleText, true);
+        state.activeBubble.innerHTML = renderFallback(state.receivedText, true);
       } else {
-        state.activeBubble.textContent = state.visibleText;
+        state.activeBubble.textContent = state.receivedText;
       }
       scrollMessagesToBottom(isAutoScrollFollowing());
     }
@@ -270,76 +226,11 @@
       scrollToBottom(messages, true);
     }
 
-    function handleTypewriterFrame(timestamp) {
-      state.typewriterFrameId = null;
-      if (state.finalized || state.destroyed || !state.isSending || !state.activeBubble) {
-        state.lastTypewriterFrameMs = 0;
-        return;
-      }
-
-      var previousTs = state.lastTypewriterFrameMs || timestamp;
-      var elapsedMs = Math.max(8, Math.min(80, timestamp - previousTs));
-      state.lastTypewriterFrameMs = timestamp;
-
-      var backlog = state.receivedText.length - state.visibleText.length;
-      if (backlog > 0) {
-        var cps = pickTypewriterCharsPerSecond(backlog);
-        if (state.doneEventReceived) {
-          cps = Math.min(TYPEWRITER_MAX_CPS, Math.floor(cps * TYPEWRITER_DONE_BOOST_MULTIPLIER));
-        }
-        state.typewriterCredit += (cps * elapsedMs) / 1000;
-        var rawStep = Math.floor(state.typewriterCredit);
-        var frameStepCap = state.doneEventReceived
-          ? TYPEWRITER_MAX_CHARS_PER_FRAME + 2
-          : TYPEWRITER_MAX_CHARS_PER_FRAME;
-        var step = Math.min(backlog, frameStepCap, Math.max(0, rawStep));
-        if (step > 0) {
-          state.typewriterCredit = Math.max(0, state.typewriterCredit - step);
-          var nextLength = Math.min(state.receivedText.length, state.visibleText.length + step);
-          state.visibleText = state.receivedText.slice(0, nextLength);
-          renderStreamingBubble();
-        }
-      }
-
-      if (state.doneEventReceived && state.visibleText.length >= state.receivedText.length) {
-        finalizeSuccess(state.pendingDoneText || state.receivedText);
-        return;
-      }
-
-      if (state.receivedText.length > state.visibleText.length || state.doneEventReceived) {
-        state.typewriterFrameId = window.requestAnimationFrame(handleTypewriterFrame);
-      } else {
-        state.lastTypewriterFrameMs = 0;
-        state.typewriterCredit = Math.min(state.typewriterCredit, 1);
-      }
-    }
-
-    function startTypewriterLoop() {
-      if (state.typewriterFrameId !== null) {
-        return;
-      }
-      if (typeof window.requestAnimationFrame !== 'function') {
-        state.visibleText = state.receivedText;
-        renderStreamingBubble();
-        if (state.doneEventReceived) {
-          finalizeSuccess(state.pendingDoneText || state.receivedText);
-        }
-        return;
-      }
-      state.typewriterFrameId = window.requestAnimationFrame(handleTypewriterFrame);
-    }
-
     function finishSending() {
-      cancelTypewriterFrame();
       detachStream();
       presenter.setSendingState(state, false, sendBtn, stopBtn, input);
-      state.currentTaskId = null;
       state.activeBubble = null;
       state.receivedText = '';
-      state.visibleText = '';
-      state.doneEventReceived = false;
-      state.pendingDoneText = '';
-      state.typewriterCredit = 0;
     }
 
     function finalizeSuccess(finalText) {
@@ -349,7 +240,7 @@
       state.finalized = true;
       var resolvedText = typeof finalText === 'string'
         ? finalText
-        : (state.pendingDoneText || state.receivedText || state.tokenBuffer || '');
+        : (state.receivedText || state.tokenBuffer || '');
       renderFinalBubble(resolvedText);
       updateHistory(presenter.firstLine(resolvedText));
       presenter.setStatus(status, '완료', false, 'DONE', false);
@@ -371,160 +262,17 @@
       hideStatusLater(2000);
     }
 
-    function scheduleResultPoll(lastError) {
-      if (state.finalized || state.destroyed || !state.isSending) {
-        return;
-      }
-      state.resultPollCount += 1;
-      if (state.resultPollCount > MAX_RESULT_POLL_COUNT) {
-        if (state.tokenBuffer && state.tokenBuffer.trim()) {
-          finalizeSuccess(state.tokenBuffer);
-          return;
-        }
-        var timeoutMessage = lastError && lastError.message
-          ? lastError.message
-          : '결과 확정 대기 시간이 초과되었습니다.';
-        finalizeError(timeoutMessage);
-        return;
-      }
-      addTimer(function () {
-        finalizeFromResult();
-      }, RESULT_POLL_INTERVAL_MS);
-    }
-
-    function finalizeFromResult() {
-      var taskId = state.currentTaskId;
-      if (!taskId) {
-        if (state.tokenBuffer) {
-          finalizeSuccess(state.tokenBuffer);
-          return;
-        }
-        finalizeError('태스크 식별자를 찾을 수 없습니다.');
-        return;
-      }
-
-      window.App.apiTransport
-        .getTaskResult(state.sessionId, taskId)
-        .then(function (result) {
-          if (state.finalized || state.destroyed || !state.isSending) {
-            return;
-          }
-          var currentStatus = result && result.status ? String(result.status) : '';
-          if (currentStatus === 'FAILED') {
-            finalizeError(result.error_message || '응답 생성에 실패했습니다.');
-            return;
-          }
-          if (currentStatus !== 'COMPLETED') {
-            scheduleResultPoll();
-            return;
-          }
-
-          state.resultPollCount = 0;
-          var finalText = state.tokenBuffer;
-          if (
-            result &&
-            result.assistant_message &&
-            typeof result.assistant_message.content === 'string' &&
-            result.assistant_message.content.trim()
-          ) {
-            finalText = result.assistant_message.content;
-          }
-          if (finalText && finalText.trim()) {
-            if (!state.tokenBuffer || finalText.indexOf(state.tokenBuffer) === 0) {
-              state.tokenBuffer = finalText;
-            }
-            if (!state.receivedText || finalText.indexOf(state.receivedText) === 0) {
-              state.receivedText = finalText;
-            }
-            state.pendingDoneText = finalText;
-            state.doneEventReceived = true;
-            startTypewriterLoop();
-            return;
-          }
-          finalizeSuccess('');
-        })
-        .catch(function (error) {
-          if (state.finalized || state.destroyed || !state.isSending) {
-            return;
-          }
-          if (state.tokenBuffer && state.tokenBuffer.trim()) {
-            state.receivedText = state.tokenBuffer;
-            state.pendingDoneText = state.tokenBuffer;
-            state.doneEventReceived = true;
-            startTypewriterLoop();
-            return;
-          }
-          scheduleResultPoll(error);
-        });
-    }
-
-    function recoverAfterStreamError(message) {
-      if (state.finalized || state.destroyed || !state.isSending) {
-        return;
-      }
-      var taskId = state.currentTaskId;
-      if (!taskId) {
-        finalizeError(message || '스트림 연결에 실패했습니다.');
-        return;
-      }
-
-      window.App.apiTransport
-        .getTaskStatus(state.sessionId, taskId)
-        .then(function (statusResponse) {
-          if (state.finalized || state.destroyed || !state.isSending) {
-            return;
-          }
-          var taskStatus = statusResponse && statusResponse.status ? String(statusResponse.status) : '';
-          if (taskStatus === 'FAILED') {
-            finalizeError(statusResponse.error_message || message || '응답 생성에 실패했습니다.');
-            return;
-          }
-          if (taskStatus === 'COMPLETED') {
-            finalizeFromResult();
-            return;
-          }
-
-          state.streamRetryCount += 1;
-          if (state.streamRetryCount > MAX_STREAM_RETRY_COUNT) {
-            finalizeError('스트림 재연결 횟수를 초과했습니다.');
-            return;
-          }
-          presenter.setStatus(
-            status,
-            '스트림 재연결중... (' + state.streamRetryCount + '/' + MAX_STREAM_RETRY_COUNT + ')',
-            true,
-            'STREAM',
-            true
-          );
-          addTimer(function () {
-            connectStream(taskId);
-          }, pickStreamRetryDelay(state.streamRetryCount));
-        })
-        .catch(function (error) {
-          if (state.finalized || state.destroyed || !state.isSending) {
-            return;
-          }
-          if (state.tokenBuffer && state.tokenBuffer.trim()) {
-            scheduleResultPoll(error);
-            return;
-          }
-          finalizeError(error && error.message ? error.message : message || '스트림 복구에 실패했습니다.');
-        });
-    }
-
-    function connectStream(taskId) {
+    function connectStream(userMessage) {
       if (state.finalized || state.destroyed || !state.isSending) {
         return;
       }
       detachStream();
       presenter.setStatus(status, '스트림 연결중', true, 'STREAM', true);
-      state.streamHandle = window.App.apiTransport.streamTask(state.sessionId, taskId, {
-        reconnectGraceMs: 8000,
+      state.streamHandle = window.App.apiTransport.streamMessage(state.sessionId, userMessage, DEFAULT_CONTEXT_WINDOW, {
         onOpen: function () {
           if (state.finalized || state.destroyed || !state.isSending) {
             return;
           }
-          state.streamRetryCount = 0;
           presenter.setStatus(status, '응답 생성중', true, 'STREAM', true);
         },
         onEvent: function (payload) {
@@ -543,8 +291,7 @@
             }
             state.tokenBuffer += chunk;
             state.receivedText = state.tokenBuffer;
-            state.streamRetryCount = 0;
-            startTypewriterLoop();
+            renderStreamingBubble();
             presenter.setStatus(status, '응답 수신중', true, 'STREAM', true);
             return;
           }
@@ -558,23 +305,7 @@
               finalizeError(payload && payload.error_message ? payload.error_message : '응답 생성에 실패했습니다.');
               return;
             }
-            var doneText = '';
-            if (
-              payload &&
-              typeof payload.final_content === 'string' &&
-              payload.final_content.trim()
-            ) {
-              doneText = payload.final_content;
-            } else if (
-              payload &&
-              payload.assistant_message &&
-              typeof payload.assistant_message.content === 'string' &&
-              payload.assistant_message.content.trim()
-            ) {
-              doneText = payload.assistant_message.content;
-            } else if (state.tokenBuffer && state.tokenBuffer.trim()) {
-              doneText = state.tokenBuffer;
-            }
+            var doneText = state.tokenBuffer && state.tokenBuffer.trim() ? state.tokenBuffer : '';
             if (doneText) {
               if (!state.tokenBuffer || doneText.indexOf(state.tokenBuffer) === 0) {
                 state.tokenBuffer = doneText;
@@ -582,16 +313,22 @@
               if (!state.receivedText || doneText.indexOf(state.receivedText) === 0) {
                 state.receivedText = doneText;
               }
-              state.pendingDoneText = doneText;
-              state.doneEventReceived = true;
-              startTypewriterLoop();
+              renderStreamingBubble();
+              finalizeSuccess(doneText);
               return;
             }
-            finalizeFromResult();
+            finalizeSuccess(state.tokenBuffer || '');
           }
         },
         onError: function (error) {
-          recoverAfterStreamError(error && error.message ? error.message : '스트림 연결에 실패했습니다.');
+          if (state.finalized || state.destroyed || !state.isSending) {
+            return;
+          }
+          if (state.tokenBuffer && state.tokenBuffer.trim()) {
+            finalizeSuccess(state.tokenBuffer);
+            return;
+          }
+          finalizeError(error && error.message ? error.message : '스트림 연결에 실패했습니다.');
         }
       });
     }
@@ -627,7 +364,6 @@
       }
       state.finalized = true;
       presenter.setSendingState(state, false, sendBtn, stopBtn, input);
-      state.currentTaskId = null;
       state.activeBubble = null;
       status.classList.add('is-visible');
       presenter.setStatus(status, '수신 중지', false, 'STOP', false);
@@ -647,35 +383,16 @@
       addUserMessage(text);
       presenter.setSendingState(state, true, sendBtn, stopBtn, input);
       status.classList.add('is-visible');
-      presenter.setStatus(status, '큐 등록중...', true, 'QUEUE', true);
+      presenter.setStatus(status, '요청 전송중...', true, 'STREAM', true);
 
       var assistantMessage = addAssistantPlaceholder();
       state.activeBubble = assistantMessage.bubble.querySelector('.markdown');
-      state.currentTaskId = null;
       state.tokenBuffer = '';
       state.receivedText = '';
-      state.visibleText = '';
-      state.streamRetryCount = 0;
-      state.resultPollCount = 0;
       state.finalized = false;
-      state.doneEventReceived = false;
-      state.pendingDoneText = '';
-      state.typewriterCredit = 0;
       renderStreamingBubble();
 
-      window.App.apiTransport
-        .queueMessage(state.sessionId, text, DEFAULT_CONTEXT_WINDOW)
-        .then(function (response) {
-          if (!state.isSending || state.finalized || state.destroyed) {
-            return;
-          }
-          state.currentTaskId = response.task_id;
-          presenter.setStatus(status, '큐 등록 완료', true, 'QUEUE', true);
-          connectStream(response.task_id);
-        })
-        .catch(function (error) {
-          finalizeError(error && error.message ? error.message : '큐 등록에 실패했습니다.');
-        });
+      connectStream(text);
     }
 
     function onSendClick() {
@@ -736,7 +453,6 @@
       clearTimers();
       detachStream();
       presenter.setSendingState(state, false, sendBtn, stopBtn, input);
-      state.currentTaskId = null;
       state.activeBubble = null;
 
       sendBtn.removeEventListener('click', onSendClick);

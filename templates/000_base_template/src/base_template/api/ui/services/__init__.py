@@ -7,14 +7,14 @@
 
 from __future__ import annotations
 
-from base_template.api.chat.services import get_chat_api_service
+from base_template.api.chat.services import get_chat_service
 from base_template.api.ui.services.chat_service import ChatUIService
 
 
 def get_chat_ui_service() -> ChatUIService:
     """UI 조회 서비스 인스턴스를 생성한다."""
 
-    return ChatUIService(chat_service=get_chat_api_service())
+    return ChatUIService(chat_service=get_chat_service())
 
 
 __all__ = ["ChatUIService", "get_chat_ui_service"]
