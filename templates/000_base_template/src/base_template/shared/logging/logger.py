@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+import json
+import os
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Iterable, List, Optional
@@ -90,10 +92,12 @@ class InMemoryLogger(Logger):
         name: str,
         repository: Optional[LogRepository] = None,
         base_context: Optional[LogContext] = None,
+        emit_stdout: Optional[bool] = None,
     ) -> None:
         self._name = name
         self._repository = repository or InMemoryLogRepository()
         self._base_context = base_context
+        self._emit_stdout = _read_emit_stdout_env() if emit_stdout is None else emit_stdout
 
     @property
     def repository(self) -> LogRepository:
@@ -118,6 +122,8 @@ class InMemoryLogger(Logger):
             metadata=metadata or {},
         )
         self._repository.add(record)
+        if self._emit_stdout:
+            self._write_stdout(record)
 
     def debug(self, message: str, context: Optional[LogContext] = None) -> None:
         self.log(LogLevel.DEBUG, message, context)
@@ -140,6 +146,7 @@ class InMemoryLogger(Logger):
             name=self._name,
             repository=self._repository,
             base_context=merged,
+            emit_stdout=self._emit_stdout,
         )
 
     def _merge_context(self, context: Optional[LogContext]) -> Optional[LogContext]:
@@ -155,6 +162,27 @@ class InMemoryLogger(Logger):
             user_id=context.user_id or self._base_context.user_id,
             tags=merged_tags,
         )
+
+    def _write_stdout(self, record: LogRecord) -> None:
+        timestamp = record.timestamp.astimezone(timezone.utc).isoformat()
+        payload: dict[str, object] = {
+            "timestamp": timestamp,
+            "level": record.level.value,
+            "logger": record.logger_name,
+            "message": record.message,
+        }
+        if record.context is not None:
+            payload["context"] = record.context.model_dump(exclude_none=True)
+        if record.metadata:
+            payload["metadata"] = record.metadata
+        print(json.dumps(payload, ensure_ascii=False), flush=True)
+
+
+def _read_emit_stdout_env() -> bool:
+    raw = os.getenv("LOG_STDOUT")
+    if raw is None:
+        return False
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def create_default_logger(name: str) -> InMemoryLogger:

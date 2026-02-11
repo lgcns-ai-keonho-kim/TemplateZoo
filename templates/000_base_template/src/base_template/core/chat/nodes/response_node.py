@@ -17,7 +17,7 @@ from base_template.shared.chat.nodes import LLMNode
 
 _model = ChatGoogleGenerativeAI(
     model=os.getenv("GEMINI_MODEL_NAME"),
-    google_api_key=os.getenv("GEMINI_API_KEY"),
+    api_key=os.getenv("GEMINI_API_KEY"),
 )
 
 # NOTE: name은 로깅 구분용 식별자이다.

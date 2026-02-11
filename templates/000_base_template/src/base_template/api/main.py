@@ -11,10 +11,6 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from base_template.api.chat.routers import router as chat_router
-from base_template.api.chat.services import shutdown_chat_api_service
-from base_template.api.health.routers.server import router as health_router
-from base_template.api.ui.routers import router as ui_chat_router
 from base_template.shared.config import RuntimeEnvironmentLoader
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -22,6 +18,14 @@ STATIC_DIR = BASE_DIR / "static"
 
 # 런타임 환경(local/dev/stg/prod)을 판별해 환경 파일을 로드한다.
 RUNTIME_ENV = RuntimeEnvironmentLoader().load()
+
+# NOTE:
+# .env 로딩 이후에 라우터/서비스를 import해야, import 시점에 생성되는 노드/모델이
+# 최신 환경 변수를 정상적으로 읽을 수 있다.
+from base_template.api.chat.routers import router as chat_router
+from base_template.api.chat.services import shutdown_chat_api_service
+from base_template.api.health.routers.server import router as health_router
+from base_template.api.ui.routers import router as ui_chat_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
