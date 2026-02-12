@@ -80,6 +80,15 @@ class ChatServicePort(Protocol):
     def delete_session(self, session_id: str) -> None:
         """세션을 삭제한다."""
 
+    def persist_assistant_message(
+        self,
+        session_id: str,
+        request_id: str,
+        content: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> bool:
+        """assistant 응답을 request_id 멱등성 기준으로 저장한다."""
+
     def invoke(self, session_id: str, user_query: str, context_window: int = 20) -> Any:
         """동기 실행 결과를 반환한다."""
 
@@ -106,5 +115,16 @@ class ChatServicePort(Protocol):
 class ServiceExecutorPort(Protocol):
     """실행 오케스트레이터 포트."""
 
-    def run_stream(self, session_id: str, user_query: str, context_window: int) -> Iterator[str]:
-        """SSE 스트림을 생성한다."""
+    def submit_job(
+        self,
+        session_id: str | None,
+        user_query: str,
+        context_window: int,
+    ) -> dict[str, str]:
+        """작업 큐에 채팅 실행 요청을 적재한다."""
+
+    def stream_events(self, session_id: str, request_id: str) -> Iterator[str]:
+        """요청 단위 SSE 스트림을 생성한다."""
+
+    def get_session_status(self, session_id: str) -> str | None:
+        """세션의 최근 실행 상태를 반환한다."""

@@ -21,6 +21,8 @@ def to_http_exception(error: BaseAppException) -> HTTPException:
         status_code = status.HTTP_404_NOT_FOUND
     if code in {"CHAT_MESSAGE_EMPTY", "CHAT_STREAM_NODE_INVALID"}:
         status_code = status.HTTP_400_BAD_REQUEST
+    if code in {"CHAT_JOB_QUEUE_FAILED"}:
+        status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     if code in {"CHAT_STREAM_TIMEOUT"}:
         status_code = status.HTTP_504_GATEWAY_TIMEOUT
     return HTTPException(status_code=status_code, detail=error.to_dict())

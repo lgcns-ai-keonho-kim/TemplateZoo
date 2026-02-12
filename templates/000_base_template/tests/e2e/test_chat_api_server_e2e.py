@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 import httpx
@@ -16,6 +17,8 @@ import httpx
 from base_template.core.chat.const.messages import SafeguardRejectionMessage
 
 _STREAM_TIMEOUT = httpx.Timeout(connect=5.0, read=180.0, write=30.0, pool=30.0)
+_HISTORY_WAIT_TIMEOUT_SECONDS = 6.0
+_HISTORY_WAIT_POLL_SECONDS = 0.2
 
 
 def _log_response(label: str, response: httpx.Response) -> dict:
@@ -45,13 +48,29 @@ def _stream_message(
     message: str,
     context_window: int = 20,
 ) -> list[dict]:
-    """단일 스트림 엔드포인트를 호출하고 SSE 이벤트 목록을 반환한다."""
+    """작업 제출 + 이벤트 스트림 구독을 호출하고 SSE 이벤트 목록을 반환한다."""
 
     events: list[dict] = []
+    submit_response = client.post(
+        "/chat",
+        json={
+            "session_id": session_id,
+            "message": message,
+            "context_window": context_window,
+        },
+        timeout=_STREAM_TIMEOUT,
+    )
+    assert submit_response.status_code == 202, submit_response.text
+    submit_payload = submit_response.json()
+    request_id = str(submit_payload.get("request_id") or "")
+    resolved_session_id = str(submit_payload.get("session_id") or "")
+    assert request_id
+    assert resolved_session_id == session_id
+
     with client.stream(
-        "POST",
-        f"/chat/sessions/{session_id}/messages/stream",
-        json={"message": message, "context_window": context_window},
+        "GET",
+        f"/chat/{session_id}/events",
+        params={"request_id": request_id},
         headers={"Accept": "text/event-stream"},
         timeout=_STREAM_TIMEOUT,
     ) as response:
@@ -75,16 +94,46 @@ def _stream_message(
     return events
 
 
+def _wait_until_messages(
+    client: httpx.Client,
+    session_id: str,
+    predicate: Callable[[list[dict]], bool],
+    timeout_seconds: float = _HISTORY_WAIT_TIMEOUT_SECONDS,
+    poll_seconds: float = _HISTORY_WAIT_POLL_SECONDS,
+) -> list[dict]:
+    """메시지 이력이 조건을 만족할 때까지 polling 한다."""
+
+    deadline = time.monotonic() + timeout_seconds
+    last_payload: dict | None = None
+    while time.monotonic() < deadline:
+        response = client.get(
+            f"/ui-api/chat/sessions/{session_id}/messages",
+            params={"limit": 50, "offset": 0},
+        )
+        if response.status_code == 200:
+            payload = response.json()
+            last_payload = payload
+            messages = payload.get("messages")
+            if isinstance(messages, list) and predicate(messages):
+                return messages
+        time.sleep(poll_seconds)
+
+    raise AssertionError(
+        "이력 반영 대기 시간 초과. "
+        f"session_id={session_id}, last_payload={json.dumps(last_payload or {}, ensure_ascii=False)}"
+    )
+
+
 def test_create_and_list_sessions(chat_api_client: httpx.Client) -> None:
     """세션 생성 후 목록 조회에서 동일 세션이 보이는지 확인한다."""
 
-    create_response = chat_api_client.post("/chat/sessions", json={"title": "E2E 세션"})
+    create_response = chat_api_client.post("/ui-api/chat/sessions", json={"title": "E2E 세션"})
     created = _log_response("create-session", create_response)
     assert create_response.status_code == 201, create_response.text
     session_id = created["session_id"]
     assert session_id
 
-    list_response = chat_api_client.get("/chat/sessions", params={"limit": 20, "offset": 0})
+    list_response = chat_api_client.get("/ui-api/chat/sessions", params={"limit": 20, "offset": 0})
     listed = _log_response("list-sessions", list_response)
     assert list_response.status_code == 200, list_response.text
     sessions = listed["sessions"]
@@ -94,7 +143,7 @@ def test_create_and_list_sessions(chat_api_client: httpx.Client) -> None:
 def test_delete_session_via_ui_api(chat_api_client: httpx.Client) -> None:
     """UI API로 세션을 삭제하면 목록/메시지 조회에서 제거되는지 확인한다."""
 
-    create_response = chat_api_client.post("/chat/sessions", json={"title": "삭제 테스트"})
+    create_response = chat_api_client.post("/ui-api/chat/sessions", json={"title": "삭제 테스트"})
     created = _log_response("create-session", create_response)
     assert create_response.status_code == 201, create_response.text
     session_id = created["session_id"]
@@ -108,13 +157,13 @@ def test_delete_session_via_ui_api(chat_api_client: httpx.Client) -> None:
     assert deleted["session_id"] == session_id
     assert deleted["deleted"] is True
 
-    list_response = chat_api_client.get("/chat/sessions", params={"limit": 50, "offset": 0})
+    list_response = chat_api_client.get("/ui-api/chat/sessions", params={"limit": 50, "offset": 0})
     listed = _log_response("list-sessions-after-delete", list_response)
     assert list_response.status_code == 200, list_response.text
     assert all(item["session_id"] != session_id for item in listed["sessions"])
 
     messages_response = chat_api_client.get(
-        f"/chat/sessions/{session_id}/messages",
+        f"/ui-api/chat/sessions/{session_id}/messages",
         params={"limit": 20, "offset": 0},
     )
     _ = _log_response("list-messages-after-delete", messages_response)
@@ -122,9 +171,9 @@ def test_delete_session_via_ui_api(chat_api_client: httpx.Client) -> None:
 
 
 def test_stream_and_history(chat_api_client: httpx.Client) -> None:
-    """단일 스트림 호출 2회 후 세션 이력이 정상 저장되는지 확인한다."""
+    """단일 스트림 호출 2회 후 세션 이력이 eventual consistency로 반영되는지 확인한다."""
 
-    create_response = chat_api_client.post("/chat/sessions", json={"title": "스트림 이력 테스트"})
+    create_response = chat_api_client.post("/ui-api/chat/sessions", json={"title": "스트림 이력 테스트"})
     created = _log_response("create-session", create_response)
     assert create_response.status_code == 201, create_response.text
     session_id = created["session_id"]
@@ -142,23 +191,24 @@ def test_stream_and_history(chat_api_client: httpx.Client) -> None:
         indent=2,
     )
 
-    messages_response = chat_api_client.get(
-        f"/chat/sessions/{session_id}/messages",
-        params={"limit": 20, "offset": 0},
-    )
-    messages_payload = _log_response("list-messages", messages_response)
-    assert messages_response.status_code == 200, messages_response.text
-    messages = messages_payload["messages"]
+    def _history_ready(messages: list[dict]) -> bool:
+        if len(messages) < 4:
+            return False
+        last_four = messages[-4:]
+        roles = [str(item.get("role") or "") for item in last_four]
+        if roles != ["user", "assistant", "user", "assistant"]:
+            return False
+        return str(last_four[2].get("content") or "") == second_message
+
+    messages = _wait_until_messages(chat_api_client, session_id, _history_ready)
     assert len(messages) >= 4
-    roles = [item["role"] for item in messages[-4:]]
-    assert roles == ["user", "assistant", "user", "assistant"]
-    assert messages[-2]["content"] == second_message
+    assert str(messages[-2].get("content") or "") == second_message
 
 
 def test_stream_endpoint(chat_api_client: httpx.Client) -> None:
     """단일 스트림 엔드포인트의 SSE 페이로드(start/token/done|error)를 검증한다."""
 
-    create_response = chat_api_client.post("/chat/sessions", json={"title": "스트림 테스트"})
+    create_response = chat_api_client.post("/ui-api/chat/sessions", json={"title": "스트림 테스트"})
     created = _log_response("create-session", create_response)
     assert create_response.status_code == 201, create_response.text
     session_id = created["session_id"]
@@ -169,7 +219,7 @@ def test_stream_endpoint(chat_api_client: httpx.Client) -> None:
     assert any(item in {"done", "error"} for item in types)
     if "done" in types:
         done = next(item for item in events if str(item.get("type")) == "done")
-        assert done.get("content") == ""
+        assert isinstance(done.get("content"), str)
         assert "final_content" not in done
         assert "assistant_message" not in done
     if "error" in types:
@@ -178,9 +228,9 @@ def test_stream_endpoint(chat_api_client: httpx.Client) -> None:
 
 
 def test_safeguard_rejection_case(chat_api_client: httpx.Client) -> None:
-    """Safeguard 차단 입력 시 거절 메시지가 저장되고 done 이벤트로 종료되는지 확인한다."""
+    """Safeguard 차단 입력 시 done 이후 이력이 eventual consistency로 반영되는지 확인한다."""
 
-    create_response = chat_api_client.post("/chat/sessions", json={"title": "safeguard 차단 테스트"})
+    create_response = chat_api_client.post("/ui-api/chat/sessions", json={"title": "safeguard 차단 테스트"})
     created = _log_response("create-session", create_response)
     assert create_response.status_code == 201, create_response.text
     session_id = created["session_id"]
@@ -198,20 +248,23 @@ def test_safeguard_rejection_case(chat_api_client: httpx.Client) -> None:
         indent=2,
     )
 
-    messages_response = chat_api_client.get(
-        f"/chat/sessions/{session_id}/messages",
-        params={"limit": 20, "offset": 0},
-    )
-    payload = _log_response("list-messages-safeguard", messages_response)
-    assert messages_response.status_code == 200, messages_response.text
-
-    messages = payload["messages"]
-    assert len(messages) >= 2
-    assert messages[-2]["role"] == "user"
-    assert messages[-1]["role"] == "assistant"
-
     rejection_messages = {item.value for item in SafeguardRejectionMessage}
-    assert messages[-1]["content"] in rejection_messages, messages[-1]["content"]
+
+    def _safeguard_ready(messages: list[dict]) -> bool:
+        if len(messages) < 2:
+            return False
+        last_two = messages[-2:]
+        user_role = str(last_two[0].get("role") or "")
+        assistant_role = str(last_two[1].get("role") or "")
+        assistant_content = str(last_two[1].get("content") or "")
+        return (
+            user_role == "user"
+            and assistant_role == "assistant"
+            and assistant_content in rejection_messages
+        )
+
+    messages = _wait_until_messages(chat_api_client, session_id, _safeguard_ready)
+    assert str(messages[-1].get("content") or "") in rejection_messages
 
 
 def test_chat_sqlite_file_created(chat_server_context, chat_api_client: httpx.Client) -> None:

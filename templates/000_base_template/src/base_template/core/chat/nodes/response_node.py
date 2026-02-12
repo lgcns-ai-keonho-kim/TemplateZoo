@@ -6,19 +6,21 @@
 """
 
 from __future__ import annotations
-
 import os
-
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
+from pydantic import SecretStr
 
 from base_template.core.chat.prompts import CHAT_PROMPT
 from base_template.integrations.llm import LLMClient
 from base_template.shared.chat.nodes import LLMNode
 
-_model = ChatGoogleGenerativeAI(
-    model=os.getenv("GEMINI_MODEL_NAME"),
-    api_key=os.getenv("GEMINI_API_KEY"),
+_model = ChatOpenAI(
+    model=os.getenv("OPENAI_MODEL_NAME", ""),
+    api_key=SecretStr(
+        os.getenv("OPENAI_API_KEY", "")
+    ),
 )
+
 
 # NOTE: name은 로깅 구분용 식별자이다.
 _llm_client = LLMClient(
@@ -26,15 +28,11 @@ _llm_client = LLMClient(
     name="chat-response-llm",
 )
 
-# NOTE:
-# - node_name: 스트림 이벤트의 node 필드 값
-# - system_prompt_template: 답변 정책/역할을 정의하는 시스템 프롬프트
-# - output_key: 이 노드 결과를 state에 기록할 키 (response 결과는 assistant_message)
 response_node = LLMNode(
     llm_client=_llm_client,
-    node_name="response",
-    system_prompt_template=CHAT_PROMPT,
-    output_key="assistant_message",
+    node_name="response", # 스트림 이벤트의 node 필드 값
+    prompt=CHAT_PROMPT, # 답변 정책/역할을 정의하는 시스템 프롬프트 템플릿
+    output_key="assistant_message", # 이 노드 결과를 state에 기록할 키 (response 결과는 assistant_message)
 )
 
 __all__ = ["response_node"]

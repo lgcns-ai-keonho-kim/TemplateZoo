@@ -13,7 +13,7 @@ from typing import Any
 
 from base_template.core.chat.const import DEFAULT_CONTEXT_WINDOW
 from base_template.core.chat.models import ChatMessage, ChatRole, ChatSession
-from base_template.shared.chat.interface import ChatServicePort, GraphPort, StreamNodeConfig
+from base_template.shared.chat.interface import ChatServicePort, GraphPort
 from base_template.shared.chat.memory import ChatSessionMemoryStore
 from base_template.shared.chat.repositories import ChatHistoryRepository
 from base_template.shared.exceptions import BaseAppException, ExceptionDetail
@@ -26,8 +26,6 @@ class ChatService(ChatServicePort):
     def __init__(
         self,
         graph: GraphPort,
-        checkpointer: Any | None = None,
-        stream_node: StreamNodeConfig | None = None,
         repository: ChatHistoryRepository | None = None,
         memory_store: ChatSessionMemoryStore | None = None,
         logger: Logger | None = None,
@@ -39,11 +37,6 @@ class ChatService(ChatServicePort):
             max_messages=self._memory_limit,
             logger=self._logger,
         )
-
-        if stream_node is not None:
-            graph.set_stream_node(stream_node)
-        if checkpointer is not None:
-            graph.compile(checkpointer=checkpointer)
         self._graph = graph
 
     @property
@@ -150,6 +143,7 @@ class ChatService(ChatServicePort):
 
         chunks: list[str] = []
         fallback_content = ""
+        done_node = "response"
         for event in self._graph.stream_events(
             session_id=session_id,
             user_message=user_message.content,
@@ -163,22 +157,24 @@ class ChatService(ChatServicePort):
                 text = str(data or "")
                 if text:
                     chunks.append(text)
+                    done_node = node or done_node
             if event_name == "assistant_message":
-                candidate = str(data or "").strip()
-                if candidate:
+                candidate = str(data or "")
+                if candidate.strip():
                     fallback_content = candidate
+                    done_node = node or done_node
             yield {"node": node, "event": event_name, "data": data}
 
-        final_content = "".join(chunks).strip() or fallback_content.strip()
-        if not final_content:
+        final_content = "".join(chunks)
+        if not final_content.strip():
+            final_content = fallback_content
+        if not final_content.strip():
             detail = ExceptionDetail(code="CHAT_STREAM_EMPTY", cause="stream returned empty content")
             raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)
-        assistant_message = self.append_assistant_message(session_id=session_id, content=final_content)
         yield {
-            "node": "response",
+            "node": done_node or "response",
             "event": "done",
-            "data": assistant_message.content,
-            "assistant_message": assistant_message,
+            "data": final_content,
         }
 
     async def astream(
@@ -197,6 +193,7 @@ class ChatService(ChatServicePort):
 
         chunks: list[str] = []
         fallback_content = ""
+        done_node = "response"
         async for event in self._graph.astream_events(
             session_id=session_id,
             user_message=user_message.content,
@@ -210,25 +207,59 @@ class ChatService(ChatServicePort):
                 text = str(data or "")
                 if text:
                     chunks.append(text)
+                    done_node = node or done_node
             if event_name == "assistant_message":
-                candidate = str(data or "").strip()
-                if candidate:
+                candidate = str(data or "")
+                if candidate.strip():
                     fallback_content = candidate
+                    done_node = node or done_node
             yield {"node": node, "event": event_name, "data": data}
 
-        final_content = "".join(chunks).strip() or fallback_content.strip()
-        if not final_content:
+        final_content = "".join(chunks)
+        if not final_content.strip():
+            final_content = fallback_content
+        if not final_content.strip():
             detail = ExceptionDetail(code="CHAT_STREAM_EMPTY", cause="astream returned empty content")
             raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)
-        assistant_message = self.append_assistant_message(session_id=session_id, content=final_content)
         yield {
-            "node": "response",
+            "node": done_node or "response",
             "event": "done",
-            "data": assistant_message.content,
-            "assistant_message": assistant_message,
+            "data": final_content,
         }
 
-    def append_assistant_message(self, session_id: str, content: str) -> ChatMessage:
+    def persist_assistant_message(
+        self,
+        session_id: str,
+        request_id: str,
+        content: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> bool:
+        """assistant 응답을 request_id 멱등성 기준으로 1회 저장한다."""
+
+        if self._repository.is_request_committed(request_id=request_id):
+            self._logger.info(
+                f"chat.persist.skip: session_id={session_id}, request_id={request_id}, reason=already_committed"
+            )
+            return False
+
+        assistant_message = self.append_assistant_message(
+            session_id=session_id,
+            content=content,
+            metadata=metadata,
+        )
+        self._repository.mark_request_committed(
+            request_id=request_id,
+            session_id=session_id,
+            message_id=assistant_message.message_id,
+        )
+        return True
+
+    def append_assistant_message(
+        self,
+        session_id: str,
+        content: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> ChatMessage:
         normalized = self._normalize_message(content)
         session = self._repository.get_session(session_id)
         if session is None:
@@ -239,6 +270,7 @@ class ChatService(ChatServicePort):
             session_id=session_id,
             role=ChatRole.ASSISTANT,
             content=normalized,
+            metadata=metadata,
         )
         self._memory_store.rpush(session_id=session_id, message=assistant_message)
         return assistant_message
@@ -294,7 +326,8 @@ class ChatService(ChatServicePort):
         )
 
     def _normalize_message(self, message: str) -> str:
-        if not message or not message.strip():
+        raw = str(message or "")
+        if not raw.strip():
             detail = ExceptionDetail(code="CHAT_MESSAGE_EMPTY", cause="message is empty")
             raise BaseAppException("메시지는 비어 있을 수 없습니다.", detail)
-        return message.strip()
+        return raw

@@ -8,8 +8,11 @@
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping
-from typing import Any
+from typing import Any, Optional
 
+from langchain_core.runnables.config import RunnableConfig
+
+from base_template.shared.chat.nodes._state_adapter import coerce_state_mapping
 from base_template.shared.logging import Logger, create_default_logger
 
 
@@ -57,7 +60,7 @@ class BranchNode:
 
             aliases:
                 selector 별칭 정규화 맵.
-                예) `{"PROMPT_INJECTION": "PROMPT_INJETION"}`.
+                예) `{"PROMPT_INJETION": "PROMPT_INJECTION"}`.
                 LLM 출력 표기가 일관되지 않을 때 표준 토큰으로 통일할 수 있다.
 
             normalize_case:
@@ -67,7 +70,7 @@ class BranchNode:
             allowed_selectors:
                 허용할 selector 집합.
                 값이 지정되면, 정규화 결과가 집합에 없을 때 `fallback_selector`를 적용한다.
-                예) `{"PASS", "PII", "HARMFUL", "PROMPT_INJETION"}`.
+                예) `{"PASS", "PII", "HARMFUL", "PROMPT_INJECTION"}`.
 
             fallback_selector:
                 허용 selector 검증 실패 시 강제로 치환할 selector.
@@ -93,14 +96,26 @@ class BranchNode:
         self._write_normalized_to = write_normalized_to
         self._logger = logger or create_default_logger("BranchNode")
 
-    def run(self, state: Mapping[str, Any]) -> dict[str, str]:
+    def run(self, state: object, config: Optional[RunnableConfig] = None) -> dict[str, str]:
+        """
+        LangGraph 노드 진입점.
+
+        타입 경계 정규화 후 실제 분기 계산은 `_run`으로 위임한다.
+        """
+        del config
+        return self._run(coerce_state_mapping(state))
+
+    def _run(self, state: Mapping[str, Any]) -> dict[str, str]:
         """state를 읽어 branch 결과 payload를 반환한다."""
         raw_selector = state.get(self._selector_key)
         selector = str(raw_selector or "").strip()
         selector = self._normalize_value(selector)
         normalized = self._aliases.get(selector, selector)
         if self._allowed_selectors is not None and normalized not in self._allowed_selectors:
-            if self._fallback_selector is not None:
+            matched = self._match_allowed_selector(normalized)
+            if matched is not None:
+                normalized = matched
+            elif self._fallback_selector is not None:
                 normalized = self._fallback_selector
 
         branch = self._branch_map.get(normalized, self._default_branch)
@@ -132,6 +147,15 @@ class BranchNode:
         if values is None:
             return None
         return {self._normalize_value(str(item)) for item in values if str(item).strip()}
+
+    def _match_allowed_selector(self, value: str) -> str | None:
+        """허용 selector 접두(prefix) 매칭으로 정규 토큰을 복원한다."""
+        if not self._allowed_selectors:
+            return None
+        for candidate in sorted(self._allowed_selectors, key=len, reverse=True):
+            if value.startswith(candidate):
+                return candidate
+        return None
 
 
 __all__ = ["BranchNode"]

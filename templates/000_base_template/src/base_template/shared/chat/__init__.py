@@ -16,6 +16,7 @@ from base_template.shared.chat.memory import ChatSessionMemoryStore
 from base_template.shared.chat.repositories import (
     ChatHistoryRepository,
     build_chat_message_schema,
+    build_chat_request_commit_schema,
     build_chat_session_schema,
 )
 from base_template.shared.chat.services import ChatService, ServiceExecutor
@@ -32,4 +33,5 @@ __all__ = [
     "ChatHistoryRepository",
     "build_chat_session_schema",
     "build_chat_message_schema",
+    "build_chat_request_commit_schema",
 ]

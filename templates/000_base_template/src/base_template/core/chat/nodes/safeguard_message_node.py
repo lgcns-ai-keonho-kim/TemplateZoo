@@ -11,7 +11,7 @@ from base_template.core.chat.const.messages import SafeguardRejectionMessage
 from base_template.shared.chat.nodes import MessageNode
 
 # NOTE:
-# - selector_key: safeguard 분류 결과(PASS/PII/HARMFUL/PROMPT_INJETION)
+# - selector_key: safeguard 분류 결과(PASS/PII/HARMFUL/PROMPT_INJECTION)
 # - output_key: 차단 문구를 assistant_message로 기록해서 SSE/update 및 최종 done에서 재사용
 # - default_member: 알 수 없는 토큰이 들어와도 안전하게 HARMFUL 문구를 사용
 safeguard_message_node = MessageNode(
@@ -22,4 +22,3 @@ safeguard_message_node = MessageNode(
 )
 
 __all__ = ["safeguard_message_node"]
-

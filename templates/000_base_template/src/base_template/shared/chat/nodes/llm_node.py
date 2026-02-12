@@ -8,14 +8,16 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Iterator, Mapping
-from typing import Any
+from typing import Any, Optional
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables.config import RunnableConfig
 from langgraph.config import get_stream_writer
 
 from base_template.core.chat.models import ChatMessage, ChatRole
 from base_template.integrations.llm import LLMClient
+from base_template.shared.chat.nodes._state_adapter import coerce_state_mapping
 from base_template.shared.exceptions import BaseAppException, ExceptionDetail
 from base_template.shared.logging import Logger, create_default_logger
 
@@ -33,10 +35,11 @@ class LLMNode:
         *,
         llm_client: LLMClient,
         node_name: str,
-        system_prompt_template: PromptTemplate | None = None,
+        prompt: PromptTemplate,
         output_key: str = "assistant_message",
         user_message_key: str = "user_message",
         history_key: str = "history",
+        stream_tokens: bool = True,
         logger: Logger | None = None,
     ) -> None:
         """
@@ -51,10 +54,10 @@ class LLMNode:
                 - 공백 문자열은 허용하지 않는다.
                 예) "reply", "safeguard", "summarize"
 
-            system_prompt_template:
+            prompt:
                 시스템 프롬프트 템플릿.
-                - `None`이면 시스템 메시지를 추가하지 않는다.
-                - 값이 있으면 항상 첫 메시지(SystemMessage)로 삽입된다.
+                - 항상 첫 메시지(SystemMessage)로 삽입된다.
+                - 반드시 1개 이상의 입력 변수를 가져야 한다.
 
             output_key:
                 노드 실행 결과를 state에 기록할 키 이름.
@@ -73,6 +76,12 @@ class LLMNode:
                 - 이력을 의도적으로 끄고 싶으면 존재하지 않는 키 이름
                   (예: `"__skip_history__"`)을 넣어 사용한다.
 
+            stream_tokens:
+                토큰 스트리밍 호출 사용 여부.
+                - True: `llm_client.stream/astream`을 사용해 토큰 단위 처리
+                - False: `llm_client.invoke/ainvoke`로 단건 호출
+                safeguard 분류 노드처럼 "최종 값 1개"가 목적일 때 False를 권장한다.
+
             logger:
                 노드 실행 로그 기록용 로거.
                 `None`이면 `LLMNode:{node_name}` 이름의 기본 로거를 생성한다.
@@ -82,18 +91,37 @@ class LLMNode:
             detail = ExceptionDetail(code="CHAT_NODE_CONFIG_ERROR", cause="node_name is empty")
             raise BaseAppException("LLM 노드 이름은 비어 있을 수 없습니다.", detail)
 
+        prompt_input_variables = [value for value in prompt.input_variables if value]
+        if not prompt_input_variables:
+            detail = ExceptionDetail(code="CHAT_NODE_CONFIG_ERROR", cause="prompt has no input variables")
+            raise BaseAppException("프롬프트 입력 변수는 최소 1개 이상이어야 합니다.", detail)
+
         self._llm_client = llm_client
         self._node_name = normalized_node_name
-        self._system_prompt_template = system_prompt_template
+        self._prompt = prompt
+        self._prompt_input_variables = tuple(prompt_input_variables)
         self._output_key = output_key
         self._user_message_key = user_message_key
         self._history_key = history_key
+        self._stream_tokens = stream_tokens
         self._logger = logger or create_default_logger(f"LLMNode:{normalized_node_name}")
 
-    def run(self, state: Mapping[str, Any]) -> dict[str, str]:
-        """노드 상태를 받아 최종 답변 문자열을 생성한다."""
+    def run(self, state: object, config: Optional[RunnableConfig] = None) -> dict[str, str]:
+        """
+        LangGraph 노드 진입점.
 
+        타입 체커가 기대하는 Node 시그니처(`state`, `config`)를 수용하고
+        실제 실행은 `_run`으로 위임한다.
+        """
+        del config
+        return self._run(coerce_state_mapping(state))
+
+    def _run(self, state: Mapping[str, Any]) -> dict[str, str]:
+        """노드 상태를 받아 동기로 최종 답변 문자열을 생성한다."""
         self._logger.debug(f"{self._node_name} 노드 실행")
+        if not self._stream_tokens:
+            text = self._invoke_once(state)
+            return self._build_output([text])
         chunks: list[str] = []
         writer = get_stream_writer()
         for chunk in self._iter_tokens(state, writer=writer):
@@ -101,10 +129,21 @@ class LLMNode:
                 chunks.append(chunk)
         return self._build_output(chunks)
 
-    async def arun(self, state: Mapping[str, Any]) -> dict[str, str]:
-        """노드 상태를 받아 비동기로 최종 답변 문자열을 생성한다."""
+    async def arun(self, state: object, config: Optional[RunnableConfig] = None) -> dict[str, str]:
+        """
+        LangGraph 비동기 노드 진입점.
 
+        타입 경계 정규화 후 실제 실행은 `_arun`으로 위임한다.
+        """
+        del config
+        return await self._arun(coerce_state_mapping(state))
+
+    async def _arun(self, state: Mapping[str, Any]) -> dict[str, str]:
+        """노드 상태를 받아 비동기로 최종 답변 문자열을 생성한다."""
         self._logger.debug(f"{self._node_name} 노드 비동기 실행")
+        if not self._stream_tokens:
+            text = await self._ainvoke_once(state)
+            return self._build_output([text])
         chunks: list[str] = []
         writer = get_stream_writer()
         async for chunk in self._aiter_tokens(state, writer=writer):
@@ -115,11 +154,17 @@ class LLMNode:
     def stream(self, state: Mapping[str, Any]) -> Iterator[str]:
         """노드 상태를 받아 토큰 단위 응답을 생성한다."""
 
+        if not self._stream_tokens:
+            yield self._invoke_once(state)
+            return
         yield from self._iter_tokens(state, writer=None)
 
     async def astream(self, state: Mapping[str, Any]) -> AsyncIterator[str]:
         """노드 상태를 받아 비동기 토큰 단위 응답을 생성한다."""
 
+        if not self._stream_tokens:
+            yield await self._ainvoke_once(state)
+            return
         async for chunk in self._aiter_tokens(state, writer=None):
             yield chunk
 
@@ -158,6 +203,32 @@ class LLMNode:
                 writer({"node": self._node_name, "event": "token", "data": text})
             yield text
 
+    def _invoke_once(self, state: Mapping[str, Any]) -> str:
+        messages = self._build_messages(state)
+        self._logger.debug(f"{self._node_name} 노드 단건 실행")
+        response = self._llm_client.invoke(messages)
+        text = self._extract_text(response).strip()
+        if text:
+            return text
+        detail = ExceptionDetail(
+            code="CHAT_STREAM_EMPTY",
+            cause=f"{self._node_name} node invoke produced empty content",
+        )
+        raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)
+
+    async def _ainvoke_once(self, state: Mapping[str, Any]) -> str:
+        messages = self._build_messages(state)
+        self._logger.debug(f"{self._node_name} 노드 비동기 단건 실행")
+        response = await self._llm_client.ainvoke(messages)
+        text = self._extract_text(response).strip()
+        if text:
+            return text
+        detail = ExceptionDetail(
+            code="CHAT_STREAM_EMPTY",
+            cause=f"{self._node_name} node ainvoke produced empty content",
+        )
+        raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)
+
     def _build_messages(self, state: Mapping[str, Any]) -> list[BaseMessage]:
         user_message = str(state.get(self._user_message_key, "") or "").strip()
         if not user_message:
@@ -167,9 +238,7 @@ class LLMNode:
             )
             raise BaseAppException("노드 입력 메시지가 비어 있습니다.", detail)
 
-        messages: list[BaseMessage] = []
-        if self._system_prompt_template is not None:
-            messages.append(SystemMessage(content=self._system_prompt_template.format()))
+        messages: list[BaseMessage] = [SystemMessage(content=self._format_prompt(state))]
 
         # NOTE:
         # history_key가 없거나 list가 아니면 이력은 자동으로 비활성화된다.
@@ -180,6 +249,26 @@ class LLMNode:
 
         messages.append(HumanMessage(content=user_message))
         return messages
+
+    def _format_prompt(self, state: Mapping[str, Any]) -> str:
+        prompt_args: dict[str, Any] = {}
+        for variable in self._prompt_input_variables:
+            if variable not in state:
+                detail = ExceptionDetail(
+                    code="CHAT_NODE_PROMPT_INPUT_INVALID",
+                    cause=f"prompt variable '{variable}' is missing in state",
+                )
+                raise BaseAppException("프롬프트 입력 변수가 누락되었습니다.", detail)
+            prompt_args[variable] = state[variable]
+
+        try:
+            return self._prompt.format(**prompt_args)
+        except Exception as error:
+            detail = ExceptionDetail(
+                code="CHAT_NODE_PROMPT_FORMAT_ERROR",
+                cause=f"{self._node_name} node prompt format failed",
+            )
+            raise BaseAppException("프롬프트 포맷에 실패했습니다.", detail, error) from error
 
     def _history_to_langchain(self, history: list[Any]) -> list[BaseMessage]:
         lc_messages: list[BaseMessage] = []
@@ -233,20 +322,28 @@ class LLMNode:
             for item in content:
                 if isinstance(item, str):
                     chunks.append(item)
-                elif isinstance(item, dict):
+                    continue
+                if isinstance(item, dict):
                     text = item.get("text")
-                    if text:
+                    if text is None:
+                        text = item.get("TEXT")
+                    if text is not None:
                         chunks.append(str(text))
-                else:
-                    chunks.append(str(item))
-            merged = "\n".join(chunks).strip()
-            if merged:
-                return merged
+                    continue
+                chunks.append(str(item))
+            return "".join(chunks)
+        if isinstance(content, dict):
+            text = content.get("text")
+            if text is None:
+                text = content.get("TEXT")
+            if text is None:
+                return ""
+            return str(text)
         return str(content)
 
     def _build_output(self, chunks: list[str]) -> dict[str, str]:
-        content = "".join(chunks).strip()
-        if not content:
+        content = "".join(chunks)
+        if not content.strip():
             detail = ExceptionDetail(
                 code="CHAT_STREAM_EMPTY",
                 cause=f"{self._node_name} node stream produced empty content",

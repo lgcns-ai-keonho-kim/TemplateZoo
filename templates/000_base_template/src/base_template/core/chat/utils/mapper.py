@@ -47,6 +47,24 @@ class ChatHistoryMapper:
             },
         )
 
+    def request_commit_to_document(
+        self,
+        request_id: str,
+        session_id: str,
+        message_id: str,
+    ) -> Document:
+        """요청 커밋 기록을 Document로 변환한다."""
+
+        return Document(
+            doc_id=request_id,
+            fields={
+                "request_id": request_id,
+                "session_id": session_id,
+                "message_id": message_id,
+                "created_at": utc_now().isoformat(),
+            },
+        )
+
     def session_from_document(self, document: Document) -> ChatSession:
         """Document를 세션 모델로 변환한다."""
 

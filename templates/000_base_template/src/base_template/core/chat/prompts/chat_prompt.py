@@ -18,6 +18,10 @@ You are an helpful Assistant.
 <Requirements>
 - Always answer in Korean.  
 </Requirements>
+
+<Context>
+- latest_user_query: {user_message}
+</Context>
 """
 ).strip()
 

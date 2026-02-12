@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class UISessionSummary(BaseModel):
@@ -28,6 +28,18 @@ class UISessionListResponse(BaseModel):
     sessions: list[UISessionSummary]
     limit: int
     offset: int
+
+
+class UICreateSessionRequest(BaseModel):
+    """UI 세션 생성 요청 모델."""
+
+    title: str | None = Field(default=None, description="세션 제목")
+
+
+class UICreateSessionResponse(BaseModel):
+    """UI 세션 생성 응답 모델."""
+
+    session_id: str
 
 
 class UIDeleteSessionResponse(BaseModel):

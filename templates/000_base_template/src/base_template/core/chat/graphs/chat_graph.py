@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, StateGraph
 from pydantic import BaseModel, ConfigDict
 
@@ -38,12 +39,16 @@ class ChatGraphInput(BaseModel):
     assistant_message: str = ""
 
 
+# 그래프 선언
 builder = StateGraph(ChatGraphState)
+# 노드 추가
 builder.add_node("safeguard", safeguard_node.run)
 builder.add_node("safeguard_route", safeguard_route_node.run)
 builder.add_node("response", response_node.run)
 builder.add_node("blocked", safeguard_message_node.run)
+# 진입점 설정
 builder.set_entry_point("safeguard")
+# 엣지 설정
 builder.add_edge("safeguard", "safeguard_route")
 builder.add_conditional_edges(
     "safeguard_route",
@@ -56,7 +61,12 @@ builder.add_conditional_edges(
 builder.add_edge("response", END)
 builder.add_edge("blocked", END)
 
-checkpointer = None
+# 그래프 설정 정의
+
+# Checkpointer 정의
+checkpointer = InMemorySaver()
+
+# Stream 할 노드 정의
 stream_node: StreamNodeConfig = {
     "safeguard": ["safeguard_result"],
     "safeguard_route": ["safeguard_route", "safeguard_result"],

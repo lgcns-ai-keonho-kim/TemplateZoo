@@ -7,6 +7,8 @@
 
 from base_template.api.ui.models.message import UIMessageItem, UIMessageListResponse
 from base_template.api.ui.models.session import (
+    UICreateSessionRequest,
+    UICreateSessionResponse,
     UIDeleteSessionResponse,
     UISessionListResponse,
     UISessionSummary,
@@ -15,6 +17,8 @@ from base_template.api.ui.models.session import (
 __all__ = [
     "UISessionSummary",
     "UISessionListResponse",
+    "UICreateSessionRequest",
+    "UICreateSessionResponse",
     "UIDeleteSessionResponse",
     "UIMessageItem",
     "UIMessageListResponse",

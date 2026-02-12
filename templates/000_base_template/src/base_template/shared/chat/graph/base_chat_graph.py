@@ -194,7 +194,8 @@ class BaseChatGraph:
         if isinstance(result, dict):
             raw = result.get("assistant_message")
             if isinstance(raw, str):
-                return raw.strip()
+                if raw.strip():
+                    return raw
         return ""
 
     def _build_input(

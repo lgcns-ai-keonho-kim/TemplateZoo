@@ -54,6 +54,7 @@
     var state = {
       id: cellId,
       sessionId: String(seed.sessionId || cellId),
+      activeRequestId: '',
       isSending: false,
       destroyed: false,
       finalized: false,
@@ -161,6 +162,13 @@
       }, ms);
     }
 
+    function setRuntimeInfo(node, metadata) {
+      if (!presenter || typeof presenter.setRuntimeInfo !== 'function') {
+        return;
+      }
+      presenter.setRuntimeInfo(status, node, metadata);
+    }
+
     function updateHistory(preview) {
       if (window.App.app && window.App.app.updateHistory) {
         window.App.app.updateHistory(cellId, headerTitle.textContent, preview);
@@ -231,6 +239,8 @@
       presenter.setSendingState(state, false, sendBtn, stopBtn, input);
       state.activeBubble = null;
       state.receivedText = '';
+      state.activeRequestId = '';
+      setRuntimeInfo('', null);
     }
 
     function finalizeSuccess(finalText) {
@@ -269,6 +279,18 @@
       detachStream();
       presenter.setStatus(status, '스트림 연결중', true, 'STREAM', true);
       state.streamHandle = window.App.apiTransport.streamMessage(state.sessionId, userMessage, DEFAULT_CONTEXT_WINDOW, {
+        onQueued: function (queued) {
+          if (state.finalized || state.destroyed || !state.isSending) {
+            return;
+          }
+          state.activeRequestId = queued && queued.request_id ? String(queued.request_id) : '';
+          var queuedSessionId = queued && queued.session_id ? String(queued.session_id) : '';
+          if (queuedSessionId) {
+            state.sessionId = queuedSessionId;
+          }
+          presenter.setStatus(status, '작업 큐 적재 완료', true, 'QUEUE', true);
+          setRuntimeInfo('queue', null);
+        },
         onOpen: function () {
           if (state.finalized || state.destroyed || !state.isSending) {
             return;
@@ -280,8 +302,17 @@
             return;
           }
           var eventType = payload && payload.type ? String(payload.type) : '';
+          var eventRequestId = payload && payload.request_id ? String(payload.request_id) : '';
+          var eventNode = payload && payload.node ? String(payload.node) : 'unknown';
+          var eventMetadata = payload && payload.metadata && typeof payload.metadata === 'object'
+            ? payload.metadata
+            : null;
+          if (state.activeRequestId && eventRequestId && state.activeRequestId !== eventRequestId) {
+            return;
+          }
+          setRuntimeInfo(eventNode, eventMetadata);
           if (eventType === 'start') {
-            presenter.setStatus(status, '응답 생성중', true, 'STREAM', true);
+            presenter.setStatus(status, '응답 생성중 [' + eventNode + ']', true, 'STREAM', true);
             return;
           }
           if (eventType === 'token') {
@@ -289,10 +320,14 @@
             if (!chunk) {
               return;
             }
-            state.tokenBuffer += chunk;
-            state.receivedText = state.tokenBuffer;
-            renderStreamingBubble();
-            presenter.setStatus(status, '응답 수신중', true, 'STREAM', true);
+            if (eventNode === 'response') {
+              state.tokenBuffer += chunk;
+              state.receivedText = state.tokenBuffer;
+              renderStreamingBubble();
+              presenter.setStatus(status, '응답 수신중 [' + eventNode + ']', true, 'STREAM', true);
+              return;
+            }
+            presenter.setStatus(status, '노드 처리중 [' + eventNode + ']', true, 'STREAM', true);
             return;
           }
           if (eventType === 'error') {
@@ -305,14 +340,13 @@
               finalizeError(payload && payload.error_message ? payload.error_message : '응답 생성에 실패했습니다.');
               return;
             }
-            var doneText = state.tokenBuffer && state.tokenBuffer.trim() ? state.tokenBuffer : '';
+            var doneContent = payload && typeof payload.content === 'string' ? payload.content : '';
+            var doneText = doneContent && doneContent.trim()
+              ? doneContent
+              : (state.tokenBuffer && state.tokenBuffer.trim() ? state.tokenBuffer : '');
             if (doneText) {
-              if (!state.tokenBuffer || doneText.indexOf(state.tokenBuffer) === 0) {
-                state.tokenBuffer = doneText;
-              }
-              if (!state.receivedText || doneText.indexOf(state.receivedText) === 0) {
-                state.receivedText = doneText;
-              }
+              state.tokenBuffer = doneText;
+              state.receivedText = doneText;
               renderStreamingBubble();
               finalizeSuccess(doneText);
               return;
@@ -365,6 +399,8 @@
       state.finalized = true;
       presenter.setSendingState(state, false, sendBtn, stopBtn, input);
       state.activeBubble = null;
+      state.activeRequestId = '';
+      setRuntimeInfo('', null);
       status.classList.add('is-visible');
       presenter.setStatus(status, '수신 중지', false, 'STOP', false);
       hideStatusLater(1200);

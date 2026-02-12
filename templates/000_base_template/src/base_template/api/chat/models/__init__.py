@@ -16,8 +16,10 @@ from base_template.api.chat.models.session import (
     SessionSummaryResponse,
 )
 from base_template.api.chat.models.stream import (
+    SessionSnapshotResponse,
+    SubmitChatRequest,
+    SubmitChatResponse,
     StreamEventType,
-    StreamMessageRequest,
     StreamPayload,
 )
 
@@ -26,8 +28,10 @@ __all__ = [
     "CreateSessionResponse",
     "SessionSummaryResponse",
     "SessionListResponse",
+    "SubmitChatRequest",
+    "SubmitChatResponse",
+    "SessionSnapshotResponse",
     "StreamEventType",
-    "StreamMessageRequest",
     "StreamPayload",
     "MessageResponse",
     "MessageListResponse",

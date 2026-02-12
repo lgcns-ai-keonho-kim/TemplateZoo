@@ -9,15 +9,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from base_template.api.chat.routers.create_session import router as create_session_router
-from base_template.api.chat.routers.list_messages import router as list_messages_router
-from base_template.api.chat.routers.list_sessions import router as list_sessions_router
-from base_template.api.chat.routers.stream_session_message import (
-    router as stream_session_message_router,
-)
+from base_template.api.const import CHAT_API_PREFIX, CHAT_API_TAG
+from base_template.api.chat.routers.create_chat import router as create_chat_router
+from base_template.api.chat.routers.get_chat_session import router as get_chat_session_router
+from base_template.api.chat.routers.stream_chat_events import router as stream_chat_events_router
 
-router = APIRouter(prefix="/chat", tags=["chat"])
-router.include_router(create_session_router)
-router.include_router(list_sessions_router)
-router.include_router(list_messages_router)
-router.include_router(stream_session_message_router)
+router = APIRouter(tags=[CHAT_API_TAG])
+router.include_router(create_chat_router, prefix=CHAT_API_PREFIX)
+router.include_router(stream_chat_events_router, prefix=CHAT_API_PREFIX)
+router.include_router(get_chat_session_router, prefix=CHAT_API_PREFIX)

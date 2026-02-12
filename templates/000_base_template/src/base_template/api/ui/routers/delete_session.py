@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
+from base_template.api.const import UI_CHAT_SESSION_PATH
 from base_template.api.ui.models import UIDeleteSessionResponse
 from base_template.api.ui.routers.common import to_http_exception
 from base_template.api.ui.services import ChatUIService, get_chat_ui_service
@@ -18,7 +19,7 @@ router = APIRouter()
 
 
 @router.delete(
-    "/sessions/{session_id}",
+    UI_CHAT_SESSION_PATH,
     response_model=UIDeleteSessionResponse,
     summary="UI용 대화 세션과 메시지 이력을 삭제합니다.",
 )
@@ -32,4 +33,3 @@ def delete_session(
         return service.delete_session(session_id=session_id)
     except BaseAppException as error:
         raise to_http_exception(error) from error
-

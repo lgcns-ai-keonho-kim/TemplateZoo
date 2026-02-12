@@ -1,6 +1,6 @@
 """
 목적: Chat 코어의 설정 상수를 정의한다.
-설명: SQLite 저장 경로, 컬렉션 명, 기본 페이지네이션 값을 제공한다.
+설명: SQLite 저장 경로, 컬렉션 명(세션/메시지/요청커밋), 기본 페이지네이션 값을 제공한다.
 디자인 패턴: 상수 객체 패턴
 참조: src/base_template/shared/chat/repositories/history_repository.py
 """
@@ -17,6 +17,8 @@ CHAT_DB_PATH = Path(
 CHAT_SESSION_COLLECTION = "chat_sessions"
 # DBClient/SQLiteEngine에서 메시지 본문을 저장하는 컬렉션 이름
 CHAT_MESSAGE_COLLECTION = "chat_messages"
+# 요청 단위 저장 멱등성(request_id)을 기록하는 컬렉션 이름
+CHAT_REQUEST_COMMIT_COLLECTION = "chat_request_commits"
 
 # 목록 조회 API의 기본 페이지 크기
 DEFAULT_PAGE_SIZE = 50

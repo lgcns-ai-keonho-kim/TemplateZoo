@@ -1,6 +1,6 @@
 """
 목적: Chat 대화 이력 저장소를 제공한다.
-설명: DBClient + SQLiteEngine 조합으로 세션/메시지 저장, 조회, 삭제를 수행한다.
+설명: DBClient 기반으로 세션/메시지 저장, 조회, 삭제를 수행하며, db_client 미주입 시 SQLite를 기본으로 사용한다.
 디자인 패턴: 저장소 패턴
 참조: src/base_template/integrations/db/client.py, src/base_template/shared/chat/repositories/schemas
 """
@@ -14,6 +14,7 @@ from uuid import uuid4
 from base_template.core.chat.const import (
     CHAT_DB_PATH,
     CHAT_MESSAGE_COLLECTION,
+    CHAT_REQUEST_COMMIT_COLLECTION,
     CHAT_SESSION_COLLECTION,
 )
 from base_template.core.chat.models import ChatMessage, ChatRole, ChatSession, utc_now
@@ -32,6 +33,7 @@ from base_template.integrations.db.base import (
 from base_template.integrations.db.engines.sqlite import SQLiteEngine
 from base_template.shared.chat.repositories.schemas import (
     build_chat_message_schema,
+    build_chat_request_commit_schema,
     build_chat_session_schema,
 )
 from base_template.shared.exceptions import BaseAppException, ExceptionDetail
@@ -47,11 +49,15 @@ class ChatHistoryRepository:
         database_path: str = str(CHAT_DB_PATH),
         logger: Optional[Logger] = None,
     ) -> None:
+        # 참고:
+        # - db_client를 주입하면 호출자가 선택한 엔진(PostgreSQL 등)으로 동작한다.
+        # - db_client를 주입하지 않으면 기본 SQLiteEngine(database_path)로 동작한다.
         self._logger = logger or create_default_logger("ChatHistoryRepository")
         self._database_path = Path(database_path)
         self._mapper = ChatHistoryMapper()
         self._session_schema = build_chat_session_schema()
         self._message_schema = build_chat_message_schema()
+        self._request_commit_schema = build_chat_request_commit_schema()
 
         self._owns_client = db_client is None
         if db_client is not None:
@@ -179,7 +185,7 @@ class ChatHistoryRepository:
                 message_id=str(uuid4()),
                 session_id=session.session_id,
                 role=role,
-                content=content.strip(),
+                content=content,
                 sequence=next_sequence,
                 created_at=utc_now(),
                 metadata=metadata or {},
@@ -197,6 +203,64 @@ class ChatHistoryRepository:
             raise
         except Exception as error:  # noqa: BLE001
             self._raise_repository_error("CHAT_MESSAGE_APPEND_ERROR", error)
+
+    def is_request_committed(self, request_id: str) -> bool:
+        """요청 식별자의 저장 커밋 여부를 반환한다."""
+
+        candidate = str(request_id or "").strip()
+        if not candidate:
+            detail = ExceptionDetail(code="CHAT_REQUEST_ID_EMPTY", cause="request_id is empty")
+            raise BaseAppException("request_id는 비어 있을 수 없습니다.", detail)
+
+        try:
+            query = Query(
+                filter_expression=FilterExpression(
+                    conditions=[
+                        FilterCondition(
+                            field="request_id",
+                            source=FieldSource.COLUMN,
+                            operator=FilterOperator.EQ,
+                            value=candidate,
+                        )
+                    ]
+                ),
+                pagination=Pagination(limit=1, offset=0),
+            )
+            documents = self._client.fetch(CHAT_REQUEST_COMMIT_COLLECTION, query)
+            return bool(documents)
+        except BaseAppException:
+            raise
+        except Exception as error:  # noqa: BLE001
+            self._raise_repository_error("CHAT_REQUEST_COMMIT_GET_ERROR", error)
+
+    def mark_request_committed(
+        self,
+        request_id: str,
+        session_id: str,
+        message_id: str,
+    ) -> None:
+        """요청 식별자의 저장 완료를 기록한다."""
+
+        candidate = str(request_id or "").strip()
+        if not candidate:
+            detail = ExceptionDetail(code="CHAT_REQUEST_ID_EMPTY", cause="request_id is empty")
+            raise BaseAppException("request_id는 비어 있을 수 없습니다.", detail)
+
+        try:
+            self._client.upsert(
+                CHAT_REQUEST_COMMIT_COLLECTION,
+                [
+                    self._mapper.request_commit_to_document(
+                        request_id=candidate,
+                        session_id=session_id,
+                        message_id=message_id,
+                    )
+                ],
+            )
+        except BaseAppException:
+            raise
+        except Exception as error:  # noqa: BLE001
+            self._raise_repository_error("CHAT_REQUEST_COMMIT_UPSERT_ERROR", error)
 
     def list_messages(self, session_id: str, limit: int, offset: int) -> list[ChatMessage]:
         """세션별 메시지 목록을 순번 오름차순으로 조회한다."""
@@ -259,6 +323,7 @@ class ChatHistoryRepository:
         self._client.connect()
         self._client.create_collection(self._session_schema)
         self._client.create_collection(self._message_schema)
+        self._client.create_collection(self._request_commit_schema)
         self._logger.info(f"Chat 저장소 초기화 완료: {self._database_path}")
 
     def _upsert_session(self, session: ChatSession) -> None:

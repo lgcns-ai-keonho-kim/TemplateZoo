@@ -9,8 +9,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
+from langchain_core.runnables.config import RunnableConfig
+
+from base_template.shared.chat.nodes._state_adapter import coerce_state_mapping
 from base_template.shared.exceptions import BaseAppException, ExceptionDetail
 from base_template.shared.logging import Logger, create_default_logger
 
@@ -51,7 +54,7 @@ class MessageNode:
 
             selector_to_member:
                 selector 값 -> Enum 멤버명 매핑.
-                예) `{"PROMPT_INJECTION": "PROMPT_INJETION"}`.
+                예) `{"PROMPT_INJETION": "PROMPT_INJECTION"}`.
                 LLM 출력 토큰과 Enum 키가 1:1이 아닐 때 사용한다.
 
             default_member:
@@ -82,7 +85,16 @@ class MessageNode:
         self._logger = logger or create_default_logger("MessageNode")
         self._selector_to_member = dict(selector_to_member or {})
 
-    def run(self, state: Mapping[str, Any]) -> dict[str, str]:
+    def run(self, state: object, config: Optional[RunnableConfig] = None) -> dict[str, str]:
+        """
+        LangGraph 노드 진입점.
+
+        타입 경계 정규화 후 실제 메시지 선택은 `_run`으로 위임한다.
+        """
+        del config
+        return self._run(coerce_state_mapping(state))
+
+    def _run(self, state: Mapping[str, Any]) -> dict[str, str]:
         """
         state에서 selector를 읽어 메시지를 반환한다.
 

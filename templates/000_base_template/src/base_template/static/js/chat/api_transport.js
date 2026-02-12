@@ -11,6 +11,7 @@
   window.App.apiTransport = window.App.apiTransport || {};
 
   var DEFAULT_CONTEXT_WINDOW = 20;
+  var STREAM_CONNECT_DELAY_MS = 1000;
 
   function buildPath(path) {
     if (!path) {
@@ -91,7 +92,7 @@
     if (title && String(title).trim()) {
       body.title = String(title).trim();
     }
-    return requestJson('POST', '/chat/sessions', body);
+    return requestJson('POST', '/ui-api/chat/sessions', body);
   };
 
   window.App.apiTransport.listSessions = function (limit, offset) {
@@ -120,22 +121,28 @@
   };
 
   window.App.apiTransport.streamMessage = function (sessionId, message, contextWindow, handlers) {
-    var payload = {
+    var submitPayload = {
       message: String(message || ''),
       context_window: Math.max(1, Number(contextWindow) || DEFAULT_CONTEXT_WINDOW)
     };
-    var path = '/chat/sessions/' + encodeSegment(sessionId) + '/messages/stream';
-    var controller = new AbortController();
+    var safeSessionId = String(sessionId || '').trim();
+    if (safeSessionId) {
+      submitPayload.session_id = safeSessionId;
+    }
+
+    var streamController = new AbortController();
     var closed = false;
     var decoder = new TextDecoder();
     var buffer = '';
+    var activeSessionId = '';
+    var activeRequestId = '';
 
     function safeClose() {
       if (closed) {
         return;
       }
       closed = true;
-      controller.abort();
+      streamController.abort();
       if (handlers && typeof handlers.onClose === 'function') {
         handlers.onClose();
       }
@@ -157,13 +164,36 @@
           continue;
         }
         if (line.indexOf('data:') === 0) {
-          dataLines.push(line.slice(5).trimStart());
+          var value = line.slice(5);
+          if (value.charAt(0) === ' ') {
+            value = value.slice(1);
+          }
+          dataLines.push(value);
         }
       }
       if (!dataLines.length) {
         return null;
       }
       return dataLines.join('\n');
+    }
+
+    function validatePayload(payload) {
+      if (!payload || typeof payload !== 'object') {
+        throw new Error('SSE payload 형식이 올바르지 않습니다.');
+      }
+      if (typeof payload.type !== 'string' || !payload.type.trim()) {
+        throw new Error('SSE payload의 type 필드가 누락되었습니다.');
+      }
+      if (typeof payload.request_id !== 'string' || !payload.request_id.trim()) {
+        throw new Error('SSE payload의 request_id 필드가 누락되었습니다.');
+      }
+      if (typeof payload.node !== 'string' || !payload.node.trim()) {
+        throw new Error('SSE payload의 node 필드가 누락되었습니다.');
+      }
+      if (payload.request_id !== activeRequestId) {
+        throw new Error('요청 ID가 일치하지 않는 이벤트를 수신했습니다.');
+      }
+      return payload;
     }
 
     function processBuffer() {
@@ -180,58 +210,69 @@
         }
         var parsed = null;
         try {
-          parsed = JSON.parse(dataText);
+          parsed = validatePayload(JSON.parse(dataText));
         } catch (error) {
-          notifyError(new Error('SSE payload 파싱에 실패했습니다.'));
+          notifyError(error instanceof Error ? error : new Error('SSE payload 파싱에 실패했습니다.'));
           return;
         }
         if (handlers && typeof handlers.onEvent === 'function') {
           handlers.onEvent(parsed);
         }
-        if (parsed && (parsed.type === 'done' || parsed.type === 'error')) {
+        if (parsed.type === 'done' || parsed.type === 'error') {
           safeClose();
           return;
         }
       }
     }
 
-    fetch(buildPath(path), {
-      method: 'POST',
-      headers: {
-        'Accept': 'text/event-stream',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal
-    })
-      .then(function (response) {
-        if (!response.ok) {
-          return response
-            .text()
-            .then(function (text) {
-              var payload = null;
-              if (text) {
-                try {
-                  payload = JSON.parse(text);
-                } catch (ignoreError) {
-                  payload = null;
+    function waitBeforeStreamConnect() {
+      return new Promise(function (resolve) {
+        setTimeout(resolve, STREAM_CONNECT_DELAY_MS);
+      });
+    }
+
+    function openEventStream() {
+      var eventPath =
+        '/chat/' +
+        encodeSegment(activeSessionId) +
+        '/events?request_id=' +
+        encodeSegment(activeRequestId);
+      return fetch(buildPath(eventPath), {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/event-stream'
+        },
+        signal: streamController.signal
+      })
+        .then(function (response) {
+          if (!response.ok) {
+            return response
+              .text()
+              .then(function (text) {
+                var payload = null;
+                if (text) {
+                  try {
+                    payload = JSON.parse(text);
+                  } catch (ignoreError) {
+                    payload = null;
+                  }
                 }
-              }
-              var message = parseErrorMessage(payload) || ('요청 처리에 실패했습니다. status=' + response.status);
-              throw new Error(message);
+                var message = parseErrorMessage(payload) || ('요청 처리에 실패했습니다. status=' + response.status);
+                throw new Error(message);
+              });
+          }
+          if (handlers && typeof handlers.onOpen === 'function') {
+            handlers.onOpen({
+              session_id: activeSessionId,
+              request_id: activeRequestId
             });
-        }
-        if (handlers && typeof handlers.onOpen === 'function') {
-          handlers.onOpen();
-        }
-        if (!response.body || typeof response.body.getReader !== 'function') {
-          throw new Error('스트리밍 본문을 읽을 수 없습니다.');
-        }
-        var reader = response.body.getReader();
-        function pump() {
-          return reader
-            .read()
-            .then(function (result) {
+          }
+          if (!response.body || typeof response.body.getReader !== 'function') {
+            throw new Error('스트리밍 본문을 읽을 수 없습니다.');
+          }
+          var reader = response.body.getReader();
+          function pump() {
+            return reader.read().then(function (result) {
               if (closed) {
                 return;
               }
@@ -246,8 +287,34 @@
               }
               return pump();
             });
+          }
+          return pump();
+        });
+    }
+
+    requestJson('POST', '/chat', submitPayload)
+      .then(function (queued) {
+        if (closed) {
+          return;
         }
-        return pump();
+        activeSessionId = String(queued.session_id || '').trim();
+        activeRequestId = String(queued.request_id || '').trim();
+        if (!activeSessionId || !activeRequestId) {
+          throw new Error('작업 제출 응답이 올바르지 않습니다.');
+        }
+        if (handlers && typeof handlers.onQueued === 'function') {
+          handlers.onQueued({
+            session_id: activeSessionId,
+            request_id: activeRequestId,
+            status: String(queued.status || 'QUEUED')
+          });
+        }
+        return waitBeforeStreamConnect().then(function () {
+          if (closed) {
+            return;
+          }
+          return openEventStream();
+        });
       })
       .catch(function (error) {
         if (closed) {
