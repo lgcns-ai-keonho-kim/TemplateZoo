@@ -8,7 +8,7 @@
 
 ## Contribution Guide
 
-<b><I> 1. 신규 예제를 작성 할 때는 항상 <a href="./000_base_template/">BASE TEMPLATE</a>을 먼저 복사하세요.</I></b>
+<b><I> 1. 신규 예제를 작성 할 때는 항상 <a href="./001_chatbot/">chatbot</a>을 먼저 복사하세요.</I></b>
 
 ```bash
 # Base Template은 모든 구현에 사용되는 기본 구조입니다.
