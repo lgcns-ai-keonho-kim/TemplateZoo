@@ -13,7 +13,7 @@
 ```bash
 # Base Template은 모든 구현에 사용되는 기본 구조입니다.
 # 최대한 구조를 지켜 작성하시되, 작성이 완료된 다음 불필요한 부분에 대해서 삭제해주세요.
-cp -r 000_base_template <TEMPLATE_NUMBER>_<STH_TITLE>
+cp -r 001_chatbot <TEMPLATE_NUMBER>_<STH_TITLE>
 ```
 
 <b><I>2. 파이썬 프로젝트의 이름을 항상 Rename 해주세요.</I></b>
