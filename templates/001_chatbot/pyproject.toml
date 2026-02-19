@@ -1,0 +1,67 @@
+[project]
+name = "base-template"
+version = "0.1.0"
+description = "Base Template for Assetization"
+readme = "README.md"
+authors = [
+    { name = "lgcns-ai-keonho-kim", email = "kkh93@lgcns.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "elasticsearch>=9.2.1",
+    "fastapi>=0.128.0",
+    "fastmcp>=2.14.4",
+    "httpx>=0.28.1",
+    "json-repair>=0.55.1",
+    "langchain>=1.2.7",
+    "langchain-anthropic>=1.3.1",
+    "langchain-google-genai>=4.2.0",
+    "langchain-mcp-adapters>=0.2.1",
+    "langchain-ollama>=1.0.1",
+    "langchain-openai>=1.1.7",
+    "langgraph>=1.0.7",
+    "langgraph-checkpoint==3.0.1",
+    "langgraph-checkpoint-postgres>=3.0.4",
+    "langgraph-checkpoint-redis>=0.3.4",
+    "langgraph-checkpoint-sqlite>=3.0.3",
+    "motor>=3.7.1",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.0",
+    "pgvector>=0.4.2",
+    "pillow>=12.1.0",
+    "psycopg2-binary>=2.9.11",
+    "pydantic>=2.12.5",
+    "python-dotenv>=1.2.1",
+    "redis>=7.1.0",
+    "redisvl>=0.13.2",
+    "sqlalchemy>=2.0.46",
+    "sqlite-vec>=0.1.6",
+    "uvicorn>=0.40.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.0.0",
+]
+
+[project.scripts]
+base-template = "base_template:main"
+
+[build-system]
+requires = ["uv_build>=0.8.19,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "base_template"
+module-root = "src"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+addopts = "-s -v"
+
