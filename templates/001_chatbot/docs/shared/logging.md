@@ -1,6 +1,6 @@
 # Shared Logging 가이드
 
-이 문서는 `src/base_template/shared/logging`의 로깅 인터페이스와 저장소 구현을 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/shared/logging`의 로깅 인터페이스와 저장소 구현을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -18,11 +18,11 @@
 
 | 파일 | 역할 |
 | --- | --- |
-| `src/base_template/shared/logging/models.py` | `LogLevel`, `LogContext`, `LogRecord` 정의 |
-| `src/base_template/shared/logging/logger.py` | Logger/Repository 인터페이스, InMemory 구현, 기본 로거 팩토리 |
-| `src/base_template/shared/logging/db_repository.py` | 일반 로그 DB 저장 구현 |
-| `src/base_template/shared/logging/llm_repository.py` | LLM 로그 DB 저장 구현 |
-| `src/base_template/shared/logging/__init__.py` | 공개 API 제공 |
+| `src/chatbot/shared/logging/models.py` | `LogLevel`, `LogContext`, `LogRecord` 정의 |
+| `src/chatbot/shared/logging/logger.py` | Logger/Repository 인터페이스, InMemory 구현, 기본 로거 팩토리 |
+| `src/chatbot/shared/logging/db_repository.py` | 일반 로그 DB 저장 구현 |
+| `src/chatbot/shared/logging/llm_repository.py` | LLM 로그 DB 저장 구현 |
+| `src/chatbot/shared/logging/__init__.py` | 공개 API 제공 |
 
 ## 3. 인터페이스 정의
 

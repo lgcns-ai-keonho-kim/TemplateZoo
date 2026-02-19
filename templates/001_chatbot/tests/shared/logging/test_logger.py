@@ -2,12 +2,12 @@
 목적: 인메모리 로거와 로그 모델 동작을 검증한다.
 설명: 로그 기록, 컨텍스트 병합, 저장소 공유 여부를 확인한다.
 디자인 패턴: 전략 패턴, 저장소 패턴
-참조: src/base_template/shared/logging/logger.py, src/base_template/shared/logging/models.py
+참조: src/chatbot/shared/logging/logger.py, src/chatbot/shared/logging/models.py
 """
 
 from __future__ import annotations
 
-from base_template.shared.logging import (
+from chatbot.shared.logging import (
     InMemoryLogger,
     LogContext,
     LogLevel,

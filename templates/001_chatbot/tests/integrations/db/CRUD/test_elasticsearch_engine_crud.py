@@ -2,7 +2,7 @@
 목적: Elasticsearch 엔진의 기본 CRUD 동작을 검증한다.
 설명: 실제 Elasticsearch 환경에서 인덱스/문서 작업을 확인한다.
 디자인 패턴: 테스트 케이스
-참조: src/base_template/integrations/db/engines/elasticsearch/engine.py
+참조: src/chatbot/integrations/db/engines/elasticsearch/engine.py
 """
 
 from __future__ import annotations
@@ -10,8 +10,8 @@ from __future__ import annotations
 import logging
 import os
 
-from base_template.integrations.db import DBClient
-from base_template.integrations.db.engines.elasticsearch import ElasticsearchEngine
+from chatbot.integrations.db import DBClient
+from chatbot.integrations.db.engines.elasticsearch import ElasticsearchEngine
 
 
 _LOGGER = logging.getLogger("tests.crud")
@@ -125,7 +125,7 @@ def _drop_none(params: dict) -> dict:
 
 
 def _collection_schema(name: str, dimension: int | None):
-    from base_template.integrations.db.base import CollectionSchema
+    from chatbot.integrations.db.base import CollectionSchema
 
     return CollectionSchema(
         name=name,
@@ -142,6 +142,6 @@ def _collection_name(prefix: str) -> str:
 
 
 def _doc(doc_id: str, payload: dict):
-    from base_template.integrations.db.base import Document
+    from chatbot.integrations.db.base import Document
 
     return Document(doc_id=doc_id, payload=payload, vector=None)

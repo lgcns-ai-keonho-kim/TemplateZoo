@@ -205,7 +205,7 @@ def chat_server_context() -> Iterator[ChatServerContext]:
         "uv",
         "run",
         "uvicorn",
-        "base_template.api.main:app",
+        "chatbot.api.main:app",
         "--host",
         "127.0.0.1",
         "--port",

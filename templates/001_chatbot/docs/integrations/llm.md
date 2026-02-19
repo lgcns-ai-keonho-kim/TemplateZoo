@@ -1,6 +1,6 @@
 # Integrations LLM 가이드
 
-이 문서는 `src/base_template/integrations/llm/client.py`의 `LLMClient` 인터페이스와 동작 규칙을 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/integrations/llm/client.py`의 `LLMClient` 인터페이스와 동작 규칙을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -16,12 +16,12 @@
 
 | 파일 | 역할 |
 | --- | --- |
-| `src/base_template/integrations/llm/client.py` | LLMClient 구현 |
-| `src/base_template/integrations/llm/__init__.py` | 공개 API 제공 |
-| `src/base_template/shared/logging/*` | 로깅 모델/저장소/로거 |
-| `src/base_template/shared/exceptions/*` | 공통 예외 모델 |
-| `src/base_template/core/chat/nodes/response_node.py` | response 노드의 LLMClient 사용 예 |
-| `src/base_template/core/chat/nodes/safeguard_node.py` | safeguard 노드의 LLMClient 사용 예 |
+| `src/chatbot/integrations/llm/client.py` | LLMClient 구현 |
+| `src/chatbot/integrations/llm/__init__.py` | 공개 API 제공 |
+| `src/chatbot/shared/logging/*` | 로깅 모델/저장소/로거 |
+| `src/chatbot/shared/exceptions/*` | 공통 예외 모델 |
+| `src/chatbot/core/chat/nodes/response_node.py` | response 노드의 LLMClient 사용 예 |
+| `src/chatbot/core/chat/nodes/safeguard_node.py` | safeguard 노드의 LLMClient 사용 예 |
 
 ## 3. 인터페이스
 
@@ -126,7 +126,7 @@
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
 
-from base_template.integrations.llm import LLMClient
+from chatbot.integrations.llm import LLMClient
 
 model = ChatOpenAI(model="gpt-4o-mini", api_key=SecretStr("..."))
 client = LLMClient(model=model, name="chat-response-llm")
@@ -170,7 +170,7 @@ for chunk in client.stream("스트리밍 테스트"):
 1. 예외 코드 표가 `client.py` 구현과 일치하는가
 2. logging_engine 허용 타입 설명이 `_resolve_logging`과 일치하는가
 3. 스트림 동작 설명이 `_stream`, `_astream` 구현과 일치하는가
-4. 문서 경로가 실제 `src/base_template/integrations/llm` 구조와 일치하는가
+4. 문서 경로가 실제 `src/chatbot/integrations/llm` 구조와 일치하는가
 
 ## 11. 관련 문서
 

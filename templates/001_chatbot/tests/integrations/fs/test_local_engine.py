@@ -2,12 +2,12 @@
 목적: 로컬 파일 시스템 엔진 동작을 검증한다.
 설명: 파일 쓰기/읽기/이동/복사 기능을 테스트한다.
 디자인 패턴: 어댑터 패턴 테스트
-참조: src/base_template/integrations/fs/engines/local.py
+참조: src/chatbot/integrations/fs/engines/local.py
 """
 
 from __future__ import annotations
 
-from base_template.integrations.fs.engines import LocalFSEngine
+from chatbot.integrations.fs.engines import LocalFSEngine
 
 
 def test_local_engine_write_read_move_copy(tmp_path):

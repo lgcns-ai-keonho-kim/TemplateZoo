@@ -1,6 +1,6 @@
 # Core Chat 가이드
 
-이 문서는 `src/base_template/core/chat`의 도메인 모델, 그래프 조립, 노드 실행 규칙을 코드 기준으로 설명한다.
+이 문서는 `src/chatbot/core/chat`의 도메인 모델, 그래프 조립, 노드 실행 규칙을 코드 기준으로 설명한다.
 
 ## 1. 용어 정리
 
@@ -20,7 +20,7 @@
 ## 2. 디렉터리와 관련 스크립트
 
 ```text
-src/base_template/core/chat/
+src/chatbot/core/chat/
   const/
   graphs/
   models/
@@ -32,27 +32,27 @@ src/base_template/core/chat/
 
 | 분류 | 파일 | 역할 |
 | --- | --- | --- |
-| 엔티티 | `src/base_template/core/chat/models/entities.py` | `ChatSession`, `ChatMessage`, `ChatRole` 정의 |
-| 턴 결과 | `src/base_template/core/chat/models/turn_result.py` | 1턴 처리 결과 묶음 모델 |
-| 상수 | `src/base_template/core/chat/const/settings.py` | DB 경로, 페이지, 문맥 길이 기본값 |
-| 차단 문구 | `src/base_template/core/chat/const/messages/safeguard.py` | 차단 메시지 Enum |
-| 상태 | `src/base_template/core/chat/state/graph_state.py` | 그래프 상태 키 정의 |
-| 그래프 | `src/base_template/core/chat/graphs/chat_graph.py` | 노드 등록, 엣지, stream 정책 |
-| 응답 노드 | `src/base_template/core/chat/nodes/response_node.py` | 일반 응답 생성 |
-| 분류 노드 | `src/base_template/core/chat/nodes/safeguard_node.py` | PASS/차단 라벨 분류 |
-| 분기 노드 | `src/base_template/core/chat/nodes/safeguard_route_node.py` | response/blocked 분기 |
-| 차단 노드 | `src/base_template/core/chat/nodes/safeguard_message_node.py` | 차단 문구 생성 |
-| 프롬프트 | `src/base_template/core/chat/prompts/chat_prompt.py`, `src/base_template/core/chat/prompts/safeguard_prompt.py` | 시스템 프롬프트 |
-| 매퍼 | `src/base_template/core/chat/utils/mapper.py` | 도메인 모델과 DB 문서 변환 |
+| 엔티티 | `src/chatbot/core/chat/models/entities.py` | `ChatSession`, `ChatMessage`, `ChatRole` 정의 |
+| 턴 결과 | `src/chatbot/core/chat/models/turn_result.py` | 1턴 처리 결과 묶음 모델 |
+| 상수 | `src/chatbot/core/chat/const/settings.py` | DB 경로, 페이지, 문맥 길이 기본값 |
+| 차단 문구 | `src/chatbot/core/chat/const/messages/safeguard.py` | 차단 메시지 Enum |
+| 상태 | `src/chatbot/core/chat/state/graph_state.py` | 그래프 상태 키 정의 |
+| 그래프 | `src/chatbot/core/chat/graphs/chat_graph.py` | 노드 등록, 엣지, stream 정책 |
+| 응답 노드 | `src/chatbot/core/chat/nodes/response_node.py` | 일반 응답 생성 |
+| 분류 노드 | `src/chatbot/core/chat/nodes/safeguard_node.py` | PASS/차단 라벨 분류 |
+| 분기 노드 | `src/chatbot/core/chat/nodes/safeguard_route_node.py` | response/blocked 분기 |
+| 차단 노드 | `src/chatbot/core/chat/nodes/safeguard_message_node.py` | 차단 문구 생성 |
+| 프롬프트 | `src/chatbot/core/chat/prompts/chat_prompt.py`, `src/chatbot/core/chat/prompts/safeguard_prompt.py` | 시스템 프롬프트 |
+| 매퍼 | `src/chatbot/core/chat/utils/mapper.py` | 도메인 모델과 DB 문서 변환 |
 
 연동 스크립트:
 
-1. `src/base_template/shared/chat/graph/base_chat_graph.py`
-2. `src/base_template/shared/chat/nodes/llm_node.py`
-3. `src/base_template/shared/chat/nodes/branch_node.py`
-4. `src/base_template/shared/chat/nodes/message_node.py`
-5. `src/base_template/shared/chat/services/chat_service.py`
-6. `src/base_template/shared/chat/services/service_executor.py`
+1. `src/chatbot/shared/chat/graph/base_chat_graph.py`
+2. `src/chatbot/shared/chat/nodes/llm_node.py`
+3. `src/chatbot/shared/chat/nodes/branch_node.py`
+4. `src/chatbot/shared/chat/nodes/message_node.py`
+5. `src/chatbot/shared/chat/services/chat_service.py`
+6. `src/chatbot/shared/chat/services/service_executor.py`
 
 ## 3. 모델 인터페이스
 
@@ -81,7 +81,7 @@ src/base_template/core/chat/
 
 ## 3-3. ChatGraphState
 
-`src/base_template/core/chat/state/graph_state.py` 기준:
+`src/chatbot/core/chat/state/graph_state.py` 기준:
 
 ```python
 class ChatGraphState(TypedDict):
@@ -103,7 +103,7 @@ class ChatGraphState(TypedDict):
 
 ## 4-1. 노드와 엣지
 
-`src/base_template/core/chat/graphs/chat_graph.py` 기준:
+`src/chatbot/core/chat/graphs/chat_graph.py` 기준:
 
 ```mermaid
 flowchart LR
@@ -140,7 +140,7 @@ flowchart LR
 
 ## 5-1. safeguard_node
 
-- 파일: `src/base_template/core/chat/nodes/safeguard_node.py`
+- 파일: `src/chatbot/core/chat/nodes/safeguard_node.py`
 - 내부 구현: `shared.chat.nodes.LLMNode`
 - 입력: `user_message`
 - 출력: `safeguard_result`
@@ -150,7 +150,7 @@ flowchart LR
 
 ## 5-2. safeguard_route_node
 
-- 파일: `src/base_template/core/chat/nodes/safeguard_route_node.py`
+- 파일: `src/chatbot/core/chat/nodes/safeguard_route_node.py`
 - 내부 구현: `shared.chat.nodes.BranchNode`
 - 규칙:
   1. `PASS -> response`
@@ -160,14 +160,14 @@ flowchart LR
 
 ## 5-3. response_node
 
-- 파일: `src/base_template/core/chat/nodes/response_node.py`
+- 파일: `src/chatbot/core/chat/nodes/response_node.py`
 - 내부 구현: `LLMNode`
 - 출력 키: `assistant_message`
 - 스트림: `token` 이벤트를 생성한다.
 
 ## 5-4. safeguard_message_node
 
-- 파일: `src/base_template/core/chat/nodes/safeguard_message_node.py`
+- 파일: `src/chatbot/core/chat/nodes/safeguard_message_node.py`
 - 내부 구현: `MessageNode`
 - 메시지 소스: `SafeguardRejectionMessage`
 - 출력 키: `assistant_message`
@@ -176,19 +176,19 @@ flowchart LR
 
 ## 6-1. CHAT_PROMPT
 
-- 파일: `src/base_template/core/chat/prompts/chat_prompt.py`
+- 파일: `src/chatbot/core/chat/prompts/chat_prompt.py`
 - 입력 변수: `user_message`
 - 역할: 일반 응답 정책 제공
 
 ## 6-2. SAFEGUARD_PROMPT
 
-- 파일: `src/base_template/core/chat/prompts/safeguard_prompt.py`
+- 파일: `src/chatbot/core/chat/prompts/safeguard_prompt.py`
 - 입력 변수: `user_message`
 - 출력 토큰 규칙: `PASS`, `PII`, `HARMFUL`, `PROMPT_INJECTION`
 
 ## 7. 상수 인터페이스
 
-`src/base_template/core/chat/const/settings.py` 기준:
+`src/chatbot/core/chat/const/settings.py` 기준:
 
 | 상수 | 값 | 설명 |
 | --- | --- | --- |
@@ -204,7 +204,7 @@ flowchart LR
 
 ## 8-1. ChatService 연동
 
-`src/base_template/shared/chat/services/chat_service.py`에서 core 그래프를 호출한다.
+`src/chatbot/shared/chat/services/chat_service.py`에서 core 그래프를 호출한다.
 
 핵심 경로:
 
@@ -215,7 +215,7 @@ flowchart LR
 
 ## 8-2. ServiceExecutor 연동
 
-`src/base_template/shared/chat/services/service_executor.py`는 core 이벤트를 API 이벤트로 변환한다.
+`src/chatbot/shared/chat/services/service_executor.py`는 core 이벤트를 API 이벤트로 변환한다.
 
 핵심 규칙:
 

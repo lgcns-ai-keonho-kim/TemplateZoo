@@ -2,14 +2,14 @@
 목적: InMemoryEventBuffer의 만료/정리 동작을 검증한다.
 설명: TTL과 GC 주기에 따라 버킷이 정리되는지 확인한다.
 디자인 패턴: 상태 기반 단위 테스트
-참조: src/base_template/shared/runtime/buffer/in_memory_buffer.py
+참조: src/chatbot/shared/runtime/buffer/in_memory_buffer.py
 """
 
 from __future__ import annotations
 
 import time
 
-from base_template.shared.runtime.buffer import EventBufferConfig, InMemoryEventBuffer
+from chatbot.shared.runtime.buffer import EventBufferConfig, InMemoryEventBuffer
 
 
 def test_in_memory_event_buffer_gc_removes_expired_bucket() -> None:

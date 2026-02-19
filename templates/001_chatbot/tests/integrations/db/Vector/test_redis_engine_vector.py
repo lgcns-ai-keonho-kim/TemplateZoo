@@ -2,7 +2,7 @@
 목적: Redis 엔진의 벡터 검색 동작을 검증한다.
 설명: 실제 Redis 환경에서 벡터 검색을 확인한다.
 디자인 패턴: 테스트 케이스
-참조: src/base_template/integrations/db/engines/redis/engine.py
+참조: src/chatbot/integrations/db/engines/redis/engine.py
 """
 
 from __future__ import annotations
@@ -10,9 +10,9 @@ from __future__ import annotations
 import os
 from typing import List
 
-from base_template.integrations.db import DBClient
-from base_template.integrations.db.base import Vector, VectorSearchRequest
-from base_template.integrations.db.engines.redis import RedisEngine
+from chatbot.integrations.db import DBClient
+from chatbot.integrations.db.base import Vector, VectorSearchRequest
+from chatbot.integrations.db.engines.redis import RedisEngine
 
 
 def test_redis_engine_vector_search(ollama_embeddings) -> None:
@@ -59,7 +59,7 @@ def test_redis_engine_vector_search(ollama_embeddings) -> None:
 
 
 def _collection_schema(name: str, dimension: int | None):
-    from base_template.integrations.db.base import CollectionSchema
+    from chatbot.integrations.db.base import CollectionSchema
 
     return CollectionSchema(
         name=name,
@@ -76,7 +76,7 @@ def _collection_name(prefix: str) -> str:
 
 
 def _doc(doc_id: str, payload: dict, vector: List[float] | None = None):
-    from base_template.integrations.db.base import Document
+    from chatbot.integrations.db.base import Document
 
     return Document(
         doc_id=doc_id,

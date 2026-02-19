@@ -2,15 +2,15 @@
 목적: 워커 기본 실행 흐름을 검증한다.
 설명: 데코레이터 등록과 with 구문 실행을 통해 큐 아이템이 처리되는지 확인한다.
 디자인 패턴: 템플릿 메서드, 커맨드 패턴
-참조: src/base_template/shared/runtime/worker/worker.py, src/base_template/shared/runtime/queue/in_memory_queue.py
+참조: src/chatbot/shared/runtime/worker/worker.py, src/chatbot/shared/runtime/queue/in_memory_queue.py
 """
 
 from __future__ import annotations
 
 import threading
 
-from base_template.shared.runtime.queue import InMemoryQueue
-from base_template.shared.runtime.worker import Worker, WorkerConfig, WorkerState
+from chatbot.shared.runtime.queue import InMemoryQueue
+from chatbot.shared.runtime.worker import Worker, WorkerConfig, WorkerState
 
 
 def test_worker_processes_items_with_context_manager() -> None:

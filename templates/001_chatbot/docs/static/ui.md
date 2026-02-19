@@ -1,6 +1,6 @@
 # Static UI 구현 가이드
 
-이 문서는 `src/base_template/static`의 동작을 기준으로, 프런트엔드에서 분석/구현/확장할 때 필요한 내용을 한 번에 제공한다.
+이 문서는 `src/chatbot/static`의 동작을 기준으로, 프런트엔드에서 분석/구현/확장할 때 필요한 내용을 한 번에 제공한다.
 
 ## 1. 범위
 
@@ -22,12 +22,12 @@
 
 다음 순서로 읽으면 전체 흐름을 빠르게 파악할 수 있다.
 
-1. `src/base_template/static/index.html`
-2. `src/base_template/static/js/core/app.js`
-3. `src/base_template/static/js/ui/grid_manager.js`
-4. `src/base_template/static/js/chat/api_transport.js`
-5. `src/base_template/static/js/chat/chat_cell.js`
-6. `src/base_template/static/js/chat/chat_presenter.js`
+1. `src/chatbot/static/index.html`
+2. `src/chatbot/static/js/core/app.js`
+3. `src/chatbot/static/js/ui/grid_manager.js`
+4. `src/chatbot/static/js/chat/api_transport.js`
+5. `src/chatbot/static/js/chat/chat_cell.js`
+6. `src/chatbot/static/js/chat/chat_presenter.js`
 
 ## 3. 모듈 책임과 공개 함수
 
@@ -537,8 +537,8 @@ interface ChatPanelState {
 
 | 키 | 의미 | 값 |
 | --- | --- | --- |
-| `base-template-theme` | 테마 유지 | `light` / `dark` |
-| `base-template-panel-collapsed` | 패널 접힘 여부 | `true` / `false` |
+| `chatbot-theme` | 테마 유지 | `light` / `dark` |
+| `chatbot-panel-collapsed` | 패널 접힘 여부 | `true` / `false` |
 
 프레임워크 전환 시에도 이 키를 유지하면, 정적 UI와 사용자 경험이 동일하다.
 

@@ -2,7 +2,7 @@
 목적: Redis 큐 기본 동작을 검증한다.
 설명: 아이템 추가/조회/닫기 흐름과 Redis 키 정리를 확인한다.
 디자인 패턴: 어댑터 패턴
-참조: src/base_template/shared/runtime/queue/redis_queue.py, src/base_template/shared/runtime/queue/model.py
+참조: src/chatbot/shared/runtime/queue/redis_queue.py, src/chatbot/shared/runtime/queue/model.py
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from uuid import uuid4
 
 import pytest
 
-from base_template.shared.runtime.queue import QueueConfig, RedisQueue
+from chatbot.shared.runtime.queue import QueueConfig, RedisQueue
 
 try:
     import redis

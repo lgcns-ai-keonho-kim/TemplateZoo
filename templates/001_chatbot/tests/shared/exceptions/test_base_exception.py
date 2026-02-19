@@ -2,12 +2,12 @@
 목적: 공통 예외 모델과 베이스 예외 동작을 검증한다.
 설명: 예외 메시지/상세 모델/원본 예외 저장 및 직렬화 결과를 확인한다.
 디자인 패턴: 도메인 예외 객체, DTO
-참조: src/base_template/shared/exceptions/base.py, src/base_template/shared/exceptions/models.py
+참조: src/chatbot/shared/exceptions/base.py, src/chatbot/shared/exceptions/models.py
 """
 
 from __future__ import annotations
 
-from base_template.shared.exceptions import BaseAppException, ExceptionDetail
+from chatbot.shared.exceptions import BaseAppException, ExceptionDetail
 
 
 def test_base_app_exception_to_dict() -> None:

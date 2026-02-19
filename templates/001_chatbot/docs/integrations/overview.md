@@ -1,12 +1,12 @@
 # Integrations 모듈 가이드
 
-이 문서는 `src/base_template/integrations` 계층의 책임, 구성 요소, 교체 절차를 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/integrations` 계층의 책임, 구성 요소, 교체 절차를 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
 | 용어 | 의미 | 관련 스크립트 |
 | --- | --- | --- |
-| 통합 계층 | 외부 시스템(DB, LLM, 파일시스템)과 직접 통신하는 계층 | `src/base_template/integrations/*` |
+| 통합 계층 | 외부 시스템(DB, LLM, 파일시스템)과 직접 통신하는 계층 | `src/chatbot/integrations/*` |
 | DB 엔진 | 저장소별 CRUD/검색 구현체 | `integrations/db/engines/*/engine.py` |
 | DB 클라이언트 | 엔진 공통 호출 퍼사드 | `integrations/db/client.py` |
 | LLM 클라이언트 | 모델 호출/로깅/예외를 표준화한 래퍼 | `integrations/llm/client.py` |
@@ -16,10 +16,10 @@
 
 | 경로 | 책임 | 주요 스크립트 |
 | --- | --- | --- |
-| `src/base_template/integrations/db` | DB 엔진 추상화, Query DSL, 엔진별 구현 | `client.py`, `base/*.py`, `query_builder/*.py`, `engines/*` |
-| `src/base_template/integrations/llm` | LangChain 모델 래핑과 로깅/예외 표준화 | `client.py` |
-| `src/base_template/integrations/fs` | 파일 시스템 추상화와 파일 로그 저장소 | `base/engine.py`, `engines/local.py`, `file_repository.py` |
-| `src/base_template/integrations/__init__.py` | integrations 공개 API | `__init__.py` |
+| `src/chatbot/integrations/db` | DB 엔진 추상화, Query DSL, 엔진별 구현 | `client.py`, `base/*.py`, `query_builder/*.py`, `engines/*` |
+| `src/chatbot/integrations/llm` | LangChain 모델 래핑과 로깅/예외 표준화 | `client.py` |
+| `src/chatbot/integrations/fs` | 파일 시스템 추상화와 파일 로그 저장소 | `base/engine.py`, `engines/local.py`, `file_repository.py` |
+| `src/chatbot/integrations/__init__.py` | integrations 공개 API | `__init__.py` |
 
 ## 3. 책임 경계
 
@@ -27,7 +27,7 @@
 
 1. API 라우터는 integrations 구현체를 직접 생성하지 않는다.
 2. shared 서비스 계층이 integrations를 사용한다.
-3. 엔진 교체는 조립 지점(`src/base_template/api/chat/services/runtime.py`)에서 수행한다.
+3. 엔진 교체는 조립 지점(`src/chatbot/api/chat/services/runtime.py`)에서 수행한다.
 4. 상위 계층은 가능하면 인터페이스(포트/퍼사드)만 의존한다.
 
 ## 4. 교체 전략

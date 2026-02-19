@@ -1,6 +1,6 @@
 # Integrations DB 가이드
 
-이 문서는 `src/base_template/integrations/db`의 공통 인터페이스, Query DSL, 엔진별 차이, 교체 절차를 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/integrations/db`의 공통 인터페이스, Query DSL, 엔진별 차이, 교체 절차를 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -21,19 +21,19 @@
 
 | 분류 | 파일 | 역할 |
 | --- | --- | --- |
-| 공개 API | `src/base_template/integrations/db/__init__.py` | DBClient/Builder/Engine 노출 |
-| 클라이언트 | `src/base_template/integrations/db/client.py` | 엔진 연결, 스키마 등록, CRUD, 벡터 검색 호출 |
-| 베이스 인터페이스 | `src/base_template/integrations/db/base/engine.py` | 엔진 공통 메서드 정의 |
-| 베이스 모델 | `src/base_template/integrations/db/base/models.py` | Schema/Document/Query/Vector 모델 |
-| 공통 DSL | `src/base_template/integrations/db/base/query_builder.py` | where/order/limit/vector DSL |
-| 읽기 DSL | `src/base_template/integrations/db/query_builder/read_builder.py` | `fetch`, `fetch_vector` |
-| 쓰기 DSL | `src/base_template/integrations/db/query_builder/write_builder.py` | `upsert`, `upsert_one` |
-| 삭제 DSL | `src/base_template/integrations/db/query_builder/delete_builder.py` | `by_id`, `execute` |
-| SQLite 엔진 | `src/base_template/integrations/db/engines/sqlite/engine.py` | 로컬 기본 엔진 |
-| Postgres 엔진 | `src/base_template/integrations/db/engines/postgres/engine.py` | PostgreSQL + pgvector |
-| Redis 엔진 | `src/base_template/integrations/db/engines/redis/engine.py` | Redis 기반 저장/검색 |
-| MongoDB 엔진 | `src/base_template/integrations/db/engines/mongodb/engine.py` | MongoDB CRUD |
-| Elasticsearch 엔진 | `src/base_template/integrations/db/engines/elasticsearch/engine.py` | ES 검색/벡터 검색 |
+| 공개 API | `src/chatbot/integrations/db/__init__.py` | DBClient/Builder/Engine 노출 |
+| 클라이언트 | `src/chatbot/integrations/db/client.py` | 엔진 연결, 스키마 등록, CRUD, 벡터 검색 호출 |
+| 베이스 인터페이스 | `src/chatbot/integrations/db/base/engine.py` | 엔진 공통 메서드 정의 |
+| 베이스 모델 | `src/chatbot/integrations/db/base/models.py` | Schema/Document/Query/Vector 모델 |
+| 공통 DSL | `src/chatbot/integrations/db/base/query_builder.py` | where/order/limit/vector DSL |
+| 읽기 DSL | `src/chatbot/integrations/db/query_builder/read_builder.py` | `fetch`, `fetch_vector` |
+| 쓰기 DSL | `src/chatbot/integrations/db/query_builder/write_builder.py` | `upsert`, `upsert_one` |
+| 삭제 DSL | `src/chatbot/integrations/db/query_builder/delete_builder.py` | `by_id`, `execute` |
+| SQLite 엔진 | `src/chatbot/integrations/db/engines/sqlite/engine.py` | 로컬 기본 엔진 |
+| Postgres 엔진 | `src/chatbot/integrations/db/engines/postgres/engine.py` | PostgreSQL + pgvector |
+| Redis 엔진 | `src/chatbot/integrations/db/engines/redis/engine.py` | Redis 기반 저장/검색 |
+| MongoDB 엔진 | `src/chatbot/integrations/db/engines/mongodb/engine.py` | MongoDB CRUD |
+| Elasticsearch 엔진 | `src/chatbot/integrations/db/engines/elasticsearch/engine.py` | ES 검색/벡터 검색 |
 
 ## 3. 핵심 인터페이스
 
@@ -151,9 +151,9 @@ Chat 기본 경로:
 예시:
 
 ```python
-from base_template.integrations.db import DBClient
-from base_template.integrations.db.engines.postgres import PostgresEngine
-from base_template.shared.chat import ChatHistoryRepository
+from chatbot.integrations.db import DBClient
+from chatbot.integrations.db.engines.postgres import PostgresEngine
+from chatbot.shared.chat import ChatHistoryRepository
 
 engine = PostgresEngine(
     host="127.0.0.1",
@@ -193,7 +193,7 @@ repository = ChatHistoryRepository(db_client=DBClient(engine))
 2. DSL 메서드 설명이 `read/write/delete_builder.py`와 일치하는가
 3. pagination 기본값이 `base/models.py`와 일치하는가
 4. 엔진 제약 설명이 각 `engine.py` 구현과 일치하는가
-5. 문서 경로가 실제 `src/base_template/integrations/db` 구조와 일치하는가
+5. 문서 경로가 실제 `src/chatbot/integrations/db` 구조와 일치하는가
 
 ## 10. 관련 문서
 

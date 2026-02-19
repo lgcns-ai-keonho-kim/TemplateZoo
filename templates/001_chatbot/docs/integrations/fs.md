@@ -1,6 +1,6 @@
 # Integrations FS 가이드
 
-이 문서는 `src/base_template/integrations/fs`의 파일 시스템 추상화와 파일 로그 저장소 동작을 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/integrations/fs`의 파일 시스템 추상화와 파일 로그 저장소 동작을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -15,10 +15,10 @@
 
 | 파일 | 역할 |
 | --- | --- |
-| `src/base_template/integrations/fs/base/engine.py` | 파일 엔진 표준 메서드 정의 |
-| `src/base_template/integrations/fs/engines/local.py` | 로컬 파일 시스템 구현 |
-| `src/base_template/integrations/fs/file_repository.py` | 파일 로그 저장소 구현 |
-| `src/base_template/integrations/fs/__init__.py` | 공개 API 제공 |
+| `src/chatbot/integrations/fs/base/engine.py` | 파일 엔진 표준 메서드 정의 |
+| `src/chatbot/integrations/fs/engines/local.py` | 로컬 파일 시스템 구현 |
+| `src/chatbot/integrations/fs/file_repository.py` | 파일 로그 저장소 구현 |
+| `src/chatbot/integrations/fs/__init__.py` | 공개 API 제공 |
 
 ## 3. BaseFSEngine 인터페이스
 
@@ -68,8 +68,8 @@ fallback 레코드 메타데이터:
 ## 6. 사용 예시
 
 ```python
-from base_template.integrations.fs import FileLogRepository
-from base_template.shared.logging import InMemoryLogger
+from chatbot.integrations.fs import FileLogRepository
+from chatbot.shared.logging import InMemoryLogger
 
 repository = FileLogRepository(base_dir="data/logs")
 logger = InMemoryLogger(name="file-logger", repository=repository)
@@ -109,7 +109,7 @@ logger.info("서비스 시작")
 1. 인터페이스 메서드 목록이 `base/engine.py`와 일치하는가
 2. 저장 경로 규칙 설명이 `file_repository.py`와 일치하는가
 3. fallback 처리 설명이 `_fallback_record` 구현과 일치하는가
-4. 문서 경로가 실제 `src/base_template/integrations/fs` 구조와 일치하는가
+4. 문서 경로가 실제 `src/chatbot/integrations/fs` 구조와 일치하는가
 
 ## 10. 관련 문서
 

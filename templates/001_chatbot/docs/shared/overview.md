@@ -1,28 +1,28 @@
 # Shared 모듈 가이드
 
-이 문서는 `src/base_template/shared` 계층의 책임 경계, 구성 요소, 변경 절차를 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/shared` 계층의 책임 경계, 구성 요소, 변경 절차를 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
 | 용어 | 의미 | 관련 스크립트 |
 | --- | --- | --- |
-| 공통 계층 | API/Core/Integrations 사이에서 재사용되는 실행/저장/보조 로직 계층 | `src/base_template/shared/*` |
-| 포트 | 구현체와 상위 계층 사이의 동작 인터페이스 | `src/base_template/shared/chat/interface/ports.py` |
-| 실행 오케스트레이터 | 큐 소비, 이벤트 중계, 상태 전이를 관리하는 컴포넌트 | `src/base_template/shared/chat/services/service_executor.py` |
-| 런타임 컴포넌트 | Queue, EventBuffer, Worker, ThreadPool 같은 실행 인프라 | `src/base_template/shared/runtime/*` |
-| 공통 예외 | 계층 전체에서 통일해 사용하는 오류 모델 | `src/base_template/shared/exceptions/*` |
-| 공통 로깅 | 로거 인터페이스와 저장소 구현 | `src/base_template/shared/logging/*` |
+| 공통 계층 | API/Core/Integrations 사이에서 재사용되는 실행/저장/보조 로직 계층 | `src/chatbot/shared/*` |
+| 포트 | 구현체와 상위 계층 사이의 동작 인터페이스 | `src/chatbot/shared/chat/interface/ports.py` |
+| 실행 오케스트레이터 | 큐 소비, 이벤트 중계, 상태 전이를 관리하는 컴포넌트 | `src/chatbot/shared/chat/services/service_executor.py` |
+| 런타임 컴포넌트 | Queue, EventBuffer, Worker, ThreadPool 같은 실행 인프라 | `src/chatbot/shared/runtime/*` |
+| 공통 예외 | 계층 전체에서 통일해 사용하는 오류 모델 | `src/chatbot/shared/exceptions/*` |
+| 공통 로깅 | 로거 인터페이스와 저장소 구현 | `src/chatbot/shared/logging/*` |
 
 ## 2. 모듈 구성과 스크립트 맵
 
 | 경로 | 핵심 책임 | 주요 스크립트 |
 | --- | --- | --- |
-| `src/base_template/shared/chat` | Chat 실행, 저장, 멱등 처리, 그래프 포트 | `services/chat_service.py`, `services/service_executor.py`, `repositories/history_repository.py` |
-| `src/base_template/shared/runtime` | 큐/이벤트 버퍼/워커/스레드풀 제공 | `queue/*.py`, `buffer/*.py`, `worker/*.py`, `thread_pool/*.py` |
-| `src/base_template/shared/config` | 환경 변수/JSON/dict 설정 병합과 런타임 `.env` 로딩 | `loader.py`, `runtime_env_loader.py` |
-| `src/base_template/shared/exceptions` | 공통 예외 모델과 베이스 예외 | `models.py`, `base.py` |
-| `src/base_template/shared/logging` | 로거 인터페이스, 인메모리/DB 로그 저장소 | `logger.py`, `db_repository.py`, `llm_repository.py` |
-| `src/base_template/shared/const` | 전역 상수 | `__init__.py` |
+| `src/chatbot/shared/chat` | Chat 실행, 저장, 멱등 처리, 그래프 포트 | `services/chat_service.py`, `services/service_executor.py`, `repositories/history_repository.py` |
+| `src/chatbot/shared/runtime` | 큐/이벤트 버퍼/워커/스레드풀 제공 | `queue/*.py`, `buffer/*.py`, `worker/*.py`, `thread_pool/*.py` |
+| `src/chatbot/shared/config` | 환경 변수/JSON/dict 설정 병합과 런타임 `.env` 로딩 | `loader.py`, `runtime_env_loader.py` |
+| `src/chatbot/shared/exceptions` | 공통 예외 모델과 베이스 예외 | `models.py`, `base.py` |
+| `src/chatbot/shared/logging` | 로거 인터페이스, 인메모리/DB 로그 저장소 | `logger.py`, `db_repository.py`, `llm_repository.py` |
+| `src/chatbot/shared/const` | 전역 상수 | `__init__.py` |
 
 ## 3. 책임 경계
 
@@ -65,7 +65,7 @@ shared -> integrations
 
 ## 7. 소스 매칭 점검 항목
 
-1. 문서에 기재된 `src/base_template/shared/*` 경로가 실제로 존재하는가
+1. 문서에 기재된 `src/chatbot/shared/*` 경로가 실제로 존재하는가
 2. 문서의 책임 설명이 `__init__.py` 공개 API와 일치하는가
 3. shared 문서 간 상호 링크가 모두 유효한가
 

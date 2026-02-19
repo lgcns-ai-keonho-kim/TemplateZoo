@@ -2,7 +2,7 @@
 목적: MongoDB 엔진의 기본 CRUD 동작을 검증한다.
 설명: 실제 MongoDB 환경에서 컬렉션/문서 작업을 확인한다.
 디자인 패턴: 테스트 케이스
-참조: src/base_template/integrations/db/engines/mongodb/engine.py
+참조: src/chatbot/integrations/db/engines/mongodb/engine.py
 """
 
 from __future__ import annotations
@@ -10,8 +10,8 @@ from __future__ import annotations
 import logging
 import os
 
-from base_template.integrations.db import DBClient
-from base_template.integrations.db.engines.mongodb import MongoDBEngine
+from chatbot.integrations.db import DBClient
+from chatbot.integrations.db.engines.mongodb import MongoDBEngine
 
 
 _LOGGER = logging.getLogger("tests.crud")
@@ -107,7 +107,7 @@ def test_mongodb_engine_query_dsl() -> None:
 
 
 def _collection_schema(name: str, dimension: int | None):
-    from base_template.integrations.db.base import CollectionSchema
+    from chatbot.integrations.db.base import CollectionSchema
 
     return CollectionSchema(
         name=name,
@@ -124,7 +124,7 @@ def _collection_name(prefix: str) -> str:
 
 
 def _doc(doc_id: str, payload: dict):
-    from base_template.integrations.db.base import Document
+    from chatbot.integrations.db.base import Document
 
     return Document(doc_id=doc_id, payload=payload, vector=None)
 

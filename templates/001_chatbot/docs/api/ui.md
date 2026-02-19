@@ -1,33 +1,33 @@
 # API UI 가이드
 
-이 문서는 `src/base_template/api/ui` 모듈을 기준으로 UI 전용 API의 인터페이스, 동작 순서, 수정 지점을 정리한다.
+이 문서는 `src/chatbot/api/ui` 모듈을 기준으로 UI 전용 API의 인터페이스, 동작 순서, 수정 지점을 정리한다.
 
 ## 1. 용어 정리
 
 | 용어 | 의미 | 관련 코드 |
 | --- | --- | --- |
 | UI API | 프런트엔드 화면 관리용 조회/생성/삭제 API 집합 | `/ui-api/chat/*` |
-| UI 서비스 | Core ChatService 호출 결과를 UI DTO로 변환하는 계층 | `src/base_template/api/ui/services/chat_service.py` |
-| UI DTO | UI에서 직접 소비하는 요청/응답 모델 | `src/base_template/api/ui/models/*.py` |
-| 매퍼 | Core 엔티티를 UI DTO로 바꾸는 순수 함수 | `src/base_template/api/ui/utils/mappers.py` |
+| UI 서비스 | Core ChatService 호출 결과를 UI DTO로 변환하는 계층 | `src/chatbot/api/ui/services/chat_service.py` |
+| UI DTO | UI에서 직접 소비하는 요청/응답 모델 | `src/chatbot/api/ui/models/*.py` |
+| 매퍼 | Core 엔티티를 UI DTO로 바꾸는 순수 함수 | `src/chatbot/api/ui/utils/mappers.py` |
 | 페이지네이션 | 목록 조회 범위를 `limit`, `offset`으로 제어하는 규칙 | `list_sessions.py`, `list_messages.py` |
 
 ## 2. 관련 스크립트
 
 | 분류 | 파일 | 역할 |
 | --- | --- | --- |
-| 라우터 집계 | `src/base_template/api/ui/routers/router.py` | `/ui-api/chat` prefix 라우터 조립 |
-| 세션 생성 | `src/base_template/api/ui/routers/create_session.py` | `POST /sessions` |
-| 세션 목록 | `src/base_template/api/ui/routers/list_sessions.py` | `GET /sessions` |
-| 메시지 목록 | `src/base_template/api/ui/routers/list_messages.py` | `GET /sessions/{session_id}/messages` |
-| 세션 삭제 | `src/base_template/api/ui/routers/delete_session.py` | `DELETE /sessions/{session_id}` |
-| 예외 변환 | `src/base_template/api/ui/routers/common.py` | `BaseAppException` HTTP 변환 |
-| 서비스 | `src/base_template/api/ui/services/chat_service.py` | 조회/생성/삭제 유스케이스 조합 |
-| 서비스 DI | `src/base_template/api/ui/services/__init__.py` | `get_chat_ui_service()` 제공 |
-| 모델 | `src/base_template/api/ui/models/session.py`, `src/base_template/api/ui/models/message.py` | 요청/응답 DTO |
-| 매퍼 | `src/base_template/api/ui/utils/mappers.py` | `to_ui_session`, `to_ui_message` |
-| 경로 상수 | `src/base_template/api/const/chat.py` | UI API prefix/path |
-| 페이지 상수 | `src/base_template/core/chat/const/settings.py` | `DEFAULT_PAGE_SIZE=50`, `MAX_PAGE_SIZE=200` |
+| 라우터 집계 | `src/chatbot/api/ui/routers/router.py` | `/ui-api/chat` prefix 라우터 조립 |
+| 세션 생성 | `src/chatbot/api/ui/routers/create_session.py` | `POST /sessions` |
+| 세션 목록 | `src/chatbot/api/ui/routers/list_sessions.py` | `GET /sessions` |
+| 메시지 목록 | `src/chatbot/api/ui/routers/list_messages.py` | `GET /sessions/{session_id}/messages` |
+| 세션 삭제 | `src/chatbot/api/ui/routers/delete_session.py` | `DELETE /sessions/{session_id}` |
+| 예외 변환 | `src/chatbot/api/ui/routers/common.py` | `BaseAppException` HTTP 변환 |
+| 서비스 | `src/chatbot/api/ui/services/chat_service.py` | 조회/생성/삭제 유스케이스 조합 |
+| 서비스 DI | `src/chatbot/api/ui/services/__init__.py` | `get_chat_ui_service()` 제공 |
+| 모델 | `src/chatbot/api/ui/models/session.py`, `src/chatbot/api/ui/models/message.py` | 요청/응답 DTO |
+| 매퍼 | `src/chatbot/api/ui/utils/mappers.py` | `to_ui_session`, `to_ui_message` |
+| 경로 상수 | `src/chatbot/api/const/chat.py` | UI API prefix/path |
+| 페이지 상수 | `src/chatbot/core/chat/const/settings.py` | `DEFAULT_PAGE_SIZE=50`, `MAX_PAGE_SIZE=200` |
 
 ## 3. 실행 흐름
 
@@ -218,7 +218,7 @@ Response:
 
 ## 5-2. 예외 코드 매핑
 
-`src/base_template/api/ui/routers/common.py` 기준:
+`src/chatbot/api/ui/routers/common.py` 기준:
 
 | 도메인 코드 | HTTP 상태 | 설명 |
 | --- | --- | --- |
@@ -255,9 +255,9 @@ Response:
 
 예시: 세션 목록에 `owner_name` 추가
 
-1. `src/base_template/api/ui/models/session.py`에 필드를 추가한다.
-2. `src/base_template/api/ui/utils/mappers.py`의 매핑을 수정한다.
-3. 필요하면 `src/base_template/shared/chat/repositories/history_repository.py` 조회 데이터를 확장한다.
+1. `src/chatbot/api/ui/models/session.py`에 필드를 추가한다.
+2. `src/chatbot/api/ui/utils/mappers.py`의 매핑을 수정한다.
+3. 필요하면 `src/chatbot/shared/chat/repositories/history_repository.py` 조회 데이터를 확장한다.
 4. `docs/static/ui.md` 렌더링 규칙을 갱신한다.
 
 ## 7-2. 정렬 정책 변경
@@ -272,7 +272,7 @@ Response:
 
 예시: 기본값 50 -> 100
 
-1. `src/base_template/core/chat/const/settings.py`의 `DEFAULT_PAGE_SIZE`를 수정한다.
+1. `src/chatbot/core/chat/const/settings.py`의 `DEFAULT_PAGE_SIZE`를 수정한다.
 2. `docs/api/ui.md`와 `docs/static/ui.md` 예시 값을 동시에 수정한다.
 3. 대량 조회 시 렌더링 성능을 확인한다.
 
@@ -287,7 +287,7 @@ Response:
 
 ## 8. 정적 UI 연동 순서
 
-`src/base_template/static/js/ui/grid_manager.js` 기준:
+`src/chatbot/static/js/ui/grid_manager.js` 기준:
 
 1. 앱 부트스트랩에서 `GET /ui-api/chat/sessions` 호출
 2. 활성 세션 결정 후 `GET /ui-api/chat/sessions/{session_id}/messages` 호출

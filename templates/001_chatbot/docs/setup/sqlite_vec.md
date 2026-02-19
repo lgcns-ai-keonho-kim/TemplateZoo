@@ -13,12 +13,12 @@
 
 | 경로 | 역할 |
 | --- | --- |
-| `src/base_template/core/chat/const/settings.py` | Chat 기본 DB 파일 경로(`CHAT_DB_PATH`) 정의 |
-| `src/base_template/shared/chat/repositories/history_repository.py` | 기본 저장소 조립 (SQLiteEngine + DBClient) |
-| `src/base_template/integrations/db/engines/sqlite/engine.py` | SQLite CRUD/쿼리/벡터 검색 엔진 |
-| `src/base_template/integrations/db/engines/sqlite/connection.py` | SQLite 연결/PRAGMA/sqlite-vec 로딩 |
-| `src/base_template/integrations/db/engines/sqlite/schema_manager.py` | 컬렉션/벡터 테이블 생성 |
-| `src/base_template/integrations/db/engines/sqlite/vector_store.py` | `vec0` 가상 테이블 관리 및 벡터 검색 |
+| `src/chatbot/core/chat/const/settings.py` | Chat 기본 DB 파일 경로(`CHAT_DB_PATH`) 정의 |
+| `src/chatbot/shared/chat/repositories/history_repository.py` | 기본 저장소 조립 (SQLiteEngine + DBClient) |
+| `src/chatbot/integrations/db/engines/sqlite/engine.py` | SQLite CRUD/쿼리/벡터 검색 엔진 |
+| `src/chatbot/integrations/db/engines/sqlite/connection.py` | SQLite 연결/PRAGMA/sqlite-vec 로딩 |
+| `src/chatbot/integrations/db/engines/sqlite/schema_manager.py` | 컬렉션/벡터 테이블 생성 |
+| `src/chatbot/integrations/db/engines/sqlite/vector_store.py` | `vec0` 가상 테이블 관리 및 벡터 검색 |
 
 ## 3. 데이터 저장 기본 위치
 
@@ -167,9 +167,9 @@ SQLITE_BUSY_TIMEOUT_MS=5000
 ### 6-2. 벡터 컬럼 스키마를 갖는 엔진 조립
 
 ```python
-from base_template.integrations.db import DBClient
-from base_template.integrations.db.base import CollectionSchema, ColumnSpec
-from base_template.integrations.db.engines.sqlite import SQLiteEngine
+from chatbot.integrations.db import DBClient
+from chatbot.integrations.db.base import CollectionSchema, ColumnSpec
+from chatbot.integrations.db.engines.sqlite import SQLiteEngine
 
 engine = SQLiteEngine(
     database_path="data/db/playground.sqlite",

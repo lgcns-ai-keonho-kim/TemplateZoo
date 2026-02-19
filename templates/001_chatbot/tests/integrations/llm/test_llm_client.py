@@ -2,48 +2,45 @@
 목적: LLM 클라이언트 로깅 동작을 검증한다.
 설명: 파일/메모리 로깅과 스트리밍 로그 기록을 테스트한다.
 디자인 패턴: 프록시 패턴 테스트
-참조: src/base_template/integrations/llm/client.py
+참조: src/chatbot/integrations/llm/client.py
 """
 
 from __future__ import annotations
 
-import inspect
 import os
-from typing import Any
 
-from base_template.integrations.fs import FileLogRepository
-from base_template.integrations.llm import LLMClient
-from base_template.shared.logging import InMemoryLogger
+from chatbot.integrations.fs import FileLogRepository
+from chatbot.integrations.llm import LLMClient
+from chatbot.shared.logging import InMemoryLogger
 
 
-def _build_gemini_model(*, streaming: bool):
-    """환경 변수 기반으로 Gemini 모델을 생성한다."""
+def _build_openai_model(*, streaming: bool):
+    """환경 변수 기반으로 OpenAI 모델을 생성한다."""
 
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
     if not api_key:
-        raise RuntimeError("LLM 테스트를 위해 GEMINI_API_KEY 또는 GOOGLE_API_KEY가 필요합니다.")
-    model_name = (os.getenv("GEMINI_MODEL") or "").strip()
+        raise RuntimeError("LLM 테스트를 위해 OPENAI_API_KEY가 필요합니다.")
+    model_name = (os.getenv("OPENAI_MODEL") or "").strip()
     if not model_name:
-        raise RuntimeError("LLM 테스트를 위해 GEMINI_MODEL이 필요합니다.")
+        raise RuntimeError("LLM 테스트를 위해 OPENAI_MODEL이 필요합니다.")
     try:
-        from langchain_google_genai import ChatGoogleGenerativeAI
-    except ImportError:
-        raise RuntimeError("LLM 테스트를 위해 langchain-google-genai 패키지가 필요합니다.")
+        from langchain_openai import ChatOpenAI
+    except ImportError as error:
+        raise RuntimeError("LLM 테스트를 위해 langchain-openai 패키지가 필요합니다.") from error
 
-    # 스트리밍 옵션을 조건부로 추가하므로 값 타입을 넓게 잡는다.
-    kwargs: dict[str, Any] = {"model": model_name}
-    signature = inspect.signature(ChatGoogleGenerativeAI)
-    if streaming and "streaming" in signature.parameters:
-        kwargs["streaming"] = True
-    return ChatGoogleGenerativeAI(**kwargs)
+    return ChatOpenAI(
+        model=model_name,
+        api_key=api_key,
+        streaming=streaming,
+    )
 
 
 def test_llm_client_file_logging(tmp_path):
     """파일 저장소에 로그가 기록되는지 확인한다."""
 
     repository = FileLogRepository(base_dir=str(tmp_path))
-    model = _build_gemini_model(streaming=False)
-    client = LLMClient(model=model, logging_engine=repository, name="gemini-model")
+    model = _build_openai_model(streaming=False)
+    client = LLMClient(model=model, logging_engine=repository, name="openai-model")
 
     client.invoke("hello")
 
@@ -58,7 +55,7 @@ def test_llm_client_file_logging(tmp_path):
             f"metadata={record.metadata}",
         )
     assert records
-    assert any(record.metadata.get("model_name") == "gemini-model" for record in records)
+    assert any(record.metadata.get("model_name") == "openai-model" for record in records)
 
 
 def test_llm_client_stream_background_logging():
@@ -69,7 +66,7 @@ def test_llm_client_stream_background_logging():
     def inline_runner(fn, *args):
         fn(*args)
 
-    model = _build_gemini_model(streaming=True)
+    model = _build_openai_model(streaming=True)
     client = LLMClient(
         model=model,
         logging_engine=logger,

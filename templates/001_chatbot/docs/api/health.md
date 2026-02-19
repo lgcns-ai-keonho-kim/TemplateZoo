@@ -7,15 +7,15 @@
 | 용어 | 의미 | 관련 코드 |
 | --- | --- | --- |
 | 헬스체크 | 프로세스의 기본 생존 여부를 확인하는 경로 | `GET /health` |
-| Liveness | 프로세스가 살아 있는지 확인하는 관점 | `src/base_template/api/health/routers/server.py` |
+| Liveness | 프로세스가 살아 있는지 확인하는 관점 | `src/chatbot/api/health/routers/server.py` |
 | Readiness | 외부 의존성 포함 준비 상태 확인 관점 | 별도 라우터로 확장 필요 |
 
 ## 2. 관련 스크립트
 
 | 파일 | 역할 |
 | --- | --- |
-| `src/base_template/api/health/routers/server.py` | `/health` 라우터 정의 |
-| `src/base_template/api/main.py` | health 라우터 앱 등록 |
+| `src/chatbot/api/health/routers/server.py` | `/health` 라우터 정의 |
+| `src/chatbot/api/main.py` | health 라우터 앱 등록 |
 
 ## 3. 인터페이스
 
@@ -46,8 +46,8 @@
 
 ## 5-1. Readiness 경로 추가
 
-1. `src/base_template/api/health/routers`에 readiness 라우터 파일을 추가한다.
-2. `src/base_template/api/main.py`에 라우터 등록을 추가한다.
+1. `src/chatbot/api/health/routers`에 readiness 라우터 파일을 추가한다.
+2. `src/chatbot/api/main.py`에 라우터 등록을 추가한다.
 3. 기존 `/health` 응답 형식은 유지한다.
 
 ## 5-2. 응답 필드 확장

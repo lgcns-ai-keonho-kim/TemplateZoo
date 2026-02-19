@@ -7,10 +7,10 @@
 
 런타임에서 환경 변수는 아래 순서로 적용된다.
 
-1. `src/base_template/api/main.py`에서 `RuntimeEnvironmentLoader().load()` 호출
+1. `src/chatbot/api/main.py`에서 `RuntimeEnvironmentLoader().load()` 호출
 2. 프로젝트 루트 `.env` 로드
 3. `ENV`/`APP_ENV`/`APP_STAGE`로 런타임 환경 결정
-4. `ENV`가 `dev/stg/prod`이면 `src/base_template/resources/<env>/.env` 추가 로드
+4. `ENV`가 `dev/stg/prod`이면 `src/chatbot/resources/<env>/.env` 추가 로드
 5. 이후 라우터/서비스 import 시점에 `os.getenv(...)` 값이 고정 반영
 
 중요 동작:
@@ -100,7 +100,7 @@
 
 ## 6. `.env.sample`에 있지만 현재 런타임 미반영인 키
 
-아래 키는 현재 `src/base_template/api/chat/services/runtime.py` 경로에서 직접 읽지 않는다.
+아래 키는 현재 `src/chatbot/api/chat/services/runtime.py` 경로에서 직접 읽지 않는다.
 필요하면 코드 반영 지점을 함께 추가해야 한다.
 
 | 변수 | 현재 상태 | 메모 |
@@ -174,7 +174,7 @@ ELASTICSEARCH_VERIFY_CERTS=true
 # 상대경로 예시
 # ELASTICSEARCH_CA_CERTS=certs/http_ca.crt
 # 절대경로 예시(권장)
-ELASTICSEARCH_CA_CERTS=/home/kkh93/proj/TemplateZoo/templates/000_base_template/certs/http_ca.crt
+ELASTICSEARCH_CA_CERTS=/home/kkh93/proj/TemplateZoo/templates/000_chatbot/certs/http_ca.crt
 ```
 
 권장 점검 순서:

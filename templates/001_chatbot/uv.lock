@@ -90,7 +90,7 @@ wheels = [
 ]
 
 [[package]]
-name = "base-template"
+name = "chatbot"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

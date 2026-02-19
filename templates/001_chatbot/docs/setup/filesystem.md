@@ -1,6 +1,6 @@
 # 파일 시스템 연동 가이드
 
-이 문서는 `src/base_template/integrations/fs`를 이용해 로그를 파일로 저장하는 방법과,
+이 문서는 `src/chatbot/integrations/fs`를 이용해 로그를 파일로 저장하는 방법과,
 원격 스토리지 엔진으로 확장할 때 필요한 구현 포인트를 정리한다.
 
 ## 1. 적용 범위
@@ -13,11 +13,11 @@
 
 | 경로 | 역할 |
 | --- | --- |
-| `src/base_template/integrations/fs/base/engine.py` | 파일 엔진 인터페이스 |
-| `src/base_template/integrations/fs/engines/local.py` | 로컬 파일 시스템 구현 |
-| `src/base_template/integrations/fs/file_repository.py` | 로그 파일 저장소 |
-| `src/base_template/shared/logging/logger.py` | Logger/LogRepository 인터페이스 |
-| `src/base_template/integrations/llm/client.py` | 로깅 저장소를 주입해 LLM 호출 로그 저장 가능 |
+| `src/chatbot/integrations/fs/base/engine.py` | 파일 엔진 인터페이스 |
+| `src/chatbot/integrations/fs/engines/local.py` | 로컬 파일 시스템 구현 |
+| `src/chatbot/integrations/fs/file_repository.py` | 로그 파일 저장소 |
+| `src/chatbot/shared/logging/logger.py` | Logger/LogRepository 인터페이스 |
+| `src/chatbot/integrations/llm/client.py` | 로깅 저장소를 주입해 LLM 호출 로그 저장 가능 |
 
 ## 3. 기본 동작 구조
 
@@ -48,8 +48,8 @@
 ### 4-2. 코드 조립 예시
 
 ```python
-from base_template.integrations.fs import FileLogRepository
-from base_template.shared.logging import InMemoryLogger
+from chatbot.integrations.fs import FileLogRepository
+from chatbot.shared.logging import InMemoryLogger
 
 file_repository = FileLogRepository(base_dir="data/logs")
 logger = InMemoryLogger(name="app-logger", repository=file_repository)
@@ -64,8 +64,8 @@ logger.error("실패 시나리오 기록")
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
 
-from base_template.integrations.fs import FileLogRepository
-from base_template.integrations.llm import LLMClient
+from chatbot.integrations.fs import FileLogRepository
+from chatbot.integrations.llm import LLMClient
 
 repo = FileLogRepository(base_dir="data/logs/llm")
 model = ChatOpenAI(model="gpt-4o-mini", api_key=SecretStr("..."))
@@ -96,7 +96,7 @@ client = LLMClient(
 구현 예시 뼈대:
 
 ```python
-from base_template.integrations.fs.base import BaseFSEngine
+from chatbot.integrations.fs.base import BaseFSEngine
 
 
 class RemoteFSEngine(BaseFSEngine):

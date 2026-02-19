@@ -39,7 +39,7 @@ OPENAI_MODEL=gpt-4o-mini
 ## 2. 서버 실행
 
 ```bash
-uv run uvicorn base_template.api.main:app --host 0.0.0.0 --port 8000 --reload
+uv run uvicorn chatbot.api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 `.env`는 `RuntimeEnvironmentLoader`가 자동 로드한다.
@@ -163,7 +163,7 @@ sqlite3 data/db/chat/chat_history.sqlite "DELETE FROM chat_messages; DELETE FROM
 ## 7. 프로젝트 구조
 
 ```text
-src/base_template/
+src/chatbot/
   api/                  # FastAPI 라우터, DTO, DI 조립
   core/
     chat/               # 도메인 모델, 그래프, 노드, 프롬프트

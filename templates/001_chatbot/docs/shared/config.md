@@ -1,6 +1,6 @@
 # Shared Config 가이드
 
-이 문서는 `src/base_template/shared/config`의 설정 병합과 런타임 환경 로딩 규칙을 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/shared/config`의 설정 병합과 런타임 환경 로딩 규칙을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -15,11 +15,11 @@
 
 | 파일 | 역할 |
 | --- | --- |
-| `src/base_template/shared/config/loader.py` | 설정 소스 추가와 병합 수행 |
-| `src/base_template/shared/config/runtime_env_loader.py` | 실행 환경 판별과 `.env` 로딩 |
-| `src/base_template/shared/config/__init__.py` | 공개 API 제공 |
-| `src/base_template/shared/const/__init__.py` | 인코딩/구분자 상수 제공 |
-| `src/base_template/api/main.py` | 런타임 환경 로더 호출 지점 |
+| `src/chatbot/shared/config/loader.py` | 설정 소스 추가와 병합 수행 |
+| `src/chatbot/shared/config/runtime_env_loader.py` | 실행 환경 판별과 `.env` 로딩 |
+| `src/chatbot/shared/config/__init__.py` | 공개 API 제공 |
+| `src/chatbot/shared/const/__init__.py` | 인코딩/구분자 상수 제공 |
+| `src/chatbot/api/main.py` | 런타임 환경 로더 호출 지점 |
 
 ## 3. ConfigLoader 인터페이스
 
@@ -70,7 +70,7 @@ APP__DB__HOST=127.0.0.1
 1. 프로젝트 루트 `.env`를 먼저 로드한다.
 2. `ENV`, `APP_ENV`, `APP_STAGE`에서 환경값을 판별한다.
 3. 값이 없으면 `local`로 처리한다.
-4. `dev/stg/prod`면 `src/base_template/resources/<env>/.env`를 추가 로드한다.
+4. `dev/stg/prod`면 `src/chatbot/resources/<env>/.env`를 추가 로드한다.
 5. 최종 환경값을 `os.environ["ENV"]`에 기록한다.
 
 ## 4-2. 지원 환경값
@@ -95,7 +95,7 @@ alias:
 
 ## 5. 실제 사용 경로
 
-1. `src/base_template/api/main.py`에서 `RuntimeEnvironmentLoader().load()` 실행
+1. `src/chatbot/api/main.py`에서 `RuntimeEnvironmentLoader().load()` 실행
 2. `.env` 로딩 완료 후 라우터/서비스 import
 3. import 시점 생성 객체가 환경 변수값을 읽어 조립됨
 
@@ -133,7 +133,7 @@ alias:
 1. 문서의 load 순서가 `runtime_env_loader.py` 코드와 일치하는가
 2. 지원 환경값 목록이 `_SUPPORTED_ENVS`, `_ENV_ALIASES`와 일치하는가
 3. 중첩 구분자 설명이 `SharedConst` 값과 일치하는가
-4. 파일 경로가 실제 `src/base_template/shared/config` 구조와 일치하는가
+4. 파일 경로가 실제 `src/chatbot/shared/config` 구조와 일치하는가
 
 ## 9. 관련 문서
 

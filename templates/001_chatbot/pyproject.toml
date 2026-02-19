@@ -1,7 +1,7 @@
 [project]
-name = "base-template"
+name = "chatbot"
 version = "0.1.0"
-description = "Base Template for Assetization"
+description = "Chatbot Template"
 readme = "README.md"
 authors = [
     { name = "lgcns-ai-keonho-kim", email = "kkh93@lgcns.com" }
@@ -47,14 +47,14 @@ dev = [
 ]
 
 [project.scripts]
-base-template = "base_template:main"
+chatbot = "chatbot:main"
 
 [build-system]
 requires = ["uv_build>=0.8.19,<0.9.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = "base_template"
+module-name = "chatbot"
 module-root = "src"
 
 [tool.pytest.ini_options]

@@ -1,6 +1,6 @@
 # Shared Runtime 가이드
 
-이 문서는 `src/base_template/shared/runtime`의 Queue, EventBuffer, Worker, ThreadPool 구성요소를 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/shared/runtime`의 Queue, EventBuffer, Worker, ThreadPool 구성요소를 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -18,22 +18,22 @@
 
 | 분류 | 파일 | 역할 |
 | --- | --- | --- |
-| 런타임 공개 API | `src/base_template/shared/runtime/__init__.py` | Queue/Buffer/Worker/ThreadPool 공개 |
-| Queue 모델 | `src/base_template/shared/runtime/queue/model.py` | `QueueConfig`, `QueueItem` |
-| InMemory Queue | `src/base_template/shared/runtime/queue/in_memory_queue.py` | 프로세스 내부 큐 |
-| Redis Queue | `src/base_template/shared/runtime/queue/redis_queue.py` | Redis 리스트 기반 큐 |
-| Buffer 모델 | `src/base_template/shared/runtime/buffer/model.py` | `EventBufferConfig`, `StreamEventItem` |
-| InMemory Buffer | `src/base_template/shared/runtime/buffer/in_memory_buffer.py` | 요청 버킷 기반 이벤트 버퍼 |
-| Redis Buffer | `src/base_template/shared/runtime/buffer/redis_buffer.py` | Redis 리스트 기반 이벤트 버퍼 |
-| Worker 모델 | `src/base_template/shared/runtime/worker/model.py` | `WorkerConfig`, `WorkerState` |
-| Worker 구현 | `src/base_template/shared/runtime/worker/worker.py` | 큐 소비 워커 |
-| ThreadPool 모델 | `src/base_template/shared/runtime/thread_pool/model.py` | `ThreadPoolConfig`, `TaskRecord` |
-| ThreadPool 구현 | `src/base_template/shared/runtime/thread_pool/thread_pool.py` | 태스크 제출/종료 |
+| 런타임 공개 API | `src/chatbot/shared/runtime/__init__.py` | Queue/Buffer/Worker/ThreadPool 공개 |
+| Queue 모델 | `src/chatbot/shared/runtime/queue/model.py` | `QueueConfig`, `QueueItem` |
+| InMemory Queue | `src/chatbot/shared/runtime/queue/in_memory_queue.py` | 프로세스 내부 큐 |
+| Redis Queue | `src/chatbot/shared/runtime/queue/redis_queue.py` | Redis 리스트 기반 큐 |
+| Buffer 모델 | `src/chatbot/shared/runtime/buffer/model.py` | `EventBufferConfig`, `StreamEventItem` |
+| InMemory Buffer | `src/chatbot/shared/runtime/buffer/in_memory_buffer.py` | 요청 버킷 기반 이벤트 버퍼 |
+| Redis Buffer | `src/chatbot/shared/runtime/buffer/redis_buffer.py` | Redis 리스트 기반 이벤트 버퍼 |
+| Worker 모델 | `src/chatbot/shared/runtime/worker/model.py` | `WorkerConfig`, `WorkerState` |
+| Worker 구현 | `src/chatbot/shared/runtime/worker/worker.py` | 큐 소비 워커 |
+| ThreadPool 모델 | `src/chatbot/shared/runtime/thread_pool/model.py` | `ThreadPoolConfig`, `TaskRecord` |
+| ThreadPool 구현 | `src/chatbot/shared/runtime/thread_pool/thread_pool.py` | 태스크 제출/종료 |
 
 연동 스크립트:
 
-1. `src/base_template/api/chat/services/runtime.py`
-2. `src/base_template/shared/chat/services/service_executor.py`
+1. `src/chatbot/api/chat/services/runtime.py`
+2. `src/chatbot/shared/chat/services/service_executor.py`
 
 ## 3. 현재 Chat 경로에서의 사용 방식
 
@@ -165,7 +165,7 @@ InMemoryQueue + InMemoryEventBuffer + ServiceExecutor
 1. Queue/Buffer/Worker/ThreadPool 메서드 설명이 코드 시그니처와 일치하는가
 2. 상태값/기본값이 모델 정의와 일치하는가
 3. 키 형식/TTL 설명이 Redis/InMemory 구현과 일치하는가
-4. 문서 경로가 실제 `src/base_template/shared/runtime` 구조와 일치하는가
+4. 문서 경로가 실제 `src/chatbot/shared/runtime` 구조와 일치하는가
 
 ## 11. 관련 문서
 

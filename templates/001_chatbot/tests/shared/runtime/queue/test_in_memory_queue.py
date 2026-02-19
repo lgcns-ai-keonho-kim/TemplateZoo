@@ -2,14 +2,14 @@
 목적: 인메모리 큐 기본 동작을 검증한다.
 설명: 아이템 추가/조회, 종료 동작, 크기 계산을 확인한다.
 디자인 패턴: 어댑터 패턴
-참조: src/base_template/shared/runtime/queue/in_memory_queue.py, src/base_template/shared/runtime/queue/model.py
+참조: src/chatbot/shared/runtime/queue/in_memory_queue.py, src/chatbot/shared/runtime/queue/model.py
 """
 
 from __future__ import annotations
 
 import pytest
 
-from base_template.shared.runtime.queue import InMemoryQueue, QueueConfig
+from chatbot.shared.runtime.queue import InMemoryQueue, QueueConfig
 
 
 def test_inmemory_queue_put_get_and_close() -> None:

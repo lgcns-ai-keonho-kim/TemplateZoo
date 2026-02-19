@@ -1,14 +1,14 @@
 # API Chat 가이드
 
-이 문서는 `src/base_template/api/chat` 모듈의 HTTP 인터페이스, 실행 흐름, 수정 지점을 코드 기준으로 설명한다.
+이 문서는 `src/chatbot/api/chat` 모듈의 HTTP 인터페이스, 실행 흐름, 수정 지점을 코드 기준으로 설명한다.
 
 ## 1. 용어 정리
 
 | 용어 | 의미 | 관련 코드 |
 | --- | --- | --- |
-| 작업 제출 | 사용자 입력을 즉시 실행하지 않고 큐에 적재하는 단계 | `src/base_template/api/chat/routers/create_chat.py` |
-| 요청 식별자 | 작업 제출 1건을 식별하는 UUID | `request_id`, `src/base_template/shared/chat/services/service_executor.py` |
-| 세션 식별자 | 대화 컨텍스트를 구분하는 ID | `session_id`, `src/base_template/shared/chat/services/chat_service.py` |
+| 작업 제출 | 사용자 입력을 즉시 실행하지 않고 큐에 적재하는 단계 | `src/chatbot/api/chat/routers/create_chat.py` |
+| 요청 식별자 | 작업 제출 1건을 식별하는 UUID | `request_id`, `src/chatbot/shared/chat/services/service_executor.py` |
+| 세션 식별자 | 대화 컨텍스트를 구분하는 ID | `session_id`, `src/chatbot/shared/chat/services/chat_service.py` |
 | 세션 상태 | 세션의 최근 실행 상태 | `IDLE`, `QUEUED`, `RUNNING`, `COMPLETED`, `FAILED` |
 | SSE | 서버가 이벤트를 연속 전달하는 스트림 응답 | `text/event-stream`, `stream_chat_events.py` |
 | 공개 이벤트 페이로드 | 내부 이벤트를 외부 응답 형태로 변환한 JSON | `_build_public_payload` |
@@ -18,16 +18,16 @@
 
 | 분류 | 파일 | 역할 |
 | --- | --- | --- |
-| 라우터 집계 | `src/base_template/api/chat/routers/router.py` | Chat 하위 라우터 등록 |
-| 작업 제출 | `src/base_template/api/chat/routers/create_chat.py` | `POST /chat` 처리 |
-| 이벤트 구독 | `src/base_template/api/chat/routers/stream_chat_events.py` | `GET /chat/{session_id}/events` SSE 중계 |
-| 세션 스냅샷 | `src/base_template/api/chat/routers/get_chat_session.py` | `GET /chat/{session_id}` 처리 |
-| 예외 매핑 | `src/base_template/api/chat/routers/common.py` | 도메인 예외를 HTTP 예외로 변환 |
-| 요청 DTO | `src/base_template/api/chat/models/stream.py` | `SubmitChatRequest`, `SubmitChatResponse` |
-| 응답 DTO | `src/base_template/api/chat/models/message.py` | 메시지 응답 모델 |
-| 실행 런타임 | `src/base_template/api/chat/services/runtime.py` | ChatService, ServiceExecutor 조립 |
-| 실행 오케스트레이터 | `src/base_template/shared/chat/services/service_executor.py` | 큐 소비, 이벤트 버퍼 push, SSE payload 변환 |
-| 도메인 서비스 | `src/base_template/shared/chat/services/chat_service.py` | 세션/메시지 처리, 그래프 실행 |
+| 라우터 집계 | `src/chatbot/api/chat/routers/router.py` | Chat 하위 라우터 등록 |
+| 작업 제출 | `src/chatbot/api/chat/routers/create_chat.py` | `POST /chat` 처리 |
+| 이벤트 구독 | `src/chatbot/api/chat/routers/stream_chat_events.py` | `GET /chat/{session_id}/events` SSE 중계 |
+| 세션 스냅샷 | `src/chatbot/api/chat/routers/get_chat_session.py` | `GET /chat/{session_id}` 처리 |
+| 예외 매핑 | `src/chatbot/api/chat/routers/common.py` | 도메인 예외를 HTTP 예외로 변환 |
+| 요청 DTO | `src/chatbot/api/chat/models/stream.py` | `SubmitChatRequest`, `SubmitChatResponse` |
+| 응답 DTO | `src/chatbot/api/chat/models/message.py` | 메시지 응답 모델 |
+| 실행 런타임 | `src/chatbot/api/chat/services/runtime.py` | ChatService, ServiceExecutor 조립 |
+| 실행 오케스트레이터 | `src/chatbot/shared/chat/services/service_executor.py` | 큐 소비, 이벤트 버퍼 push, SSE payload 변환 |
+| 도메인 서비스 | `src/chatbot/shared/chat/services/chat_service.py` | 세션/메시지 처리, 그래프 실행 |
 
 ## 3. HTTP 인터페이스
 
@@ -208,7 +208,7 @@ IDLE -> QUEUED -> RUNNING -> FAILED
 
 ## 6. 예외 코드와 HTTP 매핑
 
-`src/base_template/api/chat/routers/common.py` 기준:
+`src/chatbot/api/chat/routers/common.py` 기준:
 
 | `detail.code` | HTTP 상태 |
 | --- | --- |
@@ -239,9 +239,9 @@ IDLE -> QUEUED -> RUNNING -> FAILED
 
 예시: `priority` 필드 추가
 
-1. `src/base_template/api/chat/models/stream.py`의 `SubmitChatRequest`에 필드를 추가한다.
-2. `src/base_template/api/chat/routers/create_chat.py`에서 `submit_job` 인자를 확장한다.
-3. `src/base_template/shared/chat/services/service_executor.py` job payload를 확장한다.
+1. `src/chatbot/api/chat/models/stream.py`의 `SubmitChatRequest`에 필드를 추가한다.
+2. `src/chatbot/api/chat/routers/create_chat.py`에서 `submit_job` 인자를 확장한다.
+3. `src/chatbot/shared/chat/services/service_executor.py` job payload를 확장한다.
 4. 큐 소비 경로 `_handle_job()`에서 해당 필드 반영 로직을 추가한다.
 5. 문서의 Request 예시를 갱신한다.
 
@@ -255,7 +255,7 @@ IDLE -> QUEUED -> RUNNING -> FAILED
 
 ## 7-3. 타임아웃 정책 변경
 
-1. `src/base_template/api/chat/services/runtime.py`의 `CHAT_STREAM_TIMEOUT_SECONDS` 기본값을 조정한다.
+1. `src/chatbot/api/chat/services/runtime.py`의 `CHAT_STREAM_TIMEOUT_SECONDS` 기본값을 조정한다.
 2. `ServiceExecutor._raise_timeout_if_needed()` 동작이 의도와 일치하는지 확인한다.
 3. 타임아웃 오류 코드가 여전히 `CHAT_STREAM_TIMEOUT`으로 노출되는지 확인한다.
 

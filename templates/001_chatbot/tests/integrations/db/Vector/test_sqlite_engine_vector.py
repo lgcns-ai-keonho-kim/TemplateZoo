@@ -2,16 +2,16 @@
 목적: SQLite 엔진의 벡터 검색 동작을 검증한다.
 설명: sqlite-vec 확장을 사용해 벡터 검색 흐름을 확인한다.
 디자인 패턴: 테스트 케이스
-참조: src/base_template/integrations/db/engines/sqlite/engine.py
+참조: src/chatbot/integrations/db/engines/sqlite/engine.py
 """
 
 from __future__ import annotations
 
 from typing import List
 
-from base_template.integrations.db import DBClient
-from base_template.integrations.db.base import Vector, VectorSearchRequest
-from base_template.integrations.db.engines.sqlite import SQLiteEngine
+from chatbot.integrations.db import DBClient
+from chatbot.integrations.db.base import Vector, VectorSearchRequest
+from chatbot.integrations.db.engines.sqlite import SQLiteEngine
 
 
 def test_sqlite_engine_vector_search(tmp_path, ollama_embeddings) -> None:
@@ -57,7 +57,7 @@ def test_sqlite_engine_vector_search(tmp_path, ollama_embeddings) -> None:
 
 
 def _collection_schema(name: str, dimension: int | None):
-    from base_template.integrations.db.base import CollectionSchema
+    from chatbot.integrations.db.base import CollectionSchema
 
     return CollectionSchema(
         name=name,
@@ -68,7 +68,7 @@ def _collection_schema(name: str, dimension: int | None):
 
 
 def _doc(doc_id: str, payload: dict, vector: List[float] | None = None):
-    from base_template.integrations.db.base import Document
+    from chatbot.integrations.db.base import Document
 
     return Document(
         doc_id=doc_id,

@@ -1,12 +1,12 @@
 # Shared Const 가이드
 
-이 문서는 `src/base_template/shared/const` 전역 상수의 의미와 사용 원칙을 정리한다.
+이 문서는 `src/chatbot/shared/const` 전역 상수의 의미와 사용 원칙을 정리한다.
 
 ## 1. 용어 정리
 
 | 용어 | 의미 | 관련 스크립트 |
 | --- | --- | --- |
-| SharedConst | 전역 공통 상수 클래스 | `src/base_template/shared/const/__init__.py` |
+| SharedConst | 전역 공통 상수 클래스 | `src/chatbot/shared/const/__init__.py` |
 | 기본 인코딩 | 파일 입출력 기본 문자셋 | `DEFAULT_ENCODING` |
 | 기본 타임존 | 시간 처리 기본 타임존 이름 | `DEFAULT_TIMEZONE` |
 | ENV 중첩 구분자 | 환경 변수 키를 계층 구조로 해석하는 구분자 | `ENV_NESTED_DELIMITER` |
@@ -15,8 +15,8 @@
 
 | 파일 | 역할 |
 | --- | --- |
-| `src/base_template/shared/const/__init__.py` | 공통 상수 정의 |
-| `src/base_template/shared/config/loader.py` | 중첩 구분자와 기본 인코딩 사용 |
+| `src/chatbot/shared/const/__init__.py` | 공통 상수 정의 |
+| `src/chatbot/shared/config/loader.py` | 중첩 구분자와 기본 인코딩 사용 |
 
 ## 3. 상수 인터페이스
 

@@ -2,7 +2,7 @@
 목적: ServiceExecutor의 JobQueue/EventBuffer 동작을 검증한다.
 설명: submit_job 이후 stream_events에서 start/token/done 순서와 오류 처리를 확인한다.
 디자인 패턴: 실행 코디네이터 단위 테스트
-참조: src/base_template/shared/chat/services/service_executor.py
+참조: src/chatbot/shared/chat/services/service_executor.py
 """
 
 from __future__ import annotations
@@ -10,10 +10,10 @@ import time
 import json
 from dataclasses import dataclass
 
-from base_template.shared.chat.services.service_executor import ServiceExecutor
-from base_template.shared.exceptions import BaseAppException, ExceptionDetail
-from base_template.shared.runtime.buffer import EventBufferConfig, InMemoryEventBuffer
-from base_template.shared.runtime.queue import InMemoryQueue, QueueConfig
+from chatbot.shared.chat.services.service_executor import ServiceExecutor
+from chatbot.shared.exceptions import BaseAppException, ExceptionDetail
+from chatbot.shared.runtime.buffer import EventBufferConfig, InMemoryEventBuffer
+from chatbot.shared.runtime.queue import InMemoryQueue, QueueConfig
 
 
 def _extract_payload(raw: str) -> dict:

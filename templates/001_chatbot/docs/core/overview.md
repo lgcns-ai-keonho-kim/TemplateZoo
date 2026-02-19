@@ -1,37 +1,37 @@
 # Core 모듈 가이드
 
-이 문서는 `src/base_template/core` 계층의 책임 경계와 학습 순서를 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/core` 계층의 책임 경계와 학습 순서를 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
 | 용어 | 의미 | 관련 코드 |
 | --- | --- | --- |
-| 도메인 모델 | 세션/메시지 같은 핵심 데이터 구조 | `src/base_template/core/chat/models/entities.py` |
-| 그래프 | 노드 실행 순서를 정의한 워크플로우 | `src/base_template/core/chat/graphs/chat_graph.py` |
-| 노드 | 그래프에서 단위 작업을 수행하는 실행 컴포넌트 | `src/base_template/core/chat/nodes/*.py` |
-| 상태 | 노드 사이를 흐르는 공통 키 집합 | `src/base_template/core/chat/state/graph_state.py` |
-| 프롬프트 | LLM 노드에 주입되는 텍스트 템플릿 | `src/base_template/core/chat/prompts/*.py` |
-| 상수 | 저장소/페이지/문맥 길이 같은 운영 기본값 | `src/base_template/core/chat/const/settings.py` |
+| 도메인 모델 | 세션/메시지 같은 핵심 데이터 구조 | `src/chatbot/core/chat/models/entities.py` |
+| 그래프 | 노드 실행 순서를 정의한 워크플로우 | `src/chatbot/core/chat/graphs/chat_graph.py` |
+| 노드 | 그래프에서 단위 작업을 수행하는 실행 컴포넌트 | `src/chatbot/core/chat/nodes/*.py` |
+| 상태 | 노드 사이를 흐르는 공통 키 집합 | `src/chatbot/core/chat/state/graph_state.py` |
+| 프롬프트 | LLM 노드에 주입되는 텍스트 템플릿 | `src/chatbot/core/chat/prompts/*.py` |
+| 상수 | 저장소/페이지/문맥 길이 같은 운영 기본값 | `src/chatbot/core/chat/const/settings.py` |
 | 스트림 노드 정책 | 어떤 노드의 어떤 이벤트를 외부에 노출할지 정한 규칙 | `chat_graph.py`의 `stream_node` |
 
 ## 2. 디렉터리와 관련 스크립트
 
 | 경로 | 책임 | 주요 스크립트 |
 | --- | --- | --- |
-| `src/base_template/core/chat/models` | 도메인 엔티티 정의 | `entities.py`, `turn_result.py` |
-| `src/base_template/core/chat/const` | 저장/조회/컨텍스트 상수 | `settings.py`, `messages/safeguard.py` |
-| `src/base_template/core/chat/prompts` | 노드 프롬프트 템플릿 | `chat_prompt.py`, `safeguard_prompt.py` |
-| `src/base_template/core/chat/nodes` | safeguard/response/blocked 노드 조립 | `response_node.py`, `safeguard_node.py`, `safeguard_route_node.py`, `safeguard_message_node.py` |
-| `src/base_template/core/chat/graphs` | LangGraph 조립과 stream 노드 정책 | `chat_graph.py` |
-| `src/base_template/core/chat/state` | 그래프 상태 타입 | `graph_state.py` |
-| `src/base_template/core/chat/utils` | 도메인 문서 매퍼 | `mapper.py` |
+| `src/chatbot/core/chat/models` | 도메인 엔티티 정의 | `entities.py`, `turn_result.py` |
+| `src/chatbot/core/chat/const` | 저장/조회/컨텍스트 상수 | `settings.py`, `messages/safeguard.py` |
+| `src/chatbot/core/chat/prompts` | 노드 프롬프트 템플릿 | `chat_prompt.py`, `safeguard_prompt.py` |
+| `src/chatbot/core/chat/nodes` | safeguard/response/blocked 노드 조립 | `response_node.py`, `safeguard_node.py`, `safeguard_route_node.py`, `safeguard_message_node.py` |
+| `src/chatbot/core/chat/graphs` | LangGraph 조립과 stream 노드 정책 | `chat_graph.py` |
+| `src/chatbot/core/chat/state` | 그래프 상태 타입 | `graph_state.py` |
+| `src/chatbot/core/chat/utils` | 도메인 문서 매퍼 | `mapper.py` |
 
 연동 스크립트:
 
-1. `src/base_template/shared/chat/graph/base_chat_graph.py`
-2. `src/base_template/shared/chat/services/chat_service.py`
-3. `src/base_template/shared/chat/services/service_executor.py`
-4. `src/base_template/api/chat/services/runtime.py`
+1. `src/chatbot/shared/chat/graph/base_chat_graph.py`
+2. `src/chatbot/shared/chat/services/chat_service.py`
+3. `src/chatbot/shared/chat/services/service_executor.py`
+4. `src/chatbot/api/chat/services/runtime.py`
 
 ## 3. 의존성 경계
 
@@ -63,12 +63,12 @@ core -> integrations
 
 ## 5. 학습 순서
 
-1. `src/base_template/core/chat/models/entities.py`
-2. `src/base_template/core/chat/state/graph_state.py`
-3. `src/base_template/core/chat/nodes/*.py`
-4. `src/base_template/core/chat/graphs/chat_graph.py`
-5. `src/base_template/shared/chat/services/chat_service.py`
-6. `src/base_template/shared/chat/services/service_executor.py`
+1. `src/chatbot/core/chat/models/entities.py`
+2. `src/chatbot/core/chat/state/graph_state.py`
+3. `src/chatbot/core/chat/nodes/*.py`
+4. `src/chatbot/core/chat/graphs/chat_graph.py`
+5. `src/chatbot/shared/chat/services/chat_service.py`
+6. `src/chatbot/shared/chat/services/service_executor.py`
 
 ## 6. 소스 매칭 점검 항목
 

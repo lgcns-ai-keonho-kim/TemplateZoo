@@ -12,12 +12,12 @@
 
 | 경로 | 역할 |
 | --- | --- |
-| `src/base_template/integrations/db/engines/mongodb/engine.py` | MongoDB 엔진 본체 |
-| `src/base_template/integrations/db/engines/mongodb/connection.py` | 연결/DB 객체 초기화 |
-| `src/base_template/integrations/db/engines/mongodb/schema_manager.py` | 컬렉션 생성/필드 변경 |
-| `src/base_template/integrations/db/engines/mongodb/filter_builder.py` | Query -> Mongo 필터 변환 |
-| `src/base_template/api/chat/services/runtime.py` | 저장소 조립 지점 |
-| `src/base_template/shared/chat/repositories/history_repository.py` | `db_client` 주입형 저장소 |
+| `src/chatbot/integrations/db/engines/mongodb/engine.py` | MongoDB 엔진 본체 |
+| `src/chatbot/integrations/db/engines/mongodb/connection.py` | 연결/DB 객체 초기화 |
+| `src/chatbot/integrations/db/engines/mongodb/schema_manager.py` | 컬렉션 생성/필드 변경 |
+| `src/chatbot/integrations/db/engines/mongodb/filter_builder.py` | Query -> Mongo 필터 변환 |
+| `src/chatbot/api/chat/services/runtime.py` | 저장소 조립 지점 |
+| `src/chatbot/shared/chat/repositories/history_repository.py` | `db_client` 주입형 저장소 |
 
 ## 3. 설치 방법
 
@@ -101,9 +101,9 @@ MONGODB_AUTH_DB=admin
 ```python
 import os
 
-from base_template.integrations.db import DBClient
-from base_template.integrations.db.engines.mongodb import MongoDBEngine
-from base_template.shared.chat import ChatHistoryRepository
+from chatbot.integrations.db import DBClient
+from chatbot.integrations.db.engines.mongodb import MongoDBEngine
+from chatbot.shared.chat import ChatHistoryRepository
 
 mongo_engine = MongoDBEngine(
     uri=(os.getenv("MONGODB_URI") or "").strip() or None,

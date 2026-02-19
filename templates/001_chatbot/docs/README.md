@@ -1,6 +1,6 @@
 # 개발 문서 허브
 
-이 문서는 `src/base_template` 기준으로 문서를 읽고, 기능을 빠르게 추가/수정하기 위한 진입점이다.
+이 문서는 `src/chatbot` 기준으로 문서를 읽고, 기능을 빠르게 추가/수정하기 위한 진입점이다.
 핵심 모듈 문서는 코드 구조와 1:1로 맞췄고, `docs/setup/*`는 실행 환경/인프라 설정 절차를 다룬다.
 
 ## 문서 사용 원칙
@@ -51,17 +51,17 @@ docs/
 
 | 코드 경로 | 문서 |
 | --- | --- |
-| `src/base_template/api` | `docs/api/overview.md` |
-| `src/base_template/api/chat` | `docs/api/chat.md` |
-| `src/base_template/api/ui` | `docs/api/ui.md` |
-| `src/base_template/api/health` | `docs/api/health.md` |
-| `src/base_template/core` | `docs/core/overview.md` |
-| `src/base_template/core/chat` | `docs/core/chat.md` |
-| `src/base_template/shared` | `docs/shared/overview.md` |
-| `src/base_template/shared/chat` | `docs/shared/chat.md` |
-| `src/base_template/shared/runtime` | `docs/shared/runtime.md` |
-| `src/base_template/integrations` | `docs/integrations/overview.md` |
-| `src/base_template/static` | `docs/static/ui.md` |
+| `src/chatbot/api` | `docs/api/overview.md` |
+| `src/chatbot/api/chat` | `docs/api/chat.md` |
+| `src/chatbot/api/ui` | `docs/api/ui.md` |
+| `src/chatbot/api/health` | `docs/api/health.md` |
+| `src/chatbot/core` | `docs/core/overview.md` |
+| `src/chatbot/core/chat` | `docs/core/chat.md` |
+| `src/chatbot/shared` | `docs/shared/overview.md` |
+| `src/chatbot/shared/chat` | `docs/shared/chat.md` |
+| `src/chatbot/shared/runtime` | `docs/shared/runtime.md` |
+| `src/chatbot/integrations` | `docs/integrations/overview.md` |
+| `src/chatbot/static` | `docs/static/ui.md` |
 
 ## 설치/환경 문서
 
@@ -120,12 +120,12 @@ flowchart LR
 
 | 변경 유형 | 시작 파일 | 반드시 함께 확인할 문서 |
 | --- | --- | --- |
-| 채팅 제출/이벤트 인터페이스 변경 | `src/base_template/api/chat/routers/*.py` | `docs/api/chat.md`, `docs/static/ui.md` |
-| 세션 목록/삭제 정책 변경 | `src/base_template/api/ui/routers/*.py` | `docs/api/ui.md`, `docs/static/ui.md` |
-| 응답 품질/분기 정책 변경 | `src/base_template/core/chat/nodes/*.py` | `docs/core/chat.md`, `docs/shared/chat.md` |
-| 저장 스키마/엔진 변경 | `src/base_template/shared/chat/repositories/*.py` | `docs/shared/chat.md`, `docs/integrations/db.md` |
-| SSE/큐/재시도 정책 변경 | `src/base_template/shared/chat/services/service_executor.py` | `docs/shared/chat.md`, `docs/shared/runtime.md` |
-| FE 렌더/연결 처리 변경 | `src/base_template/static/js/chat/*.js` | `docs/static/ui.md`, `docs/api/chat.md` |
+| 채팅 제출/이벤트 인터페이스 변경 | `src/chatbot/api/chat/routers/*.py` | `docs/api/chat.md`, `docs/static/ui.md` |
+| 세션 목록/삭제 정책 변경 | `src/chatbot/api/ui/routers/*.py` | `docs/api/ui.md`, `docs/static/ui.md` |
+| 응답 품질/분기 정책 변경 | `src/chatbot/core/chat/nodes/*.py` | `docs/core/chat.md`, `docs/shared/chat.md` |
+| 저장 스키마/엔진 변경 | `src/chatbot/shared/chat/repositories/*.py` | `docs/shared/chat.md`, `docs/integrations/db.md` |
+| SSE/큐/재시도 정책 변경 | `src/chatbot/shared/chat/services/service_executor.py` | `docs/shared/chat.md`, `docs/shared/runtime.md` |
+| FE 렌더/연결 처리 변경 | `src/chatbot/static/js/chat/*.js` | `docs/static/ui.md`, `docs/api/chat.md` |
 
 ## 문서 동기화 체크리스트
 

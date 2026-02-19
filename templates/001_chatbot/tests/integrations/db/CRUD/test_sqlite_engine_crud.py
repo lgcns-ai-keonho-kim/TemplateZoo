@@ -2,15 +2,15 @@
 목적: SQLite 엔진의 기본 CRUD 동작을 검증한다.
 설명: sqlite-vec 비활성화 상태에서 테이블 CRUD 흐름을 확인한다.
 디자인 패턴: 테스트 케이스
-참조: src/base_template/integrations/db/engines/sqlite/engine.py
+참조: src/chatbot/integrations/db/engines/sqlite/engine.py
 """
 
 from __future__ import annotations
 
 import logging
 
-from base_template.integrations.db import DBClient
-from base_template.integrations.db.engines.sqlite import SQLiteEngine
+from chatbot.integrations.db import DBClient
+from chatbot.integrations.db.engines.sqlite import SQLiteEngine
 
 
 _LOGGER = logging.getLogger("tests.crud")
@@ -61,7 +61,7 @@ def test_sqlite_engine_basic_crud(tmp_path) -> None:
 
 
 def _collection_schema(name: str, dimension: int | None):
-    from base_template.integrations.db.base import CollectionSchema
+    from chatbot.integrations.db.base import CollectionSchema
 
     return CollectionSchema(
         name=name,
@@ -72,6 +72,6 @@ def _collection_schema(name: str, dimension: int | None):
 
 
 def _doc(doc_id: str, payload: dict):
-    from base_template.integrations.db.base import Document
+    from chatbot.integrations.db.base import Document
 
     return Document(doc_id=doc_id, payload=payload, vector=None)

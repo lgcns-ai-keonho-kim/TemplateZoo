@@ -1,6 +1,6 @@
 # Shared Exceptions 가이드
 
-이 문서는 `src/base_template/shared/exceptions`의 공통 예외 모델과 사용 규칙을 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/shared/exceptions`의 공통 예외 모델과 사용 규칙을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -15,11 +15,11 @@
 
 | 파일 | 역할 |
 | --- | --- |
-| `src/base_template/shared/exceptions/base.py` | 공통 예외 클래스 정의 |
-| `src/base_template/shared/exceptions/models.py` | 상세 모델 정의 |
-| `src/base_template/shared/exceptions/__init__.py` | 공개 API 제공 |
-| `src/base_template/api/chat/routers/common.py` | Chat API 예외를 HTTP 상태로 매핑 |
-| `src/base_template/api/ui/routers/common.py` | UI API 예외를 HTTP 상태로 매핑 |
+| `src/chatbot/shared/exceptions/base.py` | 공통 예외 클래스 정의 |
+| `src/chatbot/shared/exceptions/models.py` | 상세 모델 정의 |
+| `src/chatbot/shared/exceptions/__init__.py` | 공개 API 제공 |
+| `src/chatbot/api/chat/routers/common.py` | Chat API 예외를 HTTP 상태로 매핑 |
+| `src/chatbot/api/ui/routers/common.py` | UI API 예외를 HTTP 상태로 매핑 |
 
 ## 3. 인터페이스 정의
 
@@ -73,7 +73,7 @@
 예시:
 
 ```python
-from base_template.shared.exceptions import BaseAppException, ExceptionDetail
+from chatbot.shared.exceptions import BaseAppException, ExceptionDetail
 
 if not session_id:
     detail = ExceptionDetail(code="CHAT_SESSION_NOT_FOUND", cause="session_id is empty")

@@ -2,12 +2,12 @@
 목적: 스레드풀 실행기 기본 동작을 검증한다.
 설명: 태스크 제출, 데코레이터 등록, 종료 흐름을 확인한다.
 디자인 패턴: 파사드, 커맨드 패턴
-참조: src/base_template/shared/runtime/thread_pool/thread_pool.py, src/base_template/shared/runtime/thread_pool/model.py
+참조: src/chatbot/shared/runtime/thread_pool/thread_pool.py, src/chatbot/shared/runtime/thread_pool/model.py
 """
 
 from __future__ import annotations
 
-from base_template.shared.runtime.thread_pool import ThreadPool, ThreadPoolConfig
+from chatbot.shared.runtime.thread_pool import ThreadPool, ThreadPoolConfig
 
 
 def test_thread_pool_submit_and_shutdown() -> None:

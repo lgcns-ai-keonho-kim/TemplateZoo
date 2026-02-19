@@ -2,7 +2,7 @@
 목적: 파일 로그 저장소 동작을 검증한다.
 설명: 로그 저장, 정렬, 손상 파일 방어 로직을 테스트한다.
 디자인 패턴: 저장소 패턴 테스트
-참조: src/base_template/integrations/fs/file_repository.py
+참조: src/chatbot/integrations/fs/file_repository.py
 """
 
 from __future__ import annotations
@@ -10,8 +10,8 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta, timezone
 
-from base_template.integrations.fs import FileLogRepository, LocalFSEngine
-from base_template.shared.logging import LogLevel, LogRecord
+from chatbot.integrations.fs import FileLogRepository, LocalFSEngine
+from chatbot.shared.logging import LogLevel, LogRecord
 
 
 def test_file_repository_sorting(tmp_path):

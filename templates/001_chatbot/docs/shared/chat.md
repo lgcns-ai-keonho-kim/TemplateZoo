@@ -1,6 +1,6 @@
 # Shared Chat 가이드
 
-이 문서는 `src/base_template/shared/chat` 모듈의 실행 흐름, 저장 규칙, 변경 지점을 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/shared/chat` 모듈의 실행 흐름, 저장 규칙, 변경 지점을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -18,7 +18,7 @@
 ## 2. 디렉터리와 관련 스크립트
 
 ```text
-src/base_template/shared/chat/
+src/chatbot/shared/chat/
   interface/
   graph/
   memory/
@@ -29,23 +29,23 @@ src/base_template/shared/chat/
 
 | 분류 | 파일 | 역할 |
 | --- | --- | --- |
-| 포트 | `src/base_template/shared/chat/interface/ports.py` | Graph/Service/Executor 인터페이스 정의 |
-| 그래프 실행 | `src/base_template/shared/chat/graph/base_chat_graph.py` | 그래프 컴파일/실행/이벤트 필터링 |
-| 메모리 캐시 | `src/base_template/shared/chat/memory/session_store.py` | 세션 메시지 캐시 rpush/lrange |
-| 공통 노드 | `src/base_template/shared/chat/nodes/llm_node.py` | LLM 호출 노드 구현 |
-| 공통 노드 | `src/base_template/shared/chat/nodes/branch_node.py` | 분기 노드 구현 |
-| 공통 노드 | `src/base_template/shared/chat/nodes/message_node.py` | 메시지 선택 노드 구현 |
-| 저장소 | `src/base_template/shared/chat/repositories/history_repository.py` | 세션/메시지/커밋 저장 |
-| 스키마 | `src/base_template/shared/chat/repositories/schemas/*.py` | DB 컬렉션 스키마 생성 |
-| 서비스 | `src/base_template/shared/chat/services/chat_service.py` | 도메인 유스케이스 실행 |
-| 실행기 | `src/base_template/shared/chat/services/service_executor.py` | 큐 워커 + SSE 이벤트 중계 |
+| 포트 | `src/chatbot/shared/chat/interface/ports.py` | Graph/Service/Executor 인터페이스 정의 |
+| 그래프 실행 | `src/chatbot/shared/chat/graph/base_chat_graph.py` | 그래프 컴파일/실행/이벤트 필터링 |
+| 메모리 캐시 | `src/chatbot/shared/chat/memory/session_store.py` | 세션 메시지 캐시 rpush/lrange |
+| 공통 노드 | `src/chatbot/shared/chat/nodes/llm_node.py` | LLM 호출 노드 구현 |
+| 공통 노드 | `src/chatbot/shared/chat/nodes/branch_node.py` | 분기 노드 구현 |
+| 공통 노드 | `src/chatbot/shared/chat/nodes/message_node.py` | 메시지 선택 노드 구현 |
+| 저장소 | `src/chatbot/shared/chat/repositories/history_repository.py` | 세션/메시지/커밋 저장 |
+| 스키마 | `src/chatbot/shared/chat/repositories/schemas/*.py` | DB 컬렉션 스키마 생성 |
+| 서비스 | `src/chatbot/shared/chat/services/chat_service.py` | 도메인 유스케이스 실행 |
+| 실행기 | `src/chatbot/shared/chat/services/service_executor.py` | 큐 워커 + SSE 이벤트 중계 |
 
 연결 스크립트:
 
-1. `src/base_template/core/chat/graphs/chat_graph.py`
-2. `src/base_template/api/chat/services/runtime.py`
-3. `src/base_template/api/chat/routers/*.py`
-4. `src/base_template/api/ui/services/chat_service.py`
+1. `src/chatbot/core/chat/graphs/chat_graph.py`
+2. `src/chatbot/api/chat/services/runtime.py`
+3. `src/chatbot/api/chat/routers/*.py`
+4. `src/chatbot/api/ui/services/chat_service.py`
 
 ## 3. 실행 흐름
 
@@ -205,7 +205,7 @@ IDLE -> QUEUED -> RUNNING -> FAILED
 
 ## 8. 조립과 환경 변수
 
-조립 파일: `src/base_template/api/chat/services/runtime.py`
+조립 파일: `src/chatbot/api/chat/services/runtime.py`
 
 | 변수 | 기본값 | 의미 |
 | --- | --- | --- |
@@ -257,7 +257,7 @@ IDLE -> QUEUED -> RUNNING -> FAILED
 2. 이벤트 타입 집합이 `start/token/done/error`와 일치하는가
 3. 환경 변수 기본값이 `runtime.py` 코드와 일치하는가
 4. request_id 멱등 저장 흐름이 `chat_service.py`/`history_repository.py`와 일치하는가
-5. 문서의 경로가 실제 `src/base_template/shared/chat` 파일과 일치하는가
+5. 문서의 경로가 실제 `src/chatbot/shared/chat` 파일과 일치하는가
 
 ## 12. 관련 문서
 

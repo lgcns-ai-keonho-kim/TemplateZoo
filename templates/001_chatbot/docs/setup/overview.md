@@ -1,7 +1,7 @@
 # Setup 가이드 개요
 
 이 문서는 `docs/setup` 하위의 인프라/환경 설정 문서를 빠르게 탐색하기 위한 인덱스다.
-애플리케이션 코드 구조(`src/base_template/*`)와 1:1로 대응되는 문서와 달리, 이 폴더는 실행 환경 구성과 외부 시스템 준비 절차를 다룬다.
+애플리케이션 코드 구조(`src/chatbot/*`)와 1:1로 대응되는 문서와 달리, 이 폴더는 실행 환경 구성과 외부 시스템 준비 절차를 다룬다.
 
 ## 1. 문서 구성
 
@@ -33,7 +33,7 @@
 
 1. PostgreSQL 서버와 pgvector 확장을 설치한다.
 2. DB/계정/권한을 준비하고 `.env`에 `POSTGRES_*` 값을 넣는다.
-3. `src/base_template/api/chat/services/runtime.py`의 저장소 조립을 PostgreSQL 주입 방식으로 변경한다.
+3. `src/chatbot/api/chat/services/runtime.py`의 저장소 조립을 PostgreSQL 주입 방식으로 변경한다.
 
 ### 4-2. MongoDB
 
@@ -51,13 +51,13 @@
 
 | 설정 영역 | 관련 코드 |
 | --- | --- |
-| 런타임 환경 로딩 | `src/base_template/shared/config/runtime_env_loader.py`, `src/base_template/api/main.py` |
-| Chat 런타임 변수 소비 | `src/base_template/api/chat/services/runtime.py`, `src/base_template/shared/chat/services/chat_service.py` |
-| 기본 SQLite 저장소 | `src/base_template/shared/chat/repositories/history_repository.py`, `src/base_template/core/chat/const/settings.py` |
-| sqlite-vec 로딩 | `src/base_template/integrations/db/engines/sqlite/connection.py`, `src/base_template/integrations/db/engines/sqlite/vector_store.py` |
-| PostgreSQL/pgvector | `src/base_template/integrations/db/engines/postgres/*.py` |
-| MongoDB | `src/base_template/integrations/db/engines/mongodb/*.py` |
-| 파일 시스템 연동 | `src/base_template/integrations/fs/*.py`, `src/base_template/shared/logging/logger.py` |
+| 런타임 환경 로딩 | `src/chatbot/shared/config/runtime_env_loader.py`, `src/chatbot/api/main.py` |
+| Chat 런타임 변수 소비 | `src/chatbot/api/chat/services/runtime.py`, `src/chatbot/shared/chat/services/chat_service.py` |
+| 기본 SQLite 저장소 | `src/chatbot/shared/chat/repositories/history_repository.py`, `src/chatbot/core/chat/const/settings.py` |
+| sqlite-vec 로딩 | `src/chatbot/integrations/db/engines/sqlite/connection.py`, `src/chatbot/integrations/db/engines/sqlite/vector_store.py` |
+| PostgreSQL/pgvector | `src/chatbot/integrations/db/engines/postgres/*.py` |
+| MongoDB | `src/chatbot/integrations/db/engines/mongodb/*.py` |
+| 파일 시스템 연동 | `src/chatbot/integrations/fs/*.py`, `src/chatbot/shared/logging/logger.py` |
 
 ## 6. 문서 동기화 체크리스트
 

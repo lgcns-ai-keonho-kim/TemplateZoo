@@ -13,12 +13,12 @@
 
 | 경로 | 역할 |
 | --- | --- |
-| `src/base_template/api/chat/services/runtime.py` | 저장소 조립 지점 (PostgreSQL 주입 예시 포함) |
-| `src/base_template/shared/chat/repositories/history_repository.py` | `db_client` 주입형 저장소 |
-| `src/base_template/integrations/db/engines/postgres/engine.py` | PostgreSQL 엔진 |
-| `src/base_template/integrations/db/engines/postgres/connection.py` | psycopg2 연결/pgvector 타입 등록 |
-| `src/base_template/integrations/db/engines/postgres/schema_manager.py` | 테이블 생성/컬럼 변경 |
-| `src/base_template/integrations/db/engines/postgres/vector_store.py` | `CREATE EXTENSION vector`, 인덱스 생성 |
+| `src/chatbot/api/chat/services/runtime.py` | 저장소 조립 지점 (PostgreSQL 주입 예시 포함) |
+| `src/chatbot/shared/chat/repositories/history_repository.py` | `db_client` 주입형 저장소 |
+| `src/chatbot/integrations/db/engines/postgres/engine.py` | PostgreSQL 엔진 |
+| `src/chatbot/integrations/db/engines/postgres/connection.py` | psycopg2 연결/pgvector 타입 등록 |
+| `src/chatbot/integrations/db/engines/postgres/schema_manager.py` | 테이블 생성/컬럼 변경 |
+| `src/chatbot/integrations/db/engines/postgres/vector_store.py` | `CREATE EXTENSION vector`, 인덱스 생성 |
 
 ## 3. 설치 방법
 
@@ -93,7 +93,7 @@ POSTGRES_ENABLE_VECTOR=1
 
 현재 기본 조립은 SQLite다. PostgreSQL을 쓰려면 런타임 조립을 교체한다.
 
-1. `src/base_template/api/chat/services/runtime.py`에서 PostgreSQL 예시 블록을 활성화한다.
+1. `src/chatbot/api/chat/services/runtime.py`에서 PostgreSQL 예시 블록을 활성화한다.
 2. `PostgresEngine` -> `DBClient` -> `ChatHistoryRepository(db_client=...)` 순서로 주입한다.
 3. 서버 재시작 후 세션 생성/메시지 저장 동작을 확인한다.
 
@@ -102,9 +102,9 @@ POSTGRES_ENABLE_VECTOR=1
 ```python
 import os
 
-from base_template.integrations.db import DBClient
-from base_template.integrations.db.engines.postgres import PostgresEngine
-from base_template.shared.chat import ChatHistoryRepository
+from chatbot.integrations.db import DBClient
+from chatbot.integrations.db.engines.postgres import PostgresEngine
+from chatbot.shared.chat import ChatHistoryRepository
 
 postgres_engine = PostgresEngine(
     dsn=(os.getenv("POSTGRES_DSN") or "").strip() or None,
