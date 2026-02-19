@@ -39,8 +39,10 @@ fi
 
 if [ -d "src/base_template" ]; then
   mv "src/base_template" "src/${PACKAGE_NAME}"
+elif [ -d "src/chatbot" ]; then
+  mv "src/chatbot" "src/${PACKAGE_NAME}"
 else
-  echo "알림: src/base_template 디렉토리를 찾지 못했습니다. (이미 변경되었을 수 있습니다)"
+  echo "알림: src/base_template 또는 src/chatbot 디렉토리를 찾지 못했습니다. (이미 변경되었을 수 있습니다)"
 fi
 
 if sed --version >/dev/null 2>&1; then
@@ -59,6 +61,7 @@ replace_in_file() {
   "${SED_INPLACE[@]}" \
     -e "s/base-template/${PROJECT_SLUG}/g" \
     -e "s/base_template/${PACKAGE_NAME}/g" \
+    -e "s/chatbot/${PACKAGE_NAME}/g" \
     "$file"
 }
 
