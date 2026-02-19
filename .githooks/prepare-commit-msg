@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+msg_file="${1:?commit message file is required}"
+
+today="$(date +%Y%m%d)"
+count_today="$(git rev-list --count --all --since='today 00:00:00' --until='tomorrow 00:00:00' 2>/dev/null || echo 0)"
+next_number="$((count_today + 1))"
+prefix="${today}.v${next_number}"
+
+has_message="$(
+  sed '/^[[:space:]]*#/d;/^[[:space:]]*$/d' "$msg_file" | head -n 1 || true
+)"
+
+if [[ -z "$has_message" ]]; then
+  {
+    printf '%s\n\n' "$prefix"
+    cat "$msg_file"
+  } > "${msg_file}.tmp"
+  mv "${msg_file}.tmp" "$msg_file"
+  exit 0
+fi
+
+if [[ "$has_message" =~ ^[0-9]{8}\.v[0-9]+([[:space:]]|$) ]]; then
+  exit 0
+fi
+
+awk -v prefix="$prefix" '
+BEGIN {
+  updated = 0
+}
+{
+  if (!updated && $0 !~ /^[[:space:]]*#/ && $0 !~ /^[[:space:]]*$/) {
+    print prefix " " $0
+    updated = 1
+  } else {
+    print $0
+  }
+}
+' "$msg_file" > "${msg_file}.tmp"
+
+mv "${msg_file}.tmp" "$msg_file"
