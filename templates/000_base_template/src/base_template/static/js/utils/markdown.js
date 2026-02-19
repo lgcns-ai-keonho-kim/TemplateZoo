@@ -42,9 +42,51 @@
     return '<pre><code class="' + langClass + '">' + highlighted + '</code></pre>';
   }
 
+  /**
+   * 모델 출력 뒤에 붙는 구조화 조각(`[{'type': 'text', ...}]`) 아티팩트를 제거한다.
+   * @param {string} rawText
+   * @returns {string}
+   */
+  function stripStructuredTailArtifact(rawText) {
+    var source = String(rawText || '');
+    var trimmed = source.replace(/\s+$/, '');
+    var start = trimmed.lastIndexOf('[');
+    if (start < 0) {
+      return source;
+    }
+
+    var tail = trimmed.slice(start);
+    if (!/^\[\s*\{/.test(tail)) {
+      return source;
+    }
+    if (!/(?:'|")type(?:'|")\s*:\s*(?:'|")text(?:'|")/.test(tail)) {
+      return source;
+    }
+    if (!/(?:'|")text(?:'|")\s*:/.test(tail)) {
+      return source;
+    }
+
+    return trimmed.slice(0, start).replace(/\s+$/, '');
+  }
+
+  /**
+   * 코드 펜스(```lang / ```) 라인을 판별한다.
+   * @param {string} trimmedLine
+   * @returns {{language: string} | null}
+   */
+  function parseFenceLine(trimmedLine) {
+    var match = /^```([A-Za-z0-9_+-]*)?\s*$/.exec(trimmedLine);
+    if (!match) {
+      return null;
+    }
+    var language = String(match[1] || '').trim();
+    return { language: language };
+  }
+
   /** @param {string} text */
   window.App.markdown.render = function (text, options) {
-    var lines = String(text).replace(/\r\n/g, '\n').split('\n');
+    var normalized = stripStructuredTailArtifact(String(text || '')).replace(/\r\n/g, '\n');
+    var lines = normalized.split('\n');
     var html = '';
     var inCode = false;
     var codeLang = '';
@@ -60,19 +102,21 @@
 
     lines.forEach(function (line) {
       var trimmed = line.trim();
+      var fence = parseFenceLine(trimmed);
 
-      if (trimmed.startsWith('```')) {
-        if (!inCode) {
-          flushList();
-          inCode = true;
-          codeLang = trimmed.slice(3).trim();
-          codeBuffer = [];
-        } else {
-          inCode = false;
-          html += renderCodeBlock(codeBuffer.join('\n'), codeLang, options);
-          codeLang = '';
-          codeBuffer = [];
-        }
+      if (!inCode && fence) {
+        flushList();
+        inCode = true;
+        codeLang = String(fence.language || '');
+        codeBuffer = [];
+        return;
+      }
+
+      if (inCode && fence) {
+        inCode = false;
+        html += renderCodeBlock(codeBuffer.join('\n'), codeLang, options);
+        codeLang = '';
+        codeBuffer = [];
         return;
       }
 

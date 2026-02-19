@@ -1,48 +1,22 @@
 """
 목적: Chat API 서비스 공개 API를 제공한다.
-설명: 서비스 싱글턴 접근 함수와 종료 함수를 외부에 노출한다.
-디자인 패턴: 싱글턴 패턴
-참조: src/base_template/api/chat/services/chat_service.py
+설명: Chat 실행 의존성과 의존성 주입 함수를 재노출한다.
+디자인 패턴: 퍼사드
+참조: src/base_template/api/chat/services/runtime.py
 """
 
-from __future__ import annotations
-
-import threading
-from typing import Optional
-
-from base_template.api.chat.services.chat_runtime import ChatRuntime
-from base_template.api.chat.services.chat_service import ChatAPIService
-
-_chat_service: Optional[ChatAPIService] = None
-_chat_service_lock = threading.RLock()
-
-
-def get_chat_api_service() -> ChatAPIService:
-    """Chat API 서비스 싱글턴을 반환한다."""
-
-    global _chat_service
-    if _chat_service is not None:
-        return _chat_service
-    with _chat_service_lock:
-        if _chat_service is None:
-            _chat_service = ChatAPIService()
-    return _chat_service
-
-
-def shutdown_chat_api_service() -> None:
-    """Chat API 서비스 싱글턴을 종료한다."""
-
-    global _chat_service
-    with _chat_service_lock:
-        if _chat_service is None:
-            return
-        _chat_service.close()
-        _chat_service = None
-
+from base_template.api.chat.services.runtime import (
+    chat_service,
+    get_chat_service,
+    get_service_executor,
+    service_executor,
+    shutdown_chat_api_service,
+)
 
 __all__ = [
-    "ChatRuntime",
-    "ChatAPIService",
-    "get_chat_api_service",
+    "chat_service",
+    "service_executor",
+    "get_chat_service",
+    "get_service_executor",
     "shutdown_chat_api_service",
 ]

@@ -5,6 +5,10 @@
 참조: src/base_template/shared/exceptions, src/base_template/shared/logging, src/base_template/shared/runtime
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from base_template.shared.exceptions import BaseAppException, ExceptionDetail
 from base_template.shared.logging import (
     DBLogRepository,
@@ -18,10 +22,14 @@ from base_template.shared.logging import (
     create_default_logger,
 )
 from base_template.shared.runtime import (
+    EventBufferConfig,
     InMemoryQueue,
+    InMemoryEventBuffer,
     QueueConfig,
     QueueItem,
+    RedisEventBuffer,
     RedisQueue,
+    StreamEventItem,
     TaskRecord,
     ThreadPool,
     ThreadPoolConfig,
@@ -29,6 +37,41 @@ from base_template.shared.runtime import (
     WorkerConfig,
     WorkerState,
 )
+
+if TYPE_CHECKING:
+    from base_template.shared.chat import (
+        BaseChatGraph,
+        ChatHistoryRepository,
+        ChatService,
+        ChatServicePort,
+        ChatSessionMemoryStore,
+        GraphPort,
+        ServiceExecutor,
+        ServiceExecutorPort,
+        StreamNodeConfig,
+    )
+
+
+_CHAT_EXPORT_NAMES = {
+    "StreamNodeConfig",
+    "BaseChatGraph",
+    "GraphPort",
+    "ChatServicePort",
+    "ServiceExecutorPort",
+    "ChatService",
+    "ServiceExecutor",
+    "ChatSessionMemoryStore",
+    "ChatHistoryRepository",
+}
+
+
+def __getattr__(name: str) -> Any:
+    if name in _CHAT_EXPORT_NAMES:
+        from base_template.shared import chat as _chat
+
+        return getattr(_chat, name)
+    raise AttributeError(f"module 'base_template.shared' has no attribute '{name}'")
+
 
 __all__ = [
     "BaseAppException",
@@ -42,10 +85,23 @@ __all__ = [
     "DBLogRepository",
     "LLMLogRepository",
     "create_default_logger",
+    "StreamNodeConfig",
+    "BaseChatGraph",
+    "GraphPort",
+    "ChatServicePort",
+    "ServiceExecutorPort",
+    "ChatService",
+    "ServiceExecutor",
+    "ChatSessionMemoryStore",
+    "ChatHistoryRepository",
     "QueueConfig",
     "QueueItem",
     "InMemoryQueue",
     "RedisQueue",
+    "EventBufferConfig",
+    "StreamEventItem",
+    "InMemoryEventBuffer",
+    "RedisEventBuffer",
     "WorkerConfig",
     "WorkerState",
     "Worker",

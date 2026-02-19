@@ -2,7 +2,7 @@
 목적: Chat 도메인 엔티티 모델을 정의한다.
 설명: 세션/메시지/역할 타입과 공통 시간 유틸을 Pydantic 기반으로 제공한다.
 디자인 패턴: 엔티티 패턴
-참조: src/base_template/core/repositories/chat/history_repository.py
+참조: src/base_template/shared/chat/repositories/history_repository.py
 """
 
 from __future__ import annotations

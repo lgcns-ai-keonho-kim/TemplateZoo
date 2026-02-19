@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
 
+from base_template.api.const import UI_CHAT_SESSIONS_PATH
 from base_template.api.ui.models import UISessionListResponse
 from base_template.api.ui.routers.common import to_http_exception
 from base_template.api.ui.services import ChatUIService, get_chat_ui_service
@@ -19,7 +20,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/sessions",
+    UI_CHAT_SESSIONS_PATH,
     response_model=UISessionListResponse,
     summary="UI용 대화 세션 목록을 조회합니다.",
 )
@@ -34,4 +35,3 @@ def list_sessions(
         return service.list_sessions(limit=limit, offset=offset)
     except BaseAppException as error:
         raise to_http_exception(error) from error
-

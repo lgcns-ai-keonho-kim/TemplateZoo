@@ -5,6 +5,6 @@
 참조: src/base_template/core/chat/graphs/chat_graph.py
 """
 
-from base_template.core.chat import ChatGraph
+from base_template.core.chat import ChatGraphInput, chat_graph
 
-__all__ = ["ChatGraph"]
+__all__ = ["ChatGraphInput", "chat_graph"]

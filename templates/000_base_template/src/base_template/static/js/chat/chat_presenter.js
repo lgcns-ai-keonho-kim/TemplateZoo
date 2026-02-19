@@ -101,6 +101,49 @@
     }
   };
 
+  function summarizeMetadata(metadata) {
+    if (!metadata || typeof metadata !== 'object') {
+      return '';
+    }
+    var usage = metadata.token_usage || metadata.usage || null;
+    var docs = metadata.references || metadata.documents || null;
+    var parts = [];
+    if (usage && typeof usage === 'object') {
+      var totalTokens = Number(usage.total_tokens || usage.total || usage.output_tokens || 0);
+      if (totalTokens > 0) {
+        parts.push('tokens=' + String(totalTokens));
+      }
+    }
+    if (Array.isArray(docs) && docs.length > 0) {
+      parts.push('refs=' + String(docs.length));
+    }
+    if (parts.length === 0) {
+      return '';
+    }
+    return parts.join(', ');
+  }
+
+  window.App.chatPresenter.setRuntimeInfo = function (statusEl, node, metadata) {
+    var runtimeEl = statusEl.querySelector('.status-runtime');
+    if (!runtimeEl) {
+      runtimeEl = window.App.utils.createEl('span', 'status-runtime');
+      statusEl.appendChild(runtimeEl);
+    }
+    var safeNode = typeof node === 'string' && node.trim() ? node.trim() : '';
+    var metaSummary = summarizeMetadata(metadata);
+    if (!safeNode && !metaSummary) {
+      runtimeEl.textContent = '';
+      runtimeEl.classList.add('is-hidden');
+      return;
+    }
+    runtimeEl.classList.remove('is-hidden');
+    if (safeNode && metaSummary) {
+      runtimeEl.textContent = '[' + safeNode + '] ' + metaSummary;
+      return;
+    }
+    runtimeEl.textContent = safeNode ? ('[' + safeNode + ']') : metaSummary;
+  };
+
   window.App.chatPresenter.setSendingState = function (state, sending, sendBtn, stopBtn, inputEl) {
     state.isSending = sending;
     if (sending) {

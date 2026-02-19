@@ -2,7 +2,7 @@
 목적: Chat 이력 문서 매퍼를 제공한다.
 설명: 도메인 모델과 Document 간 변환 및 타입 파싱을 담당한다.
 디자인 패턴: 매퍼 패턴
-참조: src/base_template/core/repositories/chat/history_repository.py
+참조: src/base_template/shared/chat/repositories/history_repository.py
 """
 
 from __future__ import annotations
@@ -44,6 +44,24 @@ class ChatHistoryMapper:
                 "sequence": message.sequence,
                 "created_at": message.created_at.isoformat(),
                 "metadata": json.dumps(message.metadata, ensure_ascii=True),
+            },
+        )
+
+    def request_commit_to_document(
+        self,
+        request_id: str,
+        session_id: str,
+        message_id: str,
+    ) -> Document:
+        """요청 커밋 기록을 Document로 변환한다."""
+
+        return Document(
+            doc_id=request_id,
+            fields={
+                "request_id": request_id,
+                "session_id": session_id,
+                "message_id": message_id,
+                "created_at": utc_now().isoformat(),
             },
         )
 

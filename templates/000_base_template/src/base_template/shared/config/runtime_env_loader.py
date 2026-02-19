@@ -23,7 +23,7 @@ class RuntimeEnvironmentLoader:
     1. 프로젝트 루트의 `.env`를 우선 로드한다.
     2. `ENV`(또는 후보 키) 값을 읽어 런타임 환경을 결정한다.
     3. 값이 비어 있으면 `local`로 간주한다.
-    4. `dev/stg/prod`인 경우 `src/base_template/resources/<env>/`의 환경 파일을 추가 로드한다.
+    4. `dev/stg/prod`인 경우 `src/base_template/resources/<env>/.env`를 로드한다.
     """
 
     _SUPPORTED_ENVS = {"local", "dev", "stg", "prod"}
@@ -33,7 +33,7 @@ class RuntimeEnvironmentLoader:
         "production": "prod",
     }
     _DEFAULT_ENV_KEY_CANDIDATES = ("ENV", "APP_ENV", "APP_STAGE")
-    _RESOURCE_ENV_FILENAMES = (".env", ".env.sample")
+    _RESOURCE_ENV_FILENAME = ".env"
 
     def __init__(
         self,
@@ -86,7 +86,7 @@ class RuntimeEnvironmentLoader:
             return runtime_env
 
         selected_env_file = self._resolve_resource_env_file(runtime_env=runtime_env)
-        load_dotenv(dotenv_path=selected_env_file, override=True)
+        load_dotenv(dotenv_path=selected_env_file, override=False)
         self._logger.info(
             f"런타임 환경 로드 완료: env={runtime_env}, resource={selected_env_file}"
         )
@@ -133,13 +133,9 @@ class RuntimeEnvironmentLoader:
                 f"환경 리소스 디렉터리를 찾을 수 없습니다: {env_dir}"
             )
 
-        for filename in self._RESOURCE_ENV_FILENAMES:
-            candidate = env_dir / filename
-            if candidate.exists():
-                return candidate
-
-        candidate_list = ", ".join(self._RESOURCE_ENV_FILENAMES)
+        candidate = env_dir / self._RESOURCE_ENV_FILENAME
+        if candidate.exists():
+            return candidate
         raise FileNotFoundError(
-            f"환경 파일을 찾을 수 없습니다: dir={env_dir}, candidates={candidate_list}"
+            f"환경 파일을 찾을 수 없습니다: {candidate}"
         )
-

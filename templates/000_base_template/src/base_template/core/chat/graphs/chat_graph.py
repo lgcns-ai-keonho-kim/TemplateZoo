@@ -1,81 +1,83 @@
 """
-목적: Chat LangGraph 오케스트레이터를 제공한다.
-설명: Reply 노드 1개로 구성된 최소 그래프를 컴파일하고 대화 응답을 생성한다.
-디자인 패턴: 파이프라인 패턴
-참조: src/base_template/core/chat/nodes/reply_node.py
+목적: Chat 그래프 조립과 기본 싱글턴 인스턴스를 제공한다.
+설명: safeguard -> response/blocked 분기 그래프를 모듈 레벨에서 조립한다.
+디자인 패턴: 모듈 조립 + 싱글턴
+참조: src/base_template/shared/chat/graph/base_chat_graph.py
 """
 
 from __future__ import annotations
 
-from typing import Iterator, Optional
-
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, StateGraph
+from pydantic import BaseModel, ConfigDict
 
 from base_template.core.chat.models import ChatMessage
-from base_template.core.chat.nodes import ChatReplyNode
+from base_template.core.chat.nodes import (
+    response_node,
+    safeguard_message_node,
+    safeguard_route_node,
+    safeguard_node,
+)
 from base_template.core.chat.state import ChatGraphState
-from base_template.shared.exceptions import BaseAppException, ExceptionDetail
+from base_template.shared.chat.graph import BaseChatGraph
+from base_template.shared.chat.interface import StreamNodeConfig
 from base_template.shared.logging import Logger, create_default_logger
 
+logger: Logger = create_default_logger("ChatGraph")
 
-class ChatGraph:
-    """LangGraph 기반 대화 그래프 래퍼."""
 
-    def __init__(
-        self,
-        reply_node: Optional[ChatReplyNode] = None,
-        logger: Optional[Logger] = None,
-    ) -> None:
-        self._logger = logger or create_default_logger("ChatGraph")
-        self._reply_node = reply_node or ChatReplyNode(logger=self._logger)
+class ChatGraphInput(BaseModel):
+    """그래프 실행 입력 모델."""
 
-        builder = StateGraph(ChatGraphState)
-        builder.add_node("reply", self._reply_node.run)
-        builder.set_entry_point("reply")
-        builder.add_edge("reply", END)
-        self._graph = builder.compile()
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    def invoke(
-        self,
-        session_id: str,
-        user_message: str,
-        history: list[ChatMessage],
-    ) -> str:
-        """대화 상태를 그래프에 전달해 스트림 결과를 단일 문자열로 합친다."""
+    session_id: str
+    user_message: str
+    history: list[ChatMessage]
+    safeguard_result: str | None = None
+    safeguard_route: str | None = None
+    assistant_message: str = ""
 
-        self._logger.info("Chat 그래프 실행")
-        chunks = [
-            chunk
-            for chunk in self.stream(
-                session_id=session_id,
-                user_message=user_message,
-                history=history,
-            )
-            if chunk
-        ]
-        answer = "".join(chunks).strip()
-        if answer:
-            return answer
-        detail = ExceptionDetail(
-            code="CHAT_STREAM_EMPTY",
-            cause="chat graph stream produced empty content",
-        )
-        raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)
 
-    def stream(
-        self,
-        session_id: str,
-        user_message: str,
-        history: list[ChatMessage],
-    ) -> Iterator[str]:
-        """대화 상태를 그래프에 전달해 토큰 스트림을 생성한다."""
+# 그래프 선언
+builder = StateGraph(ChatGraphState)
+# 노드 추가
+builder.add_node("safeguard", safeguard_node.run)
+builder.add_node("safeguard_route", safeguard_route_node.run)
+builder.add_node("response", response_node.run)
+builder.add_node("blocked", safeguard_message_node.run)
+# 진입점 설정
+builder.set_entry_point("safeguard")
+# 엣지 설정
+builder.add_edge("safeguard", "safeguard_route")
+builder.add_conditional_edges(
+    "safeguard_route",
+    lambda state: str(state.get("safeguard_route") or "blocked"),
+    {
+        "response": "response",
+        "blocked": "blocked",
+    },
+)
+builder.add_edge("response", END)
+builder.add_edge("blocked", END)
 
-        self._logger.info("Chat 그래프 스트리밍 실행")
-        yield from self._reply_node.stream(
-            {
-                "session_id": session_id,
-                "user_message": user_message,
-                "history": history,
-                "assistant_message": "",
-            }
-        )
+# 그래프 설정 정의
+
+# Checkpointer 정의
+checkpointer = InMemorySaver()
+
+# Stream 할 노드 정의
+stream_node: StreamNodeConfig = {
+    "safeguard": ["safeguard_result"],
+    "safeguard_route": ["safeguard_route", "safeguard_result"],
+    "response": ["token", "assistant_message"],
+    "blocked": ["assistant_message"],
+}
+
+chat_graph = BaseChatGraph(
+    builder=builder,
+    checkpointer=checkpointer,
+    stream_node=stream_node,
+    logger=logger,
+    input_model=ChatGraphInput,
+)

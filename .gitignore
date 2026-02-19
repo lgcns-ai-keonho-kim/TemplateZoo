@@ -7,6 +7,9 @@ PLAN.md
 **/certs/*
 !certs/README.md
 
+# Local Dataset
+**/data/db/*
+!data/db/README.md
 
 # --- Windows / WSL / macOS specifics ---
 
