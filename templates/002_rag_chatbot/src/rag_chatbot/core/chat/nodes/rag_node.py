@@ -98,12 +98,13 @@ _rag_db_client.create_collection(_rag_schema)
 _rag_model = ChatOpenAI(
     model=os.getenv("OPENAI_MODEL", ""),
     api_key=SecretStr(os.getenv("OPENAI_API_KEY", "")),
+    reasoning_effort="minimal"
 )
 _rag_llm_client = LLMClient(model=_rag_model, name="chat-rag-llm")
 
 _rag_embedder = OpenAIEmbeddings(
     model="text-embedding-3-small",
-    api_key=os.getenv("OPENAI_API_KEY", ""),
+    api_key=SecretStr(os.getenv("OPENAI_API_KEY", "")),
 )
 
 rag_node = RagNode(
