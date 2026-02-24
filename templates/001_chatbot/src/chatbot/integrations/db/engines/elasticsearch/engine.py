@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from chatbot.shared.logging import Logger, create_default_logger
 from chatbot.integrations.db.base.engine import BaseDBEngine
@@ -36,10 +36,13 @@ from chatbot.integrations.db.engines.elasticsearch.schema_manager import (
     ElasticSchemaManager,
 )
 
+Elasticsearch: Any | None
 try:
-    from elasticsearch import Elasticsearch
+    from elasticsearch import Elasticsearch as _Elasticsearch
 except ImportError:  # pragma: no cover - 환경 의존 로딩
     Elasticsearch = None
+else:  # pragma: no cover - 환경 의존 로딩
+    Elasticsearch = _Elasticsearch
 
 
 class ElasticsearchEngine(BaseDBEngine):
@@ -207,10 +210,11 @@ class ElasticsearchEngine(BaseDBEngine):
     ) -> VectorSearchResponse:
         client = self._connection.ensure_client()
         resolved_schema = ensure_schema(schema, request.collection)
-        if not resolved_schema.vector_field:
+        target_vector_field = request.vector_field or resolved_schema.vector_field
+        if not target_vector_field:
             raise RuntimeError("벡터 필드가 정의되어 있지 않습니다.")
         knn_body = {
-            "field": resolved_schema.vector_field,
+            "field": target_vector_field,
             "query_vector": request.vector.values,
             "k": request.top_k,
             "num_candidates": max(request.top_k * 2, 10),

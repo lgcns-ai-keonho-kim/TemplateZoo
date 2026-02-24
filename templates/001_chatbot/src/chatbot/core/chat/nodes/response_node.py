@@ -19,6 +19,7 @@ _model = ChatOpenAI(
     api_key=SecretStr(
         os.getenv("OPENAI_API_KEY", "")
     ),
+    reasoning_effort='minimal',
 )
 
 

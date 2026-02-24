@@ -19,6 +19,7 @@ class ElasticDocumentMapper:
         body = {}
         if schema.payload_field:
             body[schema.payload_field] = document.payload
+            body.update(document.fields)
         else:
             body.update(document.fields)
         if schema.vector_field and document.vector:
@@ -35,14 +36,26 @@ class ElasticDocumentMapper:
 
         source = hit.get("_source", {})
         payload = source.get(schema.payload_field, {}) if schema.payload_field else {}
+
         vector = None
         if include_vector and schema.vector_field:
             raw_vector = source.get(schema.vector_field)
             if raw_vector is not None:
                 vector = Vector(values=raw_vector, dimension=len(raw_vector))
+
+        hidden_fields = {schema.vector_field} if schema.vector_field else set()
+        if schema.payload_field:
+            hidden_fields.add(schema.payload_field)
+
+        fields = {
+            key: value
+            for key, value in source.items()
+            if key not in hidden_fields
+        }
+
         return Document(
             doc_id=hit.get("_id"),
-            fields={},
+            fields=fields,
             payload=payload,
             vector=vector,
         )
