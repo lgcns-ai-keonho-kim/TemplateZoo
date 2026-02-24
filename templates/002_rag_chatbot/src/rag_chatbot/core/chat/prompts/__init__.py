@@ -7,8 +7,14 @@
 
 from rag_chatbot.core.chat.prompts.safeguard_prompt import SAFEGUARD_PROMPT
 from rag_chatbot.core.chat.prompts.chat_prompt import CHAT_PROMPT
+from rag_chatbot.core.chat.prompts.fallback_query_generation import FALLBACK_QUERY_GENERATION_PROMPT
+from rag_chatbot.core.chat.prompts.keyword_generation import KEYWORD_GENERATION_PROMPT
+from rag_chatbot.core.chat.prompts.relevance_filter import RELEVANCE_FILTER_PROMPT
 
 __all__ = [
     "SAFEGUARD_PROMPT",
     "CHAT_PROMPT",
+    "FALLBACK_QUERY_GENERATION_PROMPT",
+    "KEYWORD_GENERATION_PROMPT",
+    "RELEVANCE_FILTER_PROMPT"
 ]

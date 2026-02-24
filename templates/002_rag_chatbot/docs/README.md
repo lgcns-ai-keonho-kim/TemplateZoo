@@ -39,7 +39,7 @@ docs/
   setup/
     overview.md
     env.md
-    sqlite_vec.md
+    lancedb.md
     postgresql_pgvector.md
     mongodb.md
     filesystem.md
@@ -69,7 +69,7 @@ docs/
 | --- | --- |
 | setup 문서 인덱스 | `docs/setup/overview.md` |
 | `.env` 키 상세/반영 여부 | `docs/setup/env.md` |
-| SQLite + sqlite-vec 구성 | `docs/setup/sqlite_vec.md` |
+| 파일 기반 LanceDB 구성 | `docs/setup/lancedb.md` |
 | PostgreSQL + pgvector 구성 | `docs/setup/postgresql_pgvector.md` |
 | MongoDB 구성 | `docs/setup/mongodb.md` |
 | 파일 시스템 연동 | `docs/setup/filesystem.md` |

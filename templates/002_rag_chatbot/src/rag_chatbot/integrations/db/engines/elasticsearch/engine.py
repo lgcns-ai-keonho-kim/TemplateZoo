@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from rag_chatbot.shared.logging import Logger, create_default_logger
 from rag_chatbot.integrations.db.base.engine import BaseDBEngine
@@ -36,10 +36,13 @@ from rag_chatbot.integrations.db.engines.elasticsearch.schema_manager import (
     ElasticSchemaManager,
 )
 
+Elasticsearch: Any | None
 try:
-    from elasticsearch import Elasticsearch
+    from elasticsearch import Elasticsearch as _Elasticsearch
 except ImportError:  # pragma: no cover - 환경 의존 로딩
     Elasticsearch = None
+else:  # pragma: no cover - 환경 의존 로딩
+    Elasticsearch = _Elasticsearch
 
 
 class ElasticsearchEngine(BaseDBEngine):

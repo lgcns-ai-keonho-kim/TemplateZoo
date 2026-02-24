@@ -8,7 +8,7 @@
 | 문서 | 목적 | 열어야 하는 시점 |
 | --- | --- | --- |
 | `docs/setup/env.md` | `.env` 키 전체 설명과 실제 반영 여부 확인 | 프로젝트 초기 부트스트랩, 배포 전 변수 점검 |
-| `docs/setup/sqlite_vec.md` | sqlite-vec 구성과 SQLite 데이터 저장 위치 정리 | 로컬 단독 실행, SQLite 벡터 검색 실험 |
+| `docs/setup/lancedb.md` | LanceDB 구성과 파일 기반 벡터 저장 경로 정리 | 로컬 단독 실행, 파일 기반 벡터 검색 실험 |
 | `docs/setup/postgresql_pgvector.md` | PostgreSQL + pgvector 설치/초기화/연동 절차 | 운영형 DB로 전환할 때 |
 | `docs/setup/mongodb.md` | MongoDB 설치, 인증, 엔진 연동 절차 | MongoDB 엔진 검증/전환 시 |
 | `docs/setup/filesystem.md` | 파일 시스템 기반 로그 저장소 연동 방식 | 로그 영속화/파일 백엔드 확장 시 |
@@ -16,7 +16,7 @@
 ## 2. 권장 읽기 순서
 
 1. `docs/setup/env.md`
-2. `docs/setup/sqlite_vec.md`
+2. `docs/setup/lancedb.md`
 3. `docs/setup/postgresql_pgvector.md`
 4. `docs/setup/mongodb.md`
 5. `docs/setup/filesystem.md`
@@ -54,7 +54,7 @@
 | 런타임 환경 로딩 | `src/rag_chatbot/shared/config/runtime_env_loader.py`, `src/rag_chatbot/api/main.py` |
 | Chat 런타임 변수 소비 | `src/rag_chatbot/api/chat/services/runtime.py`, `src/rag_chatbot/shared/chat/services/chat_service.py` |
 | 기본 SQLite 저장소 | `src/rag_chatbot/shared/chat/repositories/history_repository.py`, `src/rag_chatbot/core/chat/const/settings.py` |
-| sqlite-vec 로딩 | `src/rag_chatbot/integrations/db/engines/sqlite/connection.py`, `src/rag_chatbot/integrations/db/engines/sqlite/vector_store.py` |
+| LanceDB 벡터 저장소 | `src/rag_chatbot/integrations/db/engines/lancedb/*.py`, `src/rag_chatbot/core/chat/nodes/rag_retrieve_node.py` |
 | PostgreSQL/pgvector | `src/rag_chatbot/integrations/db/engines/postgres/*.py` |
 | MongoDB | `src/rag_chatbot/integrations/db/engines/mongodb/*.py` |
 | 파일 시스템 연동 | `src/rag_chatbot/integrations/fs/*.py`, `src/rag_chatbot/shared/logging/logger.py` |

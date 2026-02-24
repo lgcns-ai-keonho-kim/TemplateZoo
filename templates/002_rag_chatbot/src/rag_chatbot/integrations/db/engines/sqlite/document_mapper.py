@@ -8,19 +8,13 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Dict
 
-from rag_chatbot.integrations.db.base.models import CollectionSchema, Document, Vector
+from rag_chatbot.integrations.db.base.models import CollectionSchema, Document
 
 
 class SqliteDocumentMapper:
     """SQLite 문서 매퍼."""
-
-    def __init__(
-        self,
-        vector_loader: Callable[[CollectionSchema, object], Optional[Vector]],
-    ) -> None:
-        self._vector_loader = vector_loader
 
     def document_to_row(
         self,
@@ -61,10 +55,9 @@ class SqliteDocumentMapper:
                 payload = {}
             else:
                 payload = {"value": raw}
-        vector = self._vector_loader(schema, doc_id)
         fields = {
             key: value
             for key, value in row.items()
             if key not in {schema.primary_key, schema.payload_field}
         }
-        return Document(doc_id=doc_id, fields=fields, payload=payload, vector=vector)
+        return Document(doc_id=doc_id, fields=fields, payload=payload, vector=None)

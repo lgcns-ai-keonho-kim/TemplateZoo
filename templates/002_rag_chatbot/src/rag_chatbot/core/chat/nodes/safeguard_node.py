@@ -16,10 +16,9 @@ from rag_chatbot.shared.chat.nodes import LLMNode
 
 
 _model = ChatOpenAI(
-    model=os.getenv("OPENAI_MODEL", ""),
-    api_key=SecretStr(
-        os.getenv("OPENAI_API_KEY", "")
-    ),
+    model_name=os.getenv("OPENAI_MODEL", ""),
+    openai_api_key=SecretStr(os.getenv("OPENAI_API_KEY", "")),
+    reasoning_effort="minimal",
 )
 
 

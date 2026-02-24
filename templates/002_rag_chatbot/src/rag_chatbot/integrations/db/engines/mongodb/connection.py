@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from rag_chatbot.shared.logging import Logger
 
@@ -28,8 +28,8 @@ class MongoConnectionManager:
         self._auth_source = auth_source
         self._logger = logger
         self._mongo_client_cls = mongo_client_cls
-        self._client: Optional[object] = None
-        self._database = None
+        self._client: Any | None = None
+        self._database: Any | None = None
 
     def connect(self) -> None:
         """MongoDB 연결을 초기화한다."""

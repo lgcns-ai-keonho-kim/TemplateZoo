@@ -6,8 +6,9 @@
 """
 
 from __future__ import annotations
-import time
+
 import json
+import time
 from dataclasses import dataclass
 
 from rag_chatbot.shared.chat.services.service_executor import ServiceExecutor
@@ -44,6 +45,14 @@ class _BaseService:
     ) -> bool:
         del session_id, request_id, content, metadata
         return True
+
+    async def astream(self, session_id: str, user_query: str, context_window: int = 20):
+        for event in self.stream(
+            session_id=session_id,
+            user_query=user_query,
+            context_window=context_window,
+        ):
+            yield event
 
 
 class _SuccessService(_BaseService):
@@ -84,6 +93,15 @@ class _ReferenceService(_BaseService):
             "event": "done",
             "data": "답변",
         }
+
+
+class _AStreamPreferredService(_BaseService):
+    def stream(self, session_id: str, user_query: str, context_window: int = 20):
+        raise AssertionError("ServiceExecutor는 stream()이 아니라 astream()을 사용해야 합니다.")
+
+    async def astream(self, session_id: str, user_query: str, context_window: int = 20):
+        yield {"node": "response", "event": "token", "data": "비동기"}
+        yield {"node": "response", "event": "done", "data": "비동기"}
 
 
 def test_service_executor_stream_success_order() -> None:
@@ -137,7 +155,7 @@ def test_service_executor_stream_service_error_emits_error() -> None:
         )
     ]
     executor.shutdown()
-    
+
     time.sleep(1)
     assert payloads[0]["type"] == "start"
     assert payloads[-1]["type"] == "error"
@@ -208,3 +226,30 @@ def test_service_executor_stream_references_event() -> None:
     assert decoded[0]["metadata"]["file_name"] == "manual.pdf"
     assert isinstance(payloads[-1]["metadata"], dict)
     assert "references" not in payloads[-1]["metadata"]
+
+
+def test_service_executor_prefers_astream_path() -> None:
+    """실행기는 동기 stream이 아니라 비동기 astream 경로를 사용해야 한다."""
+
+    job_queue = InMemoryQueue(config=QueueConfig(default_timeout=0.05))
+    event_buffer = InMemoryEventBuffer(config=EventBufferConfig(default_timeout=0.05))
+    executor = ServiceExecutor(
+        service=_AStreamPreferredService(),
+        job_queue=job_queue,
+        event_buffer=event_buffer,
+        timeout_seconds=3,
+    )
+
+    queued = executor.submit_job(session_id=None, user_query="hello", context_window=20)
+    payloads = [
+        _extract_payload(item)
+        for item in executor.stream_events(
+            session_id=queued["session_id"],
+            request_id=queued["request_id"],
+        )
+    ]
+    executor.shutdown()
+
+    types = [item["type"] for item in payloads]
+    assert types == ["start", "token", "done"]
+    assert payloads[-1]["content"] == "비동기"

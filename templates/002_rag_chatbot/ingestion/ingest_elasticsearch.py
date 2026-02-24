@@ -66,5 +66,5 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 
-# 기본 실행(권장): uv run python ingestion/ingest_sqlite_vec.py --input-root data/ingestion-doc
+# LanceDB 실행: uv run python ingestion/ingest_lancedb.py --input-root data/ingestion-doc
 # PostgreSQL(pgvector) 대체 실행: uv run python ingestion/ingest_postgres.py --input-root data/ingestion-doc

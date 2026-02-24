@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Iterator, Sequence
+from collections.abc import AsyncIterator, Iterator, Mapping, Sequence
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict
@@ -191,8 +191,9 @@ class BaseChatGraph:
                 }
 
     def _extract_assistant_message(self, result: object) -> str:
-        if isinstance(result, dict):
-            raw = result.get("assistant_message")
+        if isinstance(result, Mapping):
+            result_map = {str(key): value for key, value in result.items()}
+            raw = result_map.get("assistant_message")
             if isinstance(raw, str):
                 if raw.strip():
                     return raw

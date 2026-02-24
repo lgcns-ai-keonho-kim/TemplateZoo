@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import queue as queue_module
 import threading
@@ -230,45 +231,22 @@ class ServiceExecutor(ServiceExecutorPort):
 
         try:
             with session_lock:
-                for event in self._service.stream(
-                    session_id=session_id,
-                    user_query=user_query,
-                    context_window=context_window,
-                ):
-                    self._raise_timeout_if_needed(started_at=started_at)
-                    normalized = self._normalize_graph_event(event=event)
-                    if normalized is None:
-                        continue
-
-                    event_type = normalized["event"]
-                    if event_type == self._EVENT_TOKEN:
-                        token_count += 1
-                    if event_type == self._EVENT_DONE:
-                        done_emitted = True
-                        metadata = normalized.get("metadata")
-                        merged_metadata = self._merge_metadata(
-                            metadata=metadata,
-                            patch={"token_count": token_count},
-                        )
-                        normalized["metadata"] = merged_metadata
-                        done_content = str(normalized.get("data") or "")
-                        done_node = str(normalized.get("node") or "response")
-                        done_metadata = merged_metadata
-                        self._set_session_status(session_id=session_id, status=self._STATUS_COMPLETED)
-                    if event_type == self._EVENT_ERROR:
-                        self._set_session_status(session_id=session_id, status=self._STATUS_FAILED)
-
-                    self._emit_event(
+                consumed = asyncio.run(
+                    self._consume_service_astream(
                         session_id=session_id,
                         request_id=request_id,
-                        event_type=event_type,
-                        node=normalized["node"],
-                        data=normalized.get("data"),
-                        metadata=normalized.get("metadata"),
+                        user_query=user_query,
+                        context_window=context_window,
+                        started_at=started_at,
                     )
-
-                    if event_type in {self._EVENT_DONE, self._EVENT_ERROR}:
-                        break
+                )
+                token_count = int(consumed.get("token_count") or 0)
+                done_emitted = bool(consumed.get("done_emitted") is True)
+                done_content = str(consumed.get("done_content") or "")
+                done_node = str(consumed.get("done_node") or "response")
+                raw_done_metadata = consumed.get("done_metadata")
+                if isinstance(raw_done_metadata, dict):
+                    done_metadata = raw_done_metadata
         except BaseAppException as error:
             message = self._format_base_error_message(error)
             self._service_logger.error(
@@ -336,6 +314,71 @@ class ServiceExecutor(ServiceExecutorPort):
         self._llm_logger.info(
             f"chat.exec.llm: session_id={session_id}, request_id={request_id}, elapsed_ms={int(elapsed * 1000)}, token_count={token_count}"
         )
+
+    async def _consume_service_astream(
+        self,
+        *,
+        session_id: str,
+        request_id: str,
+        user_query: str,
+        context_window: int,
+        started_at: float,
+    ) -> dict[str, Any]:
+        """서비스 비동기 스트림을 소비하고 실행 요약을 반환한다."""
+
+        token_count = 0
+        done_emitted = False
+        done_content = ""
+        done_node = "response"
+        done_metadata: dict[str, Any] | None = None
+
+        async for event in self._service.astream(
+            session_id=session_id,
+            user_query=user_query,
+            context_window=context_window,
+        ):
+            self._raise_timeout_if_needed(started_at=started_at)
+            normalized = self._normalize_graph_event(event=event)
+            if normalized is None:
+                continue
+
+            event_type = normalized["event"]
+            if event_type == self._EVENT_TOKEN:
+                token_count += 1
+            if event_type == self._EVENT_DONE:
+                done_emitted = True
+                metadata = normalized.get("metadata")
+                merged_metadata = self._merge_metadata(
+                    metadata=metadata,
+                    patch={"token_count": token_count},
+                )
+                normalized["metadata"] = merged_metadata
+                done_content = str(normalized.get("data") or "")
+                done_node = str(normalized.get("node") or "response")
+                done_metadata = merged_metadata
+                self._set_session_status(session_id=session_id, status=self._STATUS_COMPLETED)
+            if event_type == self._EVENT_ERROR:
+                self._set_session_status(session_id=session_id, status=self._STATUS_FAILED)
+
+            self._emit_event(
+                session_id=session_id,
+                request_id=request_id,
+                event_type=event_type,
+                node=normalized["node"],
+                data=normalized.get("data"),
+                metadata=normalized.get("metadata"),
+            )
+
+            if event_type in {self._EVENT_DONE, self._EVENT_ERROR}:
+                break
+
+        return {
+            "token_count": token_count,
+            "done_emitted": done_emitted,
+            "done_content": done_content,
+            "done_node": done_node,
+            "done_metadata": done_metadata,
+        }
 
     def _persist_loop(self) -> None:
         while not self._persist_stop_event.is_set():

@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from rag_chatbot.shared.logging import Logger, create_default_logger
 from rag_chatbot.integrations.db.base.engine import BaseDBEngine
@@ -31,10 +31,13 @@ from rag_chatbot.integrations.db.engines.redis.vector_scorer import (
     RedisVectorScorer,
 )
 
+redis: Any | None
 try:
-    import redis
+    import redis as _redis
 except ImportError:  # pragma: no cover - 환경 의존 로딩
     redis = None
+else:  # pragma: no cover - 환경 의존 로딩
+    redis = _redis
 
 
 class RedisEngine(BaseDBEngine):

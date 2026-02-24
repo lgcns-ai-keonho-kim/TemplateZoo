@@ -86,6 +86,7 @@
 | `ELASTICSEARCH_CA_CERTS` | 빈값 | 테스트 | 선택 | CA 인증서 경로(HTTPS + self-signed 환경이면 필수. 절대경로 권장) |
 | `ELASTICSEARCH_VERIFY_CERTS` | `true` | 테스트 | 선택 | 인증서 검증 여부 |
 | `ELASTICSEARCH_SSL_FINGERPRINT` | 빈값 | 테스트 | 선택 | TLS 지문 검증 값 |
+| `LANCEDB_URI` | `data/db/vector` | `core/chat/nodes/rag_retrieve_node.py`, `ingestion/core/db.py` | 선택 | 파일 기반 벡터 저장소 경로 |
 | `SQLITE_DB_DIR` | `data/db` | 현재 서비스 코드 직접 미사용 | 선택 | 범용 SQLite 저장 디렉터리 정책용 |
 | `SQLITE_DB_PATH` | `data/db/playground.sqlite` | 현재 서비스 코드 직접 미사용 | 선택 | 범용 SQLite DB 경로 정책용 |
 
@@ -197,7 +198,7 @@ ELASTICSEARCH_CA_CERTS=/home/kkh93/proj/TemplateZoo/templates/000_rag_chatbot/ce
 
 ## 9. 관련 문서
 
-- `docs/setup/sqlite_vec.md`
+- `docs/setup/lancedb.md`
 - `docs/setup/postgresql_pgvector.md`
 - `docs/setup/mongodb.md`
 - `docs/setup/filesystem.md`

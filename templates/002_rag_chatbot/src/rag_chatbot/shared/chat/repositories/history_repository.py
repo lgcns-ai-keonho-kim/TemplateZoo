@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, NoReturn, Optional
 from uuid import uuid4
 
 from rag_chatbot.core.chat.const import (
@@ -67,7 +67,6 @@ class ChatHistoryRepository:
             engine = SQLiteEngine(
                 database_path=str(self._database_path),
                 logger=self._logger,
-                enable_vector=False,
             )
             self._client = DBClient(engine)
         self._initialize()
@@ -344,6 +343,6 @@ class ChatHistoryRepository:
             ]
         )
 
-    def _raise_repository_error(self, code: str, error: Exception) -> None:
+    def _raise_repository_error(self, code: str, error: Exception) -> NoReturn:
         detail = ExceptionDetail(code=code, cause=str(error))
         raise BaseAppException("대화 이력 저장소 처리 중 오류가 발생했습니다.", detail, error) from error

@@ -323,19 +323,21 @@ class LLMNode:
                 if isinstance(item, str):
                     chunks.append(item)
                     continue
-                if isinstance(item, dict):
-                    text = item.get("text")
+                if isinstance(item, Mapping):
+                    item_map = {str(key): value for key, value in item.items()}
+                    text = item_map.get("text")
                     if text is None:
-                        text = item.get("TEXT")
+                        text = item_map.get("TEXT")
                     if text is not None:
                         chunks.append(str(text))
                     continue
                 chunks.append(str(item))
             return "".join(chunks)
-        if isinstance(content, dict):
-            text = content.get("text")
+        if isinstance(content, Mapping):
+            content_map = {str(key): value for key, value in content.items()}
+            text = content_map.get("text")
             if text is None:
-                text = content.get("TEXT")
+                text = content_map.get("TEXT")
             if text is None:
                 return ""
             return str(text)

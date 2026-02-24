@@ -29,7 +29,8 @@
 | 읽기 DSL | `src/rag_chatbot/integrations/db/query_builder/read_builder.py` | `fetch`, `fetch_vector` |
 | 쓰기 DSL | `src/rag_chatbot/integrations/db/query_builder/write_builder.py` | `upsert`, `upsert_one` |
 | 삭제 DSL | `src/rag_chatbot/integrations/db/query_builder/delete_builder.py` | `by_id`, `execute` |
-| SQLite 엔진 | `src/rag_chatbot/integrations/db/engines/sqlite/engine.py` | 로컬 기본 엔진 |
+| LanceDB 엔진 | `src/rag_chatbot/integrations/db/engines/lancedb/engine.py` | 파일 기반 벡터 저장/검색 |
+| SQLite 엔진 | `src/rag_chatbot/integrations/db/engines/sqlite/engine.py` | 로컬 기본 RDB 엔진 |
 | Postgres 엔진 | `src/rag_chatbot/integrations/db/engines/postgres/engine.py` | PostgreSQL + pgvector |
 | Redis 엔진 | `src/rag_chatbot/integrations/db/engines/redis/engine.py` | Redis 기반 저장/검색 |
 | MongoDB 엔진 | `src/rag_chatbot/integrations/db/engines/mongodb/engine.py` | MongoDB CRUD |
@@ -113,7 +114,8 @@ query = (
 
 | 엔진 | 클래스 | 벡터 검색 | 기본 특성 |
 | --- | --- | --- | --- |
-| SQLite | `SQLiteEngine` | 조건부 지원 | `enable_vector=True` + `sqlite_vec` 사용 가능 시 벡터 검색 지원 |
+| LanceDB | `LanceDBEngine` | 지원 | 파일 기반 벡터 저장소, 로컬 경로(`LANCEDB_URI`) 사용 |
+| SQLite | `SQLiteEngine` | 미지원 | RDB 전용 엔진, 벡터 필드/검색은 명시 오류 |
 | PostgreSQL | `PostgresEngine` | 지원 | pgvector 연동 전제, `supports_vector_search=True` |
 | Redis | `RedisEngine` | 조건부 지원 | `enable_vector=False` 기본, true일 때 코사인 유사도 기반 검색 |
 | MongoDB | `MongoDBEngine` | 미지원 | `supports_vector_search=False`, `vector_search`는 오류 반환 |
@@ -124,7 +126,7 @@ query = (
 1. Redis 엔진은 벡터 검색 시 filter_expression을 아직 지원하지 않는다.
 2. Elasticsearch 엔진은 `drop_column` 호출 시 오류를 발생시킨다.
 3. MongoDB 엔진은 벡터 검색을 비활성화한다.
-4. SQLite 엔진은 vector 기능 비활성화 시 벡터 검색을 막는다.
+4. SQLite 엔진은 벡터 검색을 지원하지 않는다.
 
 ## 6. 실제 연결 경로
 
@@ -198,7 +200,7 @@ repository = ChatHistoryRepository(db_client=DBClient(engine))
 ## 10. 관련 문서
 
 - `docs/integrations/overview.md`
-- `docs/setup/sqlite_vec.md`
+- `docs/setup/lancedb.md`
 - `docs/setup/postgresql_pgvector.md`
 - `docs/setup/mongodb.md`
 - `docs/shared/chat.md`

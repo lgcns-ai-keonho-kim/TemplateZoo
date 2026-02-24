@@ -152,7 +152,9 @@ class BranchNode:
         """허용 selector 접두(prefix) 매칭으로 정규 토큰을 복원한다."""
         if not self._allowed_selectors:
             return None
-        for candidate in sorted(self._allowed_selectors, key=len, reverse=True):
+        candidates: list[str] = [str(item) for item in self._allowed_selectors]
+        candidates.sort(key=len, reverse=True)
+        for candidate in candidates:
             if value.startswith(candidate):
                 return candidate
         return None

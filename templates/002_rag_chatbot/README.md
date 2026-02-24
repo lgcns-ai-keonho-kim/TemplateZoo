@@ -187,7 +187,7 @@ docs/                   # 개발 문서
 | 문서 허브 | [docs/README.md](docs/README.md) | 전체 맵, 변경 진입점 |
 | Setup 개요 | [docs/setup/overview.md](docs/setup/overview.md) | 인프라/환경 문서 인덱스 |
 | Setup ENV | [docs/setup/env.md](docs/setup/env.md) | `.env` 키 전체 설명 |
-| Setup SQLite Vec | [docs/setup/sqlite_vec.md](docs/setup/sqlite_vec.md) | SQLite + sqlite-vec 구성 |
+| Setup LanceDB | [docs/setup/lancedb.md](docs/setup/lancedb.md) | 파일 기반 LanceDB 벡터 저장소 구성 |
 | Setup PostgreSQL | [docs/setup/postgresql_pgvector.md](docs/setup/postgresql_pgvector.md) | PostgreSQL + pgvector 설치/연동 |
 | Setup MongoDB | [docs/setup/mongodb.md](docs/setup/mongodb.md) | MongoDB 설치/연동 |
 | Setup FileSystem | [docs/setup/filesystem.md](docs/setup/filesystem.md) | 파일 시스템 로그 연동 |

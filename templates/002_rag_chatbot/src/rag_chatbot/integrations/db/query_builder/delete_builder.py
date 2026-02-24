@@ -7,10 +7,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import List, Optional
 
 from rag_chatbot.integrations.db.base.engine import BaseDBEngine
-from rag_chatbot.integrations.db.base.models import CollectionSchema, FieldSource, Query
+from rag_chatbot.integrations.db.base.models import (
+    CollectionSchema,
+    Document,
+    FieldSource,
+    Query,
+)
 from rag_chatbot.integrations.db.base.query_builder import QueryBuilder
 
 
@@ -22,21 +28,35 @@ class DeleteBuilder:
         engine: BaseDBEngine,
         collection: str,
         schema: Optional[CollectionSchema] = None,
+        query_executor: Optional[
+            Callable[[str, Query, Optional[CollectionSchema]], List[Document]]
+        ] = None,
+        delete_executor: Optional[
+            Callable[[str, object, Optional[CollectionSchema]], None]
+        ] = None,
     ) -> None:
         self._engine = engine
         self._collection = collection
         self._builder = QueryBuilder()
         self._schema = schema
+        self._query_executor = query_executor
+        self._delete_executor = delete_executor
 
     def by_id(self, doc_id: object) -> None:
         """ID로 삭제한다."""
 
+        if self._delete_executor is not None:
+            self._delete_executor(self._collection, doc_id, self._schema)
+            return
         self._engine.delete(self._collection, doc_id, self._schema)
 
     def by_ids(self, doc_ids: List[object]) -> None:
         """여러 ID를 삭제한다."""
 
         for doc_id in doc_ids:
+            if self._delete_executor is not None:
+                self._delete_executor(self._collection, doc_id, self._schema)
+                continue
             self._engine.delete(self._collection, doc_id, self._schema)
 
     def where(
@@ -109,9 +129,15 @@ class DeleteBuilder:
         return self._delete_by_query(query)
 
     def _delete_by_query(self, query: Query) -> int:
-        if self._schema:
-            self._schema.validate_query(query)
-        documents = self._engine.query(self._collection, query, self._schema)
+        if self._query_executor is not None:
+            documents = self._query_executor(self._collection, query, self._schema)
+        else:
+            if self._schema:
+                self._schema.validate_query(query)
+            documents = self._engine.query(self._collection, query, self._schema)
         for document in documents:
+            if self._delete_executor is not None:
+                self._delete_executor(self._collection, document.doc_id, self._schema)
+                continue
             self._engine.delete(self._collection, document.doc_id, self._schema)
         return len(documents)

@@ -27,24 +27,34 @@ _MAX_PROMPT_TABLE_CHARS = 40_000
 _MAX_PAGE_TEXT_CHARS = 6_000
 
 _TABLE_PROMPT_TEMPLATE = """
-아래 표 HTML과 페이지 텍스트를 바탕으로 표 내용을 분석하라.
+<system>
+You are a table analysis specialist. Your sole task is to generate structured annotations for HTML tables based on the provided table markup and surrounding page text.
+</system>
 
-[출력 형식 - 반드시 그대로]
-<SUMMARY>최대 5문장 요약</SUMMARY>
-<DESCRIPTION>최대 3문단 상세 설명</DESCRIPTION>
+<instructions>
+Analyze the provided HTML table and generate a structured annotation using ONLY the information explicitly present in the table and the surrounding page text. Do not infer, assume, or hallucinate any content beyond what is directly stated.
 
-[강제 규칙]
-1) 위 태그 외 어떤 텍스트도 출력하지 마라.
-2) SUMMARY는 최대 5문장으로 작성하라.
-3) DESCRIPTION은 최대 3문단으로 작성하라.
-4) 표에 없는 내용을 추측해서 쓰지 마라.
-5) 한국어로 작성하라.
+Your response MUST adhere to the following rules without exception:
+  1. Output ONLY the annotation block below — no preamble, explanation, commentary, or trailing text of any kind.
+  2. SUMMARY must be written in 5 sentences or fewer.
+  3. DESCRIPTION must be written in 3 paragraphs or fewer.
+  4. Base all content strictly on the table content and the provided page text. Do not speculate or fill in gaps.
+  5. Write all content in Korean.
+</instructions>
 
-[표 HTML]
-{table_html}
+<output_format>
+Reproduce this structure exactly:
 
-[페이지 텍스트]
-{page_text}
+[TBL]
+<SUMMARY>5문장 이내 요약</SUMMARY>
+<DESCRIPTION>3문단 이내 상세 설명</DESCRIPTION>
+[TBL]
+</output_format>
+
+<input>
+  <table_html>{table_html}</table_html>
+  <page_text>{page_text}</page_text>
+</input>
 """.strip()
 
 

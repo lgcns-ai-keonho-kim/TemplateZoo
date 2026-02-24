@@ -173,10 +173,10 @@ flowchart LR
 
 ## 5-4. rag_node
 
-- 파일: `src/rag_chatbot/shared/chat/nodes/rag_node.py`
+- 파일: `src/rag_chatbot/core/chat/nodes/rag_retrieve_node.py`
 - 출력 키: `rag_context`, `rag_references`
 - 기본 동작:
-  1. SQLite-Vec(`rag_chunks`)를 기본 검색 저장소로 사용한다.
+  1. LanceDB(`rag_chunks`)를 기본 검색 저장소로 사용한다.
   2. `emb_body` 벡터 필드로 검색한다.
   3. 응답 완료 전 references 이벤트 전송을 위한 `rag_references`를 생성한다.
 

@@ -13,8 +13,8 @@ from ingestion.core.types import RAG_COLLECTION
 from rag_chatbot.integrations.db import DBClient
 from rag_chatbot.integrations.db.base import CollectionSchema, ColumnSpec
 from rag_chatbot.integrations.db.engines.elasticsearch import ElasticsearchEngine
+from rag_chatbot.integrations.db.engines.lancedb import LanceDBEngine
 from rag_chatbot.integrations.db.engines.postgres import PostgresEngine
-from rag_chatbot.integrations.db.engines.sqlite import SQLiteEngine
 from rag_chatbot.shared.logging import Logger, create_default_logger
 
 
@@ -24,13 +24,12 @@ def create_logger(name: str = "Ingestion") -> Logger:
     return create_default_logger(name)
 
 
-def create_sqlite_client(logger: Logger | None = None) -> DBClient:
-    """SQLite-Vec 기본 DBClient를 생성한다."""
+def create_lancedb_client(logger: Logger | None = None) -> DBClient:
+    """LanceDB 기본 DBClient를 생성한다."""
 
-    engine = SQLiteEngine(
-        database_path=os.getenv("SQLITE_DB_PATH", "data/db/playground.sqlite"),
+    engine = LanceDBEngine(
+        uri=os.getenv("LANCEDB_URI", "data/db/vector"),
         logger=logger,
-        enable_vector=True,
     )
     return DBClient(engine)
 
@@ -71,8 +70,8 @@ def create_elasticsearch_client(logger: Logger | None = None) -> DBClient:
     return DBClient(engine)
 
 
-def build_sqlite_schema(embedding_dim: int) -> CollectionSchema:
-    """SQLite-Vec ingestion 스키마를 생성한다."""
+def build_lancedb_schema(embedding_dim: int) -> CollectionSchema:
+    """LanceDB ingestion 스키마를 생성한다."""
 
     return CollectionSchema(
         name=RAG_COLLECTION,
@@ -87,7 +86,7 @@ def build_sqlite_schema(embedding_dim: int) -> CollectionSchema:
             ColumnSpec(name="file_path", data_type="TEXT", nullable=False),
             ColumnSpec(name="body", data_type="TEXT", nullable=False),
             ColumnSpec(name="metadata", data_type="TEXT"),
-            ColumnSpec(name="emb_body", data_type="TEXT", is_vector=True, dimension=embedding_dim),
+            ColumnSpec(name="emb_body", is_vector=True, dimension=embedding_dim),
         ],
     )
 
@@ -144,10 +143,10 @@ def ensure_collection(db_client: DBClient, schema: CollectionSchema) -> None:
 
 __all__ = [
     "create_logger",
-    "create_sqlite_client",
+    "create_lancedb_client",
     "create_postgres_client",
     "create_elasticsearch_client",
-    "build_sqlite_schema",
+    "build_lancedb_schema",
     "build_postgres_schema",
     "build_elasticsearch_schema",
     "ensure_collection",

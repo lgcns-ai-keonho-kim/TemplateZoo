@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from rag_chatbot.shared.logging import Logger
 
@@ -19,7 +19,7 @@ class RedisConnectionManager:
         self._url = url
         self._logger = logger
         self._redis = redis_module
-        self._client: Optional[object] = None
+        self._client: Any | None = None
 
     def connect(self) -> None:
         """Redis 연결을 초기화한다."""

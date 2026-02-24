@@ -51,19 +51,29 @@ from rag_chatbot.integrations.db.engines.postgres.vector_store import (
     PostgresVectorStore,
 )
 
+psycopg2: Any | None
+PgJson: Any | None
 try:
-    import psycopg2
-    from psycopg2.extras import Json as PgJson
+    import psycopg2 as _psycopg2
+    from psycopg2.extras import Json as _PgJson
 except ImportError:  # pragma: no cover - 환경 의존 로딩
     psycopg2 = None
     PgJson = None
+else:  # pragma: no cover - 환경 의존 로딩
+    psycopg2 = _psycopg2
+    PgJson = _PgJson
 
+register_pgvector: Any | None
+PgVector: Any | None
 try:
-    from pgvector.psycopg2 import register_vector as register_pgvector
-    from pgvector import Vector as PgVector
+    from pgvector.psycopg2 import register_vector as _register_pgvector
+    from pgvector import Vector as _PgVector
 except ImportError:  # pragma: no cover - 환경 의존 로딩
     register_pgvector = None
     PgVector = None
+else:  # pragma: no cover - 환경 의존 로딩
+    register_pgvector = _register_pgvector
+    PgVector = _PgVector
 
 
 class PostgresEngine(BaseDBEngine):

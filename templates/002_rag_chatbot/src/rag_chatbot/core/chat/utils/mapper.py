@@ -124,7 +124,7 @@ class ChatHistoryMapper:
 
     def _parse_metadata(self, raw: object) -> dict[str, Any]:
         if isinstance(raw, dict):
-            return raw
+            return {str(key): value for key, value in raw.items()}
         if isinstance(raw, str) and raw:
             try:
                 loaded = json.loads(raw)
@@ -136,6 +136,8 @@ class ChatHistoryMapper:
 
     def _to_int(self, value: object) -> int:
         try:
-            return int(value)  # type: ignore[arg-type]
+            if isinstance(value, (int, float, str)):
+                return int(value)
+            return 0
         except (TypeError, ValueError):
             return 0

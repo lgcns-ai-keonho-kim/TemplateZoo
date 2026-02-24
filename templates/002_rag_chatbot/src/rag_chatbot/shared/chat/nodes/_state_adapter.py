@@ -28,28 +28,27 @@ def coerce_state_mapping(state: object) -> Mapping[str, Any]:
         BaseAppException: 지원하지 않는 state 타입인 경우.
     """
     if isinstance(state, Mapping):
-        return state
+        return {str(key): value for key, value in state.items()}
 
     if not isinstance(state, type) and is_dataclass(state):
         data = asdict(state)
         if isinstance(data, Mapping):
-            return data
+            return {str(key): value for key, value in data.items()}
 
     model_dump = getattr(state, "model_dump", None)
     if callable(model_dump):
         data = model_dump()
         if isinstance(data, Mapping):
-            return data
+            return {str(key): value for key, value in data.items()}
 
     legacy_dump = getattr(state, "dict", None)
     if callable(legacy_dump):
         data = legacy_dump()
         if isinstance(data, Mapping):
-            return data
+            return {str(key): value for key, value in data.items()}
 
     detail = ExceptionDetail(
         code="CHAT_NODE_INPUT_INVALID",
         cause=f"state_type={type(state).__name__}",
     )
     raise BaseAppException("노드 입력 state 타입이 올바르지 않습니다.", detail)
-

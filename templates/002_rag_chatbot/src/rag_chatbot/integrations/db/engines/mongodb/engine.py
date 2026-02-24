@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from rag_chatbot.shared.logging import Logger, create_default_logger
 from rag_chatbot.integrations.db.base.engine import BaseDBEngine
@@ -27,10 +27,13 @@ from rag_chatbot.integrations.db.engines.mongodb.filter_builder import (
 )
 from rag_chatbot.integrations.db.engines.mongodb.schema_manager import MongoSchemaManager
 
+MongoClient: Any | None
 try:
-    from pymongo import MongoClient
+    from pymongo import MongoClient as _MongoClient
 except ImportError:  # pragma: no cover - 환경 의존 로딩
     MongoClient = None
+else:  # pragma: no cover - 환경 의존 로딩
+    MongoClient = _MongoClient
 
 
 class MongoDBEngine(BaseDBEngine):

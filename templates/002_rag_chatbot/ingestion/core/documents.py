@@ -1,6 +1,6 @@
 """
 목적: ingestion 청크를 엔진별 업서트 문서로 변환한다.
-설명: 공통 직렬화/검증/배치 분할과 SQLite·Postgres·Elasticsearch 매핑을 담당한다.
+설명: 공통 직렬화/검증/배치 분할과 LanceDB·Postgres·Elasticsearch 매핑을 담당한다.
 디자인 패턴: 어댑터 변환 모듈
 참조: ingestion/steps/upsert_*.py
 """
@@ -15,12 +15,13 @@ from rag_chatbot.integrations.db.base import Document, Vector
 from rag_chatbot.shared.exceptions import BaseAppException, ExceptionDetail
 
 
-def to_sqlite_documents(chunks: list[IngestionChunk]) -> list[Document]:
-    """SQLite-Vec 업서트 문서로 변환한다."""
+def to_lancedb_documents(chunks: list[IngestionChunk]) -> list[Document]:
+    """LanceDB 업서트 문서로 변환한다."""
 
     docs: list[Document] = []
     for chunk in chunks:
         _validate_file_name(chunk)
+        vector_values = chunk.emb_body or []
         docs.append(
             Document(
                 doc_id=chunk.chunk_id,
@@ -30,10 +31,9 @@ def to_sqlite_documents(chunks: list[IngestionChunk]) -> list[Document]:
                     "file_path": chunk.file_path,
                     "body": chunk.body,
                     "metadata": _json_dumps(chunk.metadata),
-                    "emb_body": _json_dumps(chunk.emb_body),
                 },
                 payload={},
-                vector=Vector(values=chunk.emb_body or [], dimension=len(chunk.emb_body or [])),
+                vector=Vector(values=vector_values, dimension=len(vector_values)),
             )
         )
     return docs
@@ -45,6 +45,7 @@ def to_postgres_documents(chunks: list[IngestionChunk]) -> list[Document]:
     docs: list[Document] = []
     for chunk in chunks:
         _validate_file_name(chunk)
+        vector_values = chunk.emb_body or []
         docs.append(
             Document(
                 doc_id=chunk.chunk_id,
@@ -56,7 +57,7 @@ def to_postgres_documents(chunks: list[IngestionChunk]) -> list[Document]:
                     "metadata": _json_dumps(chunk.metadata),
                 },
                 payload={},
-                vector=Vector(values=chunk.emb_body or [], dimension=len(chunk.emb_body or [])),
+                vector=Vector(values=vector_values, dimension=len(vector_values)),
             )
         )
     return docs
@@ -68,6 +69,7 @@ def to_elasticsearch_documents(chunks: list[IngestionChunk]) -> list[Document]:
     docs: list[Document] = []
     for chunk in chunks:
         _validate_file_name(chunk)
+        vector_values = chunk.emb_body or []
         docs.append(
             Document(
                 doc_id=chunk.chunk_id,
@@ -79,7 +81,7 @@ def to_elasticsearch_documents(chunks: list[IngestionChunk]) -> list[Document]:
                     "metadata": chunk.metadata,
                 },
                 payload={},
-                vector=Vector(values=chunk.emb_body or [], dimension=len(chunk.emb_body or [])),
+                vector=Vector(values=vector_values, dimension=len(vector_values)),
             )
         )
     return docs
@@ -108,7 +110,7 @@ def _validate_file_name(chunk: IngestionChunk) -> None:
 
 
 __all__ = [
-    "to_sqlite_documents",
+    "to_lancedb_documents",
     "to_postgres_documents",
     "to_elasticsearch_documents",
     "batched",

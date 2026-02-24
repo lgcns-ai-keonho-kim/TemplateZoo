@@ -29,25 +29,36 @@ _IMG_BLOCK_PATTERN = re.compile(
 _MAX_PAGE_TEXT_CHARS = 6000
 
 _ANNOTATION_PROMPT_TEMPLATE = """
-아래 입력을 기반으로 이미지 주석을 생성하라.
+<system>
+You are an image annotation specialist. Your sole task is to generate structured annotations for images based on the provided image path and surrounding page text.
+</system>
 
-[출력 형식 - 반드시 그대로]
+<instructions>
+Generate a structured image annotation using ONLY the information explicitly present in the image and the provided page text. Do not infer, assume, or hallucinate any content beyond what is directly observable or stated.
+
+Your response MUST adhere to the following rules without exception:
+  1. Output ONLY the annotation block below — no preamble, explanation, commentary, or trailing text of any kind.
+  2. Preserve the PATH value exactly as given in the input; do not modify it in any way.
+  3. SUMMARY must be written in 5 sentences or fewer.
+  4. DESCRIPTION must be written in 3 paragraphs or fewer.
+  5. Base all content strictly on the image content and the provided page text. Do not speculate.
+  6. Write all content in Korean.
+</instructions>
+
+<output_format>
+Reproduce this structure exactly:
+
 [IMG]
 <PATH>{image_path}</PATH>
-<SUMMARY>최대 5문장 요약</SUMMARY>
-<DESCRIPTION>최대 3문단 상세 설명</DESCRIPTION>
+<SUMMARY>5문장 이내 요약</SUMMARY>
+<DESCRIPTION>3문단 이내 상세 설명</DESCRIPTION>
 [/IMG]
+</output_format>
 
-[강제 규칙]
-1) 태그 외 다른 텍스트를 절대 출력하지 마라.
-2) PATH는 반드시 입력값과 동일하게 유지하라.
-3) SUMMARY는 최대 5문장으로 작성하라.
-4) DESCRIPTION은 최대 3문단으로 작성하라.
-5) 추측하지 말고, 이미지 내용과 페이지 텍스트 근거로만 작성하라.
-6) 한국어로 작성하라.
-
-[페이지 전체 텍스트]
-{page_text}
+<input>
+  <image_path>{image_path}</image_path>
+  <page_text>{page_text}</page_text>
+</input>
 """.strip()
 
 

@@ -8,16 +8,20 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Awaitable
 from datetime import datetime, timezone
 from typing import Any
 
 from rag_chatbot.shared.logging import Logger, create_default_logger
 from rag_chatbot.shared.runtime.buffer.model import EventBufferConfig, StreamEventItem
 
+redis_module: Any | None
 try:
-    import redis
+    import redis as _redis_module
 except ImportError:  # pragma: no cover - 환경 의존 로딩
-    redis = None
+    redis_module = None
+else:  # pragma: no cover - 환경 의존 로딩
+    redis_module = _redis_module
 
 
 class RedisEventBuffer:
@@ -32,7 +36,7 @@ class RedisEventBuffer:
         self._url = url
         self._config = config or EventBufferConfig()
         self._logger = logger or create_default_logger("RedisEventBuffer")
-        self._client = None
+        self._client: Any | None = None
 
     @property
     def config(self) -> EventBufferConfig:
@@ -43,48 +47,67 @@ class RedisEventBuffer:
     def push(self, session_id: str, request_id: str, event: dict[str, Any] | StreamEventItem) -> StreamEventItem:
         """요청 단위 키에 이벤트를 적재한다."""
 
-        self._ensure_client()
+        client = self._require_client()
         item = self._to_item(request_id=request_id, event=event)
         key = self._key(session_id=session_id, request_id=request_id)
-        self._client.rpush(key, self._encode_item(item))
+        client.rpush(key, self._encode_item(item))
         ttl = self._config.redis_ttl_seconds
         if ttl is not None:
-            self._client.expire(key, int(ttl))
+            client.expire(key, int(ttl))
         return item
 
     def pop(self, session_id: str, request_id: str, timeout: float | None = None) -> StreamEventItem | None:
         """요청 단위 키에서 이벤트를 1건 꺼낸다."""
 
-        self._ensure_client()
         key = self._key(session_id=session_id, request_id=request_id)
         wait_time = self._resolve_timeout(timeout=timeout)
         result = self._blocking_pop(key=key, timeout=wait_time)
         if result is None:
             return None
-        _, raw = result
-        return self._decode_item(raw)
+        raw_value = result[1]
+        if isinstance(raw_value, bytes):
+            return self._decode_item(raw_value)
+        if isinstance(raw_value, bytearray):
+            return self._decode_item(bytes(raw_value))
+        if isinstance(raw_value, str):
+            return self._decode_item(raw_value.encode())
+        raise ValueError("Redis BLPOP 결과 형식이 올바르지 않습니다.")
 
     def cleanup(self, session_id: str, request_id: str) -> None:
         """요청 단위 키를 정리한다."""
 
-        self._ensure_client()
+        client = self._require_client()
         key = self._key(session_id=session_id, request_id=request_id)
-        self._client.delete(key)
+        client.delete(key)
 
     def size(self, session_id: str, request_id: str) -> int:
         """요청 단위 키의 현재 리스트 길이를 반환한다."""
 
-        self._ensure_client()
+        client = self._require_client()
         key = self._key(session_id=session_id, request_id=request_id)
-        return int(self._client.llen(key))
+        size = client.llen(key)
+        if isinstance(size, int):
+            return size
+        if isinstance(size, (float, str)):
+            try:
+                return int(size)
+            except ValueError:
+                return 0
+        return 0
 
     def _ensure_client(self) -> None:
         if self._client is not None:
             return
-        if redis is None:
+        if redis_module is None:
             raise RuntimeError("redis 패키지가 설치되어 있지 않습니다.")
-        self._client = redis.Redis.from_url(self._url)
+        self._client = redis_module.Redis.from_url(self._url)
         self._logger.info("Redis 이벤트 버퍼 연결이 초기화되었습니다.")
+
+    def _require_client(self) -> Any:
+        self._ensure_client()
+        if self._client is None:
+            raise RuntimeError("Redis 이벤트 버퍼 연결이 초기화되지 않았습니다.")
+        return self._client
 
     def _resolve_timeout(self, timeout: float | None) -> float | None:
         if timeout is None:
@@ -92,12 +115,24 @@ class RedisEventBuffer:
         return timeout
 
     def _blocking_pop(self, key: str, timeout: float | None):
+        client = self._require_client()
         wait_time = 0 if timeout is None else max(timeout, 0)
         try:
-            return self._client.blpop(key, timeout=wait_time)
+            result = client.blpop([key], timeout=wait_time)
         except TypeError:
             wait_time_int = 0 if timeout is None else max(int(timeout), 1)
-            return self._client.blpop(key, timeout=wait_time_int)
+            result = client.blpop([key], timeout=wait_time_int)
+        if isinstance(result, Awaitable):
+            raise RuntimeError("비동기 Redis 클라이언트는 지원하지 않습니다.")
+        if result is None:
+            return None
+        if not isinstance(result, (list, tuple)) or len(result) < 2:
+            raise ValueError("Redis BLPOP 결과 형식이 올바르지 않습니다.")
+        key_raw = result[0]
+        value_raw = result[1]
+        key_bytes = key_raw if isinstance(key_raw, bytes) else str(key_raw).encode()
+        value_bytes = value_raw if isinstance(value_raw, bytes) else str(value_raw).encode()
+        return key_bytes, value_bytes
 
     def _to_item(self, request_id: str, event: dict[str, Any] | StreamEventItem) -> StreamEventItem:
         if isinstance(event, StreamEventItem):
@@ -169,4 +204,3 @@ class RedisEventBuffer:
     def _key(self, session_id: str, request_id: str) -> str:
         prefix = self._config.redis_key_prefix.strip() or "chat:stream"
         return f"{prefix}:{session_id}:{request_id}"
-

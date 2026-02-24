@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import List, Optional
 
 from rag_chatbot.integrations.db.base.engine import BaseDBEngine
@@ -15,6 +16,7 @@ from rag_chatbot.integrations.db.base.models import (
     Document,
     FieldSource,
     Query,
+    VectorSearchRequest,
     VectorSearchResponse,
     VectorSearchResult,
 )
@@ -29,11 +31,22 @@ class ReadBuilder:
         engine: BaseDBEngine,
         collection: str,
         schema: Optional[CollectionSchema] = None,
+        query_executor: Optional[
+            Callable[[str, Query, Optional[CollectionSchema]], List[Document]]
+        ] = None,
+        vector_executor: Optional[
+            Callable[
+                [VectorSearchRequest, Optional[CollectionSchema]],
+                VectorSearchResponse,
+            ]
+        ] = None,
     ) -> None:
         self._engine = engine
         self._collection = collection
         self._builder = QueryBuilder()
         self._schema = schema
+        self._query_executor = query_executor
+        self._vector_executor = vector_executor
 
     def where(self, field: str, source: FieldSource = FieldSource.AUTO) -> "ReadBuilder":
         self._builder.where(field, source)
@@ -132,6 +145,8 @@ class ReadBuilder:
         if self._builder.has_vector():
             raise RuntimeError("벡터 검색은 fetch_vector()를 사용해야 합니다.")
         query = self.build()
+        if self._query_executor is not None:
+            return self._query_executor(self._collection, query, self._schema)
         if self._schema:
             self._schema.validate_query(query)
         return self._engine.query(self._collection, query, self._schema)
@@ -146,6 +161,8 @@ class ReadBuilder:
         if self._schema and not self._schema.vector_field:
             raise RuntimeError("벡터 필드가 정의되어 있지 않습니다.")
         request = self._builder.build_vector_request(self._collection)
+        if self._vector_executor is not None:
+            return self._vector_executor(request, self._schema)
         if self._schema:
             self._schema.validate_filter_expression(request.filter_expression)
         return self._engine.vector_search(request, self._schema)

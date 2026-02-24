@@ -32,7 +32,9 @@ from rag_chatbot.shared.logging import (
 )
 
 if TYPE_CHECKING:
-    from rag_chatbot.integrations.db.base import BaseDBEngine
+    from rag_chatbot.integrations.db import DBClient
+    from rag_chatbot.integrations.db.base import BaseDBEngine, CollectionSchema
+
     LoggingEngine: TypeAlias = BaseDBEngine | LogRepository | Logger
 else:
     LoggingEngine: TypeAlias = object
@@ -59,7 +61,7 @@ class LLMClient(BaseChatModel):
         logger: Optional[Logger] = None,
         log_repository: Optional[LogRepository] = None,
         log_collection: str = "llm_logs",
-        log_schema: Optional[object] = None,
+        log_schema: Optional["CollectionSchema"] = None,
         auto_create_collection: bool = True,
         log_payload: bool = False,
         log_response: bool = False,
@@ -74,7 +76,7 @@ class LLMClient(BaseChatModel):
         self._log_response = log_response
         self._context_provider = context_provider
         self._background_runner = background_runner
-        db_client: Optional[object] = None
+        db_client: Optional["DBClient"] = None
         if logging_engine is not None:
             logger, log_repository, db_client = self._resolve_logging(
                 logging_engine, logger, log_repository
@@ -260,28 +262,37 @@ class LLMClient(BaseChatModel):
         logging_target: object,
         logger: Optional[Logger],
         log_repository: Optional[LogRepository],
-    ) -> tuple[Optional[Logger], Optional[LogRepository], Optional[object]]:
+    ) -> tuple[Optional[Logger], Optional[LogRepository], Optional["DBClient"]]:
         if isinstance(logging_target, Logger):
             return logging_target, log_repository, None
         if isinstance(logging_target, LogRepository):
             return logger, logging_target, None
+        db_client_cls: Any | None = None
+        base_db_engine_cls: Any | None = None
         try:
-            from rag_chatbot.integrations.db import DBClient
-            from rag_chatbot.integrations.db.base import BaseDBEngine
+            from rag_chatbot.integrations.db import DBClient as _DBClient
+            from rag_chatbot.integrations.db.base import BaseDBEngine as _BaseDBEngine
         except ImportError:
-            DBClient = None
-            BaseDBEngine = None
-        if BaseDBEngine is not None and isinstance(logging_target, BaseDBEngine):
-            return logger, log_repository, DBClient(logging_target)
-        if DBClient is not None and isinstance(logging_target, DBClient):
+            db_client_cls = None
+            base_db_engine_cls = None
+        else:
+            db_client_cls = _DBClient
+            base_db_engine_cls = _BaseDBEngine
+        if (
+            base_db_engine_cls is not None
+            and db_client_cls is not None
+            and isinstance(logging_target, base_db_engine_cls)
+        ):
+            return logger, log_repository, db_client_cls(logging_target)
+        if db_client_cls is not None and isinstance(logging_target, db_client_cls):
             raise ValueError("logging에는 DBClient가 아니라 BaseDBEngine을 주입해야 합니다.")
         raise ValueError("logging_engine에는 BaseDBEngine, Logger, LogRepository만 허용됩니다.")
 
     def _build_llm_repository(
         self,
-        db_client: object,
+        db_client: "DBClient",
         collection: str,
-        schema: Optional[object],
+        schema: Optional["CollectionSchema"],
         auto_create: bool,
         auto_connect: bool,
     ) -> LogRepository:

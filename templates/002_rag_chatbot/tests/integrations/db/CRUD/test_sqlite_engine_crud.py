@@ -1,6 +1,6 @@
 """
 목적: SQLite 엔진의 기본 CRUD 동작을 검증한다.
-설명: sqlite-vec 비활성화 상태에서 테이블 CRUD 흐름을 확인한다.
+설명: SQLite RDB 전용 정책에서 테이블 CRUD 흐름을 확인한다.
 디자인 패턴: 테스트 케이스
 참조: src/rag_chatbot/integrations/db/engines/sqlite/engine.py
 """
@@ -31,7 +31,7 @@ def test_sqlite_engine_basic_crud(tmp_path) -> None:
 
     db_path = tmp_path / "test.sqlite"
     _log_step("엔진 생성", db_path=db_path)
-    engine = SQLiteEngine(str(db_path), enable_vector=False)
+    engine = SQLiteEngine(str(db_path))
     _log_step("클라이언트 생성")
     client = DBClient(engine)
     _log_step("연결 시작")

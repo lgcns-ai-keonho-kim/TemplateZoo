@@ -7,9 +7,21 @@
 
 from __future__ import annotations
 
-from typing import NotRequired, TypedDict
+from typing_extensions import Annotated, NotRequired, TypedDict
 
 from rag_chatbot.core.chat.models import ChatMessage
+
+
+def _merge_relevance_judge_results(
+    left: list[dict[str, object]],
+    right: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """관련성 판정 결과 목록을 누적 병합한다."""
+
+    # 빈 리스트는 "현재 배치 결과 초기화" 신호로 사용한다.
+    if not right:
+        return []
+    return [*left, *right]
 
 
 class ChatGraphState(TypedDict):
@@ -21,6 +33,21 @@ class ChatGraphState(TypedDict):
     safeguard_result: NotRequired[str]
     safeguard_route: NotRequired[str]
     safeguard_reason: NotRequired[str]
+    rag_keyword_raw: NotRequired[str]
+    rag_queries: NotRequired[list[str]]
+    rag_retrieved_chunks: NotRequired[list[dict[str, object]]]
+    rag_candidates: NotRequired[list[dict[str, object]]]
+    rag_relevance_batch_id: NotRequired[str]
+    rag_relevance_judge_inputs: NotRequired[list[dict[str, object]]]
+    rag_relevance_candidate_index: NotRequired[int]
+    rag_relevance_candidate: NotRequired[dict[str, object]]
+    rag_relevance_judge_results: NotRequired[
+        Annotated[list[dict[str, object]], _merge_relevance_judge_results]
+    ]
+    rag_relevance_passed_docs: NotRequired[list[dict[str, object]]]
+    rag_relevance_raw: NotRequired[str]
+    rag_file_page_deduped_docs: NotRequired[list[dict[str, object]]]
+    rag_filtered_docs: NotRequired[list[dict[str, object]]]
     rag_context: NotRequired[str]
     rag_references: NotRequired[list[dict[str, object]]]
     assistant_message: str

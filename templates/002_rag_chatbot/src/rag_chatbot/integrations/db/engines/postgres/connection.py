@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from rag_chatbot.shared.logging import Logger
 from rag_chatbot.integrations.db.engines.postgres.vector_adapter import (
@@ -29,7 +29,7 @@ class PostgresConnectionManager:
         self._logger = logger
         self._psycopg2 = psycopg2_module
         self._vector_adapter = vector_adapter
-        self._connection: Optional[object] = None
+        self._connection: Any | None = None
 
     def connect(self) -> None:
         """PostgreSQL 연결을 초기화한다."""
