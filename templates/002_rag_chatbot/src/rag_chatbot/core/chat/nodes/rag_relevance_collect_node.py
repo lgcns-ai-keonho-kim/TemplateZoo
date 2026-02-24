@@ -16,28 +16,29 @@ from rag_chatbot.shared.logging import Logger, create_default_logger
 _rag_relevance_collect_logger: Logger = create_default_logger("RagRelevanceCollectNode")
 
 
+def _build_collect_output(passed_docs: list[dict[str, Any]]) -> dict[str, Any]:
+    """collect 노드 표준 반환 payload를 생성한다."""
+
+    return {
+        "rag_relevance_passed_docs": passed_docs,
+        "rag_relevance_judge_inputs": [],
+        "rag_relevance_judge_results": [],
+    }
+
+
 def _run_rag_relevance_collect_step(state: Mapping[str, Any]) -> dict[str, Any]:
     """판정 결과를 모아 최종 통과 문서 목록을 생성한다."""
 
-    # 1) 현재 배치 식별자를 기준으로 유효한 판정 결과만 추린다.
-    #    체크포인터/재시도 환경에서는 이전 실행 결과가 state에 남을 수 있으므로
-    #    batch_id를 키로 현재 실행 결과만 집계한다.
     batch_id = str(state.get("rag_relevance_batch_id") or "").strip()
     raw_results = state.get("rag_relevance_judge_results")
-    matched_results = (
-        [
-            item
-            for item in raw_results
-            if isinstance(item, dict)
-            and (not batch_id or str(item.get("rag_relevance_batch_id") or "") == batch_id)
-        ]
-        if isinstance(raw_results, list)
-        else []
-    )
+    judge_results = [item for item in raw_results if isinstance(item, dict)] if isinstance(raw_results, list) else []
+    matched_results = [
+        item
+        for item in judge_results
+        if not batch_id or str(item.get("rag_relevance_batch_id") or "") == batch_id
+    ]
 
-    # 2) judge를 생략한 경로(LLM off)에서는 기존 통과 문서를 그대로 사용한다.
-    #    prepare 노드에서 이미 passed_docs를 채워 준 경우를 그대로 전달해
-    #    그래프 분기를 단일 collect 로직으로 흡수한다.
+    # judge를 생략한 경로(_ENABLE_LLM=False)에서는 prepare가 채운 passed_docs를 그대로 사용한다.
     if not matched_results:
         raw_passed_docs = state.get("rag_relevance_passed_docs")
         passed_docs = (
@@ -48,23 +49,18 @@ def _run_rag_relevance_collect_step(state: Mapping[str, Any]) -> dict[str, Any]:
         _rag_relevance_collect_logger.info(
             "rag.relevance.collect.completed: matched=0, passed=%s" % len(passed_docs)
         )
-        return {
-            "rag_relevance_passed_docs": passed_docs,
-            "rag_relevance_judge_inputs": [],
-            "rag_relevance_judge_results": [],
-        }
+        return _build_collect_output(passed_docs)
 
-    # 3) 원본 후보 순서를 보장하기 위해 인덱스 기준으로 정렬 후 통과 문서만 남긴다.
-    #    fan-out 실행은 완료 순서가 비결정적이므로 index 정렬로 결정 순서를 복원한다.
+    # fan-out 완료 순서는 비결정적이므로 candidate_index 기준으로 순서를 복원한다.
     passed_map: dict[int, dict[str, Any]] = {}
     for item in matched_results:
         if item.get("passed") is not True:
             continue
-        raw_index = item.get("rag_relevance_candidate_index")
         try:
-            candidate_index = int(raw_index)
+            candidate_index = int(item.get("rag_relevance_candidate_index"))
         except (TypeError, ValueError):
             continue
+
         candidate = item.get("rag_relevance_candidate")
         if not isinstance(candidate, dict):
             continue
@@ -75,11 +71,7 @@ def _run_rag_relevance_collect_step(state: Mapping[str, Any]) -> dict[str, Any]:
         "rag.relevance.collect.completed: matched=%s, passed=%s"
         % (len(matched_results), len(passed_docs))
     )
-    return {
-        "rag_relevance_passed_docs": passed_docs,
-        "rag_relevance_judge_inputs": [],
-        "rag_relevance_judge_results": [],
-    }
+    return _build_collect_output(passed_docs)
 
 
 rag_relevance_collect_node = function_node(

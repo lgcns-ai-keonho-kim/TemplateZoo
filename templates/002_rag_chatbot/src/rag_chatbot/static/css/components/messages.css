@@ -1,0 +1,99 @@
+/*
+  목적: 메시지 영역과 말풍선 표현을 정의한다.
+  설명: 스크롤바, 사용자/어시스턴트 버블, 메타 텍스트를 포함한 메시지 UI를 담당한다.
+  디자인 패턴: 컴포넌트 스타일 분리
+  참조: ../base/tokens.css, ./chat-cell.css
+*/
+.chat-cell__messages {
+  flex: 1 1 auto;
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90, 98, 117, 0.66) rgba(127, 138, 160, 0.12);
+}
+
+.chat-cell__messages::-webkit-scrollbar {
+  width: 10px;
+}
+
+.chat-cell__messages::-webkit-scrollbar-track {
+  background: rgba(127, 138, 160, 0.12);
+  border-radius: 999px;
+}
+
+.chat-cell__messages::-webkit-scrollbar-thumb {
+  background: rgba(90, 98, 117, 0.46);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.chat-cell__messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(90, 98, 117, 0.66);
+  background-clip: padding-box;
+}
+
+.message {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.message > .references-carousel {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.message__bubble {
+  max-width: 40%;
+  width: fit-content;
+  display: inline-block;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  line-height: 1.5;
+  font-size: 14.5px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-soft);
+  position: relative;
+  word-break: break-word;
+}
+
+.message.user .message__bubble {
+  margin-left: auto;
+  background: #ffffff;
+  border-color: rgba(165, 0, 52, 0.2);
+}
+
+html[data-theme="dark"] .message.user .message__bubble {
+  background: #1f2330;
+  border-color: rgba(240, 242, 247, 0.18);
+  color: #f0f2f7;
+}
+
+.message.assistant .message__bubble {
+  background: var(--brand-muted);
+  border-color: rgba(165, 0, 52, 0.24);
+}
+
+@media (max-width: 720px) {
+  .message.user .message__bubble,
+  .message.assistant .message__bubble {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+
+.message__meta {
+  font-size: 11px;
+  color: var(--text-soft);
+  margin-top: 6px;
+}

@@ -7,14 +7,19 @@
 
 from __future__ import annotations
 
-from ingestion.core.enrichment import attach_embeddings, create_embedder
+from langchain_core.embeddings import Embeddings
+
+from ingestion.core.enrichment import attach_embeddings
 from ingestion.core.types import IngestionChunk
 
 
-def run_embedding_step(chunks: list[IngestionChunk]) -> list[IngestionChunk]:
+def run_embedding_step(
+    chunks: list[IngestionChunk],
+    *,
+    embedder: Embeddings,
+) -> list[IngestionChunk]:
     """임베딩 생성 단계를 수행한다."""
 
-    embedder = create_embedder()
     return attach_embeddings(chunks, embedder=embedder)
 
 

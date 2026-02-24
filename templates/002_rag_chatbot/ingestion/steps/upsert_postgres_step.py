@@ -7,13 +7,19 @@
 
 from __future__ import annotations
 
+from langchain_core.embeddings import Embeddings
+
 from ingestion.core.db import build_postgres_schema, create_postgres_client, ensure_collection
 from ingestion.core.documents import batched, to_postgres_documents
-from ingestion.core.enrichment import create_embedder, embedding_dimension
+from ingestion.core.enrichment import embedding_dimension
 from ingestion.core.types import IngestionChunk
 
 
-def run_upsert_postgres_step(chunks: list[IngestionChunk]) -> None:
+def run_upsert_postgres_step(
+    chunks: list[IngestionChunk],
+    *,
+    embedder: Embeddings,
+) -> None:
     """PostgreSQL(pgvector) 업서트를 수행한다."""
 
     if not chunks:
@@ -22,7 +28,7 @@ def run_upsert_postgres_step(chunks: list[IngestionChunk]) -> None:
 
     embedding_dim = len(chunks[0].emb_body or [])
     if embedding_dim <= 0:
-        embedding_dim = embedding_dimension(create_embedder())
+        embedding_dim = embedding_dimension(embedder)
 
     db_client = create_postgres_client()
     schema = build_postgres_schema(embedding_dim)

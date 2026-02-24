@@ -281,9 +281,12 @@ CELL->>CELL: 상태/버블/히스토리 반영
 ## 7. references UI 동작
 
 1. `type=references` 이벤트를 수신하면 assistant 메시지 하단에 카드 캐러셀을 렌더링한다.
-2. 카드에는 `file_name`(필수), `file_path`/`score`/본문 미리보기를 표시한다.
-3. 카드 클릭 시 모달을 열어 `body` 전문과 `metadata`를 보여준다.
-4. 모달 본문은 Markdown 우선 렌더링 후 allowlist sanitize를 적용한다.
+2. 캐러셀은 데스크톱 기준으로 한 화면에 카드가 최대 3개 보이며, 태블릿/모바일에서는 각각 2개/1개로 줄어든다.
+3. 초기 렌더 시 우측 끝(`scrollRight`)을 기준으로 정렬해 최신 reference 카드부터 보이게 한다.
+4. 캐러셀은 마우스 드래그(좌/우)와 이전/다음 버튼으로 페이지 단위 이동을 지원한다.
+5. 첫/마지막 경계에 도달하면 이동이 멈추며, 해당 방향 버튼은 비활성화된다(루프 없음).
+6. 카드에는 `file_name`(필수), `file_path`/`score`/본문 미리보기를 표시하고, 카드 클릭 시 모달을 열어 `body` 전문과 `metadata`를 보여준다.
+7. 모달 본문은 Markdown 우선 렌더링 후 allowlist sanitize를 적용한다.
 
 ## 6-3. 상태 전이
 

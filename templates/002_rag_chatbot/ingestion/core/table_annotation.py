@@ -14,8 +14,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from langchain_core.messages import HumanMessage
-from langchain_openai import ChatOpenAI
-from pydantic import SecretStr
+from langchain_core.language_models import BaseChatModel
 
 from rag_chatbot.shared.exceptions import BaseAppException, ExceptionDetail
 
@@ -71,6 +70,7 @@ class TableAnnotationTask:
 def annotate_table_tasks(
     tasks: Sequence[TableAnnotationTask],
     *,
+    model: BaseChatModel,
     workers: int | None = None,
 ) -> dict[str, str]:
     """표 주석 태스크를 병렬 처리해 task_id별 [TBL] 본문을 반환한다."""
@@ -82,7 +82,13 @@ def annotate_table_tasks(
     print(
         f"[진행][table-llm] 주석 생성 시작: 작업 {len(tasks)}개, 워커 {worker_count}개"
     )
-    resolved = asyncio.run(_annotate_table_tasks_async(tasks=tasks, workers=worker_count))
+    resolved = asyncio.run(
+        _annotate_table_tasks_async(
+            tasks=tasks,
+            workers=worker_count,
+            model=model,
+        )
+    )
     print("[진행][table-llm] 주석 생성 완료")
     return resolved
 
@@ -91,12 +97,13 @@ async def _annotate_table_tasks_async(
     *,
     tasks: Sequence[TableAnnotationTask],
     workers: int,
+    model: BaseChatModel,
 ) -> dict[str, str]:
     """표 주석 태스크를 비동기로 병렬 처리한다."""
 
     semaphore = asyncio.Semaphore(max(1, workers))
     coroutines = [
-        _annotate_single_task(task=task, semaphore=semaphore)
+        _annotate_single_task(task=task, semaphore=semaphore, model=model)
         for task in tasks
     ]
     gathered = await asyncio.gather(*coroutines)
@@ -112,6 +119,7 @@ async def _annotate_single_task(
     *,
     task: TableAnnotationTask,
     semaphore: asyncio.Semaphore,
+    model: BaseChatModel,
 ) -> tuple[str, str]:
     """단일 표의 [TBL] 본문을 생성한다."""
 
@@ -125,7 +133,6 @@ async def _annotate_single_task(
 
     try:
         async with semaphore:
-            model = _create_llm_model()
             response = await model.ainvoke([HumanMessage(content=prompt)])
     except Exception as error:
         detail = ExceptionDetail(
@@ -147,25 +154,6 @@ async def _annotate_single_task(
         "[/TBL]"
     )
     return task.task_id, body
-
-
-def _create_llm_model() -> ChatOpenAI:
-    """표 주석용 모델을 생성한다."""
-
-    api_key = os.getenv("OPENAI_API_KEY", "").strip()
-    if not api_key:
-        detail = ExceptionDetail(
-            code="INGESTION_OPENAI_API_KEY_MISSING",
-            cause="OPENAI_API_KEY 환경 변수가 비어 있습니다.",
-        )
-        raise BaseAppException("표 주석 생성을 위해 OPENAI_API_KEY가 필요합니다.", detail)
-
-    model_name = os.getenv("OPENAI_MODEL", "").strip() or "gpt-4o-mini"
-    return ChatOpenAI(
-        model=model_name,
-        api_key=SecretStr(api_key),
-        temperature=0.0,
-    )
 
 
 def _normalize_full_table_html(table_html: str) -> str:

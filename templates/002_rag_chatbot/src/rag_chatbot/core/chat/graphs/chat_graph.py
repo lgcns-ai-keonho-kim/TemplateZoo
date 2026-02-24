@@ -15,6 +15,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from rag_chatbot.core.chat.models import ChatMessage
 from rag_chatbot.core.chat.nodes import (
+    CONTEXT_STRATEGY_REUSE_LAST_ASSISTANT,
+    CONTEXT_STRATEGY_USE_RAG,
+    context_strategy_finalize_node,
+    context_strategy_prepare_node,
+    context_strategy_route_node,
+    context_strategy_node,
     rag_chunk_dedup_node,
     rag_file_page_dedup_node,
     rag_format_node,
@@ -49,6 +55,9 @@ class ChatGraphInput(BaseModel):
     history: list[ChatMessage]
     safeguard_result: str | None = None
     safeguard_route: str | None = None
+    context_strategy: str = CONTEXT_STRATEGY_USE_RAG
+    context_strategy_raw: str = CONTEXT_STRATEGY_USE_RAG
+    last_assistant_message: str = ""
     rag_context: str = ""
     rag_references: list[dict[str, object]] = Field(default_factory=list)
     assistant_message: str = ""
@@ -66,6 +75,10 @@ builder = StateGraph(cast(Any, ChatGraphState))
 # 노드 추가
 builder.add_node("safeguard", safeguard_node.run)
 builder.add_node("safeguard_route", safeguard_route_node.run)
+builder.add_node("context_strategy_prepare", context_strategy_prepare_node.run)
+builder.add_node("context_strategy", context_strategy_node.run)
+builder.add_node("context_strategy_route", context_strategy_route_node.run)
+builder.add_node("context_strategy_finalize", context_strategy_finalize_node.run)
 builder.add_node("rag_keyword_llm", rag_keyword_llm_node.arun)
 builder.add_node("rag_keyword_postprocess", rag_keyword_postprocess_node.arun)
 builder.add_node("rag_retrieve", rag_retrieve_node.arun)
@@ -86,8 +99,19 @@ builder.add_conditional_edges(
     "safeguard_route",
     lambda state: str(state.get("safeguard_route") or "blocked"),
     {
-        "response": "rag_keyword_llm",
+        "response": "context_strategy_prepare",
         "blocked": "blocked",
+    },
+)
+builder.add_edge("context_strategy_prepare", "context_strategy")
+builder.add_edge("context_strategy", "context_strategy_route")
+builder.add_edge("context_strategy_route", "context_strategy_finalize")
+builder.add_conditional_edges(
+    "context_strategy_finalize",
+    lambda state: str(state.get("context_strategy") or CONTEXT_STRATEGY_USE_RAG),
+    {
+        CONTEXT_STRATEGY_REUSE_LAST_ASSISTANT: "response",
+        CONTEXT_STRATEGY_USE_RAG: "rag_keyword_llm",
     },
 )
 builder.add_edge("rag_keyword_llm", "rag_keyword_postprocess")
