@@ -19,7 +19,11 @@ class ElasticSchemaManager:
         mappings = {"properties": {}}
         if schema.payload_field:
             mappings["properties"][schema.payload_field] = {"type": "object"}
-        if schema.vector_field:
+
+        for column in schema.columns:
+            mappings["properties"][column.name] = self._column_mapping(schema, column)
+
+        if schema.vector_field and schema.vector_field not in mappings["properties"]:
             vector_dim = schema.resolve_vector_dimension()
             if vector_dim is None:
                 raise ValueError("벡터 차원 정보가 필요합니다.")
@@ -29,6 +33,7 @@ class ElasticSchemaManager:
                 "index": True,
                 "similarity": "cosine",
             }
+
         client.indices.create(index=schema.name, mappings=mappings)
 
     def delete_collection(self, client, name: str) -> None:
@@ -44,19 +49,26 @@ class ElasticSchemaManager:
     ) -> None:
         """필드 매핑을 추가한다."""
 
-        properties: dict = {}
+        properties: dict = {
+            column.name: self._column_mapping(schema, column)
+        }
+        client.indices.put_mapping(index=schema.name, properties=properties)
+
+    def _column_mapping(self, schema: CollectionSchema, column: ColumnSpec) -> dict:
+        """컬럼 스펙을 Elasticsearch mapping으로 변환한다."""
+
         if column.is_vector or column.name == schema.vector_field:
-            vector_dim = schema.resolve_vector_dimension()
+            vector_dim = column.dimension or schema.resolve_vector_dimension()
             if vector_dim is None:
                 raise ValueError("벡터 차원 정보가 필요합니다.")
-            properties[column.name] = {
+            return {
                 "type": "dense_vector",
                 "dims": vector_dim,
                 "index": True,
                 "similarity": "cosine",
             }
-        elif schema.payload_field and column.name == schema.payload_field:
-            properties[column.name] = {"type": "object"}
-        else:
-            properties[column.name] = {"type": column.data_type or "keyword"}
-        client.indices.put_mapping(index=schema.name, properties=properties)
+        if schema.payload_field and column.name == schema.payload_field:
+            return {"type": "object"}
+        if column.data_type:
+            return {"type": column.data_type}
+        return {"type": "keyword"}
