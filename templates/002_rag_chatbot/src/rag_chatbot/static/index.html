@@ -1,0 +1,71 @@
+<!doctype html>
+<!--
+  목적: 정적 채팅 UI의 진입점 제공
+  설명: 좌측 패널 + 단일 채팅 화면 구조를 정의
+  디자인 패턴: 모듈 패턴 기반 JS 초기화
+  참조: css/main.css, js/*
+-->
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LG CNS Chat UI</title>
+    <link rel="icon" type="image/png" href="asset/farvicon.png" />
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="header-left">
+          <img class="header-logo" src="asset/logo.png" alt="로고" loading="eager" />
+        </div>
+        <div class="header-actions">
+          <button class="btn-primary btn-icon" id="addCell" type="button" aria-label="새 채팅 생성">
+            <img class="icon-lg" src="asset/icons/add.svg" alt="" />
+          </button>
+          <button class="btn-ghost btn-icon" id="themeToggle" type="button" aria-label="다크 모드">
+            <img class="icon" src="asset/icons/moon.svg" alt="" />
+          </button>
+        </div>
+      </header>
+
+      <div class="app-body">
+        <aside class="side-panel" id="sidePanel" aria-label="채팅 히스토리">
+          <div class="side-panel__header">
+            <h2>채팅 히스토리</h2>
+            <button class="btn-ghost btn-panel-toggle" id="panelToggle" type="button" aria-label="패널 접기">
+              <img class="icon" src="asset/icons/left_panel_close.svg" alt="" />
+            </button>
+          </div>
+
+          <ul class="history-list" id="historyList"></ul>
+
+        </aside>
+
+        <main class="chat-grid" id="chatGrid" aria-label="채팅 화면"></main>
+      </div>
+    </div>
+
+    <script src="js/utils/dom.js"></script>
+    <script src="js/utils/syntax_highlighting/highlight_core.js?v=20260212"></script>
+    <script src="js/utils/syntax_highlighting/languages/java.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/python.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/cpp.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/ruby.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/sql.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/shell.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/html.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/javascript.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/typescript.js"></script>
+    <script src="js/utils/syntax_highlighting/index.js"></script>
+    <script src="js/utils/markdown.js?v=20260212-2"></script>
+    <script src="js/ui/theme.js"></script>
+    <script src="js/ui/panel_toggle.js"></script>
+    <script src="js/ui/grid_manager.js"></script>
+    <script src="js/chat/api_transport.js?v=20260212"></script>
+    <script src="js/chat/chat_presenter.js?v=20260212"></script>
+    <script src="js/chat/chat_cell.js?v=20260212"></script>
+    <script src="js/core/app.js"></script>
+    <script src="js/script.js"></script>
+  </body>
+</html>
