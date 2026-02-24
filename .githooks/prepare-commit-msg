@@ -5,8 +5,19 @@ set -euo pipefail
 msg_file="${1:?commit message file is required}"
 
 today="$(date +%Y%m%d)"
-count_today="$(git rev-list --count --all --since='today 00:00:00' --until='tomorrow 00:00:00' 2>/dev/null || echo 0)"
-next_number="$((count_today + 1))"
+today_start="$(date '+%Y-%m-%d 00:00:00 %z')"
+last_version="$(
+  git log --all --since="$today_start" --pretty=format:'%s' 2>/dev/null \
+    | sed -nE "s/^${today}\\.v([0-9]+)([[:space:]].*)?$/\\1/p" \
+    | sort -n \
+    | tail -n 1 \
+    || true
+)"
+if [[ -n "$last_version" ]]; then
+  next_number="$((last_version + 1))"
+else
+  next_number=1
+fi
 prefix="${today}.v${next_number}"
 
 has_message="$(

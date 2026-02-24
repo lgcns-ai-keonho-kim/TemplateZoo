@@ -8,8 +8,11 @@ PLAN.md
 !certs/README.md
 
 # Local Dataset
-**/data/*
-!data/db/README.md
+**/data/**
+!**/data/
+!**/data/**/
+!**/data/**/.gitkeep
+!**/data/**/README.md
 
 # --- Windows / WSL / macOS specifics ---
 
