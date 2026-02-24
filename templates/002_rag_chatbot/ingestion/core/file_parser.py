@@ -12,6 +12,8 @@ from html import escape
 from statistics import median
 from pathlib import Path
 
+from langchain_core.language_models import BaseChatModel
+
 from ingestion.core.docx_layout import (
     advance_docx_page_state as _advance_docx_page_state,
     estimate_docx_paragraph_layout as _estimate_docx_paragraph_layout,
@@ -47,7 +49,11 @@ def scan_input_files(input_root: str | Path) -> list[Path]:
     ]
 
 
-def extract_text_by_file(path: Path) -> list[tuple[str, dict[str, object]]]:
+def extract_text_by_file(
+    path: Path,
+    *,
+    annotation_model: BaseChatModel,
+) -> list[tuple[str, dict[str, object]]]:
     """파일에서 텍스트와 레이아웃 메타데이터를 추출한다."""
 
     suffix = path.suffix.lower()
@@ -55,9 +61,9 @@ def extract_text_by_file(path: Path) -> list[tuple[str, dict[str, object]]]:
         text = path.read_text(encoding="utf-8")
         return [(text, {"layout_type": "markdown", "page_num": None})]
     if suffix == ".docx":
-        return _read_docx_blocks(path)
+        return _read_docx_blocks(path, annotation_model=annotation_model)
     if suffix == ".pdf":
-        return _read_pdf_blocks(path)
+        return _read_pdf_blocks(path, annotation_model=annotation_model)
     detail = ExceptionDetail(
         code="INGESTION_FILE_TYPE_UNSUPPORTED",
         cause=f"path={path}",
@@ -65,7 +71,11 @@ def extract_text_by_file(path: Path) -> list[tuple[str, dict[str, object]]]:
     raise BaseAppException("지원하지 않는 파일 형식입니다.", detail)
 
 
-def _read_docx_blocks(path: Path) -> list[tuple[str, dict[str, object]]]:
+def _read_docx_blocks(
+    path: Path,
+    *,
+    annotation_model: BaseChatModel,
+) -> list[tuple[str, dict[str, object]]]:
     try:
         from docx import Document as WordDocument
     except ImportError as error:
@@ -194,7 +204,7 @@ def _read_docx_blocks(path: Path) -> list[tuple[str, dict[str, object]]]:
                 page_text=page_text,
             )
         )
-    table_bodies = annotate_table_tasks(table_tasks)
+    table_bodies = annotate_table_tasks(table_tasks, model=annotation_model)
 
     resolved_rows: list[tuple[str, dict[str, object]]] = []
     for row_text, row_metadata in rows:
@@ -213,7 +223,11 @@ def _read_docx_blocks(path: Path) -> list[tuple[str, dict[str, object]]]:
     return resolved_rows
 
 
-def _read_pdf_blocks(path: Path) -> list[tuple[str, dict[str, object]]]:
+def _read_pdf_blocks(
+    path: Path,
+    *,
+    annotation_model: BaseChatModel,
+) -> list[tuple[str, dict[str, object]]]:
     page_assets = extract_pdf_page_assets(path)
     table_htmls_by_page = extract_pdf_tables_by_page(path)
 
@@ -231,7 +245,7 @@ def _read_pdf_blocks(path: Path) -> list[tuple[str, dict[str, object]]]:
                     page_text=page_text,
                 )
             )
-    table_bodies = annotate_table_tasks(table_tasks)
+    table_bodies = annotate_table_tasks(table_tasks, model=annotation_model)
 
     table_rows_by_page: dict[int, list[tuple[str, dict[str, object]]]] = {}
     for task in table_tasks:
@@ -265,7 +279,10 @@ def _read_pdf_blocks(path: Path) -> list[tuple[str, dict[str, object]]]:
             )
 
     image_rows_by_page: dict[int, list[tuple[str, dict[str, object]]]] = {}
-    for image_body, image_metadata in annotate_image_tasks(image_tasks):
+    for image_body, image_metadata in annotate_image_tasks(
+        image_tasks,
+        model=annotation_model,
+    ):
         page_num = int(image_metadata.get("page_num", 1))
         image_rows_by_page.setdefault(page_num, []).append((image_body, image_metadata))
 

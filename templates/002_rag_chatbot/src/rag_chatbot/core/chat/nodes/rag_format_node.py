@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, cast
 
 from rag_chatbot.shared.chat.nodes.function_node import function_node
 from rag_chatbot.shared.exceptions import BaseAppException, ExceptionDetail
@@ -46,43 +46,74 @@ class RagReference(TypedDict):
 _rag_format_logger: Logger = create_default_logger("RagFormatNode")
 
 
+def _normalize_string_list(raw_value: Any) -> list[str]:
+    """문자열 목록을 trim + dedupe(순서 보존)로 정규화한다."""
+
+    if not isinstance(raw_value, list):
+        return []
+    return list(
+        dict.fromkeys(
+            normalized
+            for item in raw_value
+            if (normalized := str(item or "").strip())
+        )
+    )
+
+
+def _to_int_or_none(raw_value: Any) -> int | None:
+    """값을 int로 변환하고 실패 시 None을 반환한다."""
+
+    try:
+        if isinstance(raw_value, (int, float, str)):
+            return int(raw_value)
+    except (TypeError, ValueError):
+        return None
+    return None
+
+
+def _to_float_or_zero(raw_value: Any) -> float:
+    """값을 float로 변환하고 실패 시 0.0을 반환한다."""
+
+    try:
+        if isinstance(raw_value, (int, float, str)):
+            return float(raw_value)
+    except (TypeError, ValueError):
+        return 0.0
+    return 0.0
+
+
+def _extract_metadata(doc: dict[str, Any]) -> dict[str, Any]:
+    """문서에서 metadata dict를 안전하게 추출한다."""
+
+    metadata = doc.get("metadata")
+    return metadata if isinstance(metadata, dict) else {}
+
+
+def _collect_unique_metadata_values(group_docs: list[dict[str, Any]], field: str) -> list[object]:
+    """그룹 문서에서 metadata[field] 값을 중복 없이 수집한다."""
+
+    signature_to_value: dict[str, object] = {}
+    for doc in group_docs:
+        metadata_obj = _extract_metadata(doc)
+        if field not in metadata_obj:
+            continue
+        value = metadata_obj[field]
+        signature = repr(value)
+        if signature in signature_to_value:
+            continue
+        signature_to_value[signature] = value
+    return list(signature_to_value.values())
+
+
 def _run_rag_format_step(state: Mapping[str, Any]) -> dict[str, Any]:
     """최종 응답에 필요한 RAG 컨텍스트와 references를 생성한다."""
 
-    # 1) 최종 후보 문서와 레퍼런스 필드 설정을 안전하게 정규화한다.
     raw_docs = state.get("rag_filtered_docs")
     docs = [item for item in raw_docs if isinstance(item, dict)] if isinstance(raw_docs, list) else []
 
-    raw_reference_fields = state.get("rag_reference_fields")
-    raw_metadata_fields = state.get("rag_metadata_fields")
+    reference_fields = _normalize_string_list(state.get("rag_reference_fields"))
+    metadata_fields = _normalize_string_list(state.get("rag_metadata_fields"))
 
-    # 입력 필드 목록은 공백 제거 + 중복 제거 + 순서 보존으로 정규화한다.
-    # (dict.fromkeys를 사용해 첫 등장 순서를 유지)
-    reference_fields = (
-        list(
-            dict.fromkeys(
-                normalized
-                for item in raw_reference_fields
-                if (normalized := str(item or "").strip())
-            )
-        )
-        if isinstance(raw_reference_fields, list)
-        else []
-    )
-
-    metadata_fields = (
-        list(
-            dict.fromkeys(
-                normalized
-                for item in raw_metadata_fields
-                if (normalized := str(item or "").strip())
-            )
-        )
-        if isinstance(raw_metadata_fields, list)
-        else []
-    )
-
-    # 2) 지원하지 않는 출력 필드를 사전에 차단해 런타임 혼선을 방지한다.
     if "chunk_id" in reference_fields:
         detail = ExceptionDetail(
             code="RAG_REFERENCE_FIELDS_INVALID",
@@ -102,23 +133,18 @@ def _run_rag_format_step(state: Mapping[str, Any]) -> dict[str, Any]:
         )
         raise BaseAppException("reference_fields 설정이 올바르지 않습니다.", detail)
 
-    # 3) LLM 응답 프롬프트에서 바로 소비할 수 있는 컨텍스트 텍스트를 구성한다.
-    #    여기서는 "문서 순회 + 고정 포맷 텍스트"를 사용해 프롬프트 입력 형태를 안정화한다.
     context_lines = [
         "[참고자료 {index}]\n- 파일명: {file_name}\n- 파일경로: {file_path}\n- 페이지: {page_num}\n- 본문:\n{body}".format(
             index=index,
             file_name=str(doc.get("file_name") or ""),
             file_path=str(doc.get("file_path") or ""),
-            page_num=(doc.get("metadata") if isinstance(doc.get("metadata"), dict) else {}).get("page_num"),
+            page_num=_extract_metadata(doc).get("page_num"),
             body=str(doc.get("body") or ""),
         )
         for index, doc in enumerate(docs, start=1)
     ]
     rag_context = "\n\n".join(context_lines)
 
-    # 4) 같은 파일 단위로 문서를 묶어 reference 집계를 위한 그룹을 만든다.
-    #    file_path가 있으면 우선 사용하고, 없으면 file_name을 대체 키로 사용한다.
-    #    이렇게 하면 같은 파일의 여러 페이지/청크를 하나의 reference 엔트리로 묶을 수 있다.
     groups: dict[str, dict[str, Any]] = {}
     for doc in docs:
         file_name = str(doc.get("file_name") or "")
@@ -134,11 +160,6 @@ def _run_rag_format_step(state: Mapping[str, Any]) -> dict[str, Any]:
         )
         group["docs"].append(doc)
 
-    # 5) 그룹별로 본문/페이지/점수/메타데이터를 병합해 references를 생성한다.
-    #    - 본문: 중복 본문 제거 후 병합
-    #    - page_nums: 정렬된 고유 페이지 목록
-    #    - score: 그룹 내 최대 점수(대표 점수)
-    #    - metadata_fields: 요청된 필드만 동적 병합
     references: list[RagReference] = []
     for index, group in enumerate(groups.values(), start=1):
         group_docs: list[dict[str, Any]] = group["docs"]
@@ -155,7 +176,7 @@ def _run_rag_format_step(state: Mapping[str, Any]) -> dict[str, Any]:
             merged_bodies.append(body)
         merged_body = "\n\n".join(merged_bodies)
 
-        metadata: RagReferenceMetadata = {
+        metadata: dict[str, Any] = {
             "index": index,
             "file_name": str(group.get("file_name") or ""),
             "file_path": str(group.get("file_path") or ""),
@@ -164,13 +185,8 @@ def _run_rag_format_step(state: Mapping[str, Any]) -> dict[str, Any]:
         page_nums: list[int] = []
         seen_page_nums: set[int] = set()
         for doc in group_docs:
-            metadata_obj = doc.get("metadata")
-            if not isinstance(metadata_obj, dict):
-                continue
-            raw_page_num = metadata_obj.get("page_num")
-            try:
-                page_num = int(raw_page_num)
-            except (TypeError, ValueError):
+            page_num = _to_int_or_none(_extract_metadata(doc).get("page_num"))
+            if page_num is None:
                 continue
             if page_num in seen_page_nums:
                 continue
@@ -181,40 +197,19 @@ def _run_rag_format_step(state: Mapping[str, Any]) -> dict[str, Any]:
             metadata["page_nums"] = page_nums
 
         if "score" in reference_fields:
-            # 그룹 대표 점수는 최대값을 사용한다.
-            # 평균/합산보다 "가장 강한 근거가 있는 문서"를 보존하기 유리하다.
-            max_score = 0.0
-            for doc in group_docs:
-                raw_score = doc.get("score", 0.0)
-                try:
-                    score = float(raw_score)
-                except (TypeError, ValueError):
-                    score = 0.0
-                if score > max_score:
-                    max_score = score
-            metadata["score"] = max_score
+            metadata["score"] = max(
+                (_to_float_or_zero(doc.get("score", 0.0)) for doc in group_docs),
+                default=0.0,
+            )
 
         if "snippet" in reference_fields:
             metadata["snippet"] = merged_body[:240]
 
         for field in metadata_fields:
-            # metadata 값은 repr 서명을 기준으로 중복 제거한다.
-            # 값 자체가 list/dict여도 안정적으로 중복 비교가 가능하도록 repr를 사용한다.
-            signature_to_value: dict[str, object] = {}
-            for doc in group_docs:
-                metadata_obj = doc.get("metadata")
-                if not isinstance(metadata_obj, dict):
-                    continue
-                if field not in metadata_obj:
-                    continue
-                value = metadata_obj[field]
-                signature = repr(value)
-                if signature not in signature_to_value:
-                    signature_to_value[signature] = value
-            values = list(signature_to_value.values())
-            if not values:
-                continue
             if field in metadata:
+                continue
+            values = _collect_unique_metadata_values(group_docs, field)
+            if not values:
                 continue
             if len(values) == 1:
                 metadata[field] = values[0]
@@ -225,11 +220,10 @@ def _run_rag_format_step(state: Mapping[str, Any]) -> dict[str, Any]:
             {
                 "type": "reference",
                 "content": merged_body,
-                "metadata": metadata,
+                "metadata": cast(RagReferenceMetadata, metadata),
             }
         )
 
-    # 6) 컨텍스트/레퍼런스를 다음 응답 생성 단계 입력으로 반환한다.
     _rag_format_logger.info(
         "rag.format.completed: docs=%s, references=%s" % (len(docs), len(references))
     )

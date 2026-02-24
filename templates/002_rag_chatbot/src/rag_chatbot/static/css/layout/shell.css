@@ -1,0 +1,73 @@
+/*
+  목적: 앱 상단/본문의 기본 레이아웃을 정의한다.
+  설명: 헤더, 로고, 액션 버튼 영역, 본문 컨테이너 배치를 담당한다.
+  디자인 패턴: 레이아웃 컴포지션
+  참조: ../base/tokens.css, ./sidebar.css, ./grid.css
+*/
+.app-shell {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  gap: 10px;
+  position: relative;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 18px rgba(24, 32, 48, 0.08);
+}
+
+.app-header::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--lg-red), rgba(255, 0, 84, 0.55), rgba(74, 75, 77, 0.6));
+}
+
+html[data-theme="dark"] .app-header {
+  background: rgba(14, 16, 24, 0.9);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] .app-header::before {
+  background: linear-gradient(90deg, var(--brand), rgba(255, 0, 84, 0.65), rgba(240, 242, 247, 0.5));
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-logo {
+  height: 34px;
+  width: auto;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.app-body {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  gap: 12px;
+  padding: 12px 20px 16px;
+  overflow: hidden;
+  min-height: 0;
+}
+

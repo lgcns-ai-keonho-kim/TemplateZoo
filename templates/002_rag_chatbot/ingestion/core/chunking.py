@@ -10,9 +10,10 @@ from __future__ import annotations
 import os
 import re
 import traceback
-from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import TypedDict
+
+from langchain_core.language_models import BaseChatModel
 
 from ingestion.core.file_parser import extract_text_by_file
 from ingestion.core.types import IngestionChunk
@@ -35,6 +36,7 @@ class _StructuralUnit(TypedDict):
 def chunk_sources(
     paths: list[Path],
     *,
+    annotation_model: BaseChatModel,
     max_chars: int = _DEFAULT_MAX_CHARS,
     overlap_chars: int = 120,
     workers: int | None = None,
@@ -52,69 +54,52 @@ def chunk_sources(
         f"[진행][chunk] 청킹 시작: 파일 {len(sorted_paths)}개, 워커 {worker_count}개, "
         f"max_chars={int(max_chars)}, min_chunk_chars={_MIN_CHUNK_CHARS}"
     )
-    path_args = [(str(path), int(max_chars)) for path in sorted_paths]
+    if worker_count > 1:
+        print("[진행][chunk] 모델 객체 주입 모드에서는 멀티프로세스를 비활성화합니다. 워커를 1로 조정합니다.")
+        worker_count = 1
 
     chunks: list[IngestionChunk] = []
     next_index = 1
-    if worker_count > 1:
-        with ProcessPoolExecutor(max_workers=worker_count) as executor:
-            row_iter = executor.map(_extract_and_chunk_document, path_args)
-            for file_index, (path, chunk_rows) in enumerate(zip(sorted_paths, row_iter, strict=True), start=1):
-                for body, metadata in chunk_rows:
-                    chunk = IngestionChunk(
-                        chunk_id=_make_chunk_id(next_index),
-                        index=next_index,
-                        file_name=path.name,
-                        file_path=str(path),
-                        body=body,
-                        metadata=metadata,
-                        emb_body=None,
-                    )
-                    chunks.append(chunk)
-                    next_index += 1
-                print(
-                    f"[진행][chunk] 파일 완료: {file_index}/{len(sorted_paths)} "
-                    f"({path.name}), 누적 청크 {len(chunks)}개"
-                )
-    else:
-        for file_index, path in enumerate(sorted_paths, start=1):
-            chunk_rows = _extract_and_chunk_document((str(path), int(max_chars)))
-            for body, metadata in chunk_rows:
-                chunk = IngestionChunk(
-                    chunk_id=_make_chunk_id(next_index),
-                    index=next_index,
-                    file_name=path.name,
-                    file_path=str(path),
-                    body=body,
-                    metadata=metadata,
-                    emb_body=None,
-                )
-                chunks.append(chunk)
-                next_index += 1
-            print(
-                f"[진행][chunk] 파일 완료: {file_index}/{len(sorted_paths)} "
-                f"({path.name}), 누적 청크 {len(chunks)}개"
+    for file_index, path in enumerate(sorted_paths, start=1):
+        chunk_rows = _extract_and_chunk_document((str(path), int(max_chars), annotation_model))
+        for body, metadata in chunk_rows:
+            chunk = IngestionChunk(
+                chunk_id=_make_chunk_id(next_index),
+                index=next_index,
+                file_name=path.name,
+                file_path=str(path),
+                body=body,
+                metadata=metadata,
+                emb_body=None,
             )
+            chunks.append(chunk)
+            next_index += 1
+        print(
+            f"[진행][chunk] 파일 완료: {file_index}/{len(sorted_paths)} "
+            f"({path.name}), 누적 청크 {len(chunks)}개"
+        )
 
     print(f"[진행][chunk] 청킹 종료: 총 청크 {len(chunks)}개")
     return chunks
 
 
-def _extract_and_chunk_document(args: tuple[str, int]) -> list[tuple[str, dict[str, object]]]:
+def _extract_and_chunk_document(
+    args: tuple[str, int, BaseChatModel],
+) -> list[tuple[str, dict[str, object]]]:
     """단일 문서에서 구조 단위 추출과 청킹을 수행한다."""
 
-    path_raw, max_chars = args
+    path_raw, max_chars, annotation_model = args
     path = Path(path_raw)
     try:
-        raw_rows = extract_text_by_file(path)
+        raw_rows = extract_text_by_file(path, annotation_model=annotation_model)
         units = _to_structural_units(raw_rows)
         return _pack_structural_units(units, max_chars=max_chars)
     except Exception as error:
-        # 멀티프로세스 직렬화 오류(BrokenProcessPool)를 피하기 위해
-        # 원본 예외 객체 대신 문자열 기반 RuntimeError로 변환한다.
+        # 파일별 실패 원인을 상위 단계에서 한 번에 확인할 수 있도록
+        # 원본 예외를 문자열 컨텍스트와 함께 래핑한다.
         trace_text = traceback.format_exc(limit=8)
         raise RuntimeError(
-            f"청킹 워커 실패: file={path.as_posix()}, error={error!s}\n{trace_text}"
+            f"청킹 단계 실패: file={path.as_posix()}, error={error!s}\n{trace_text}"
         ) from None
 
 

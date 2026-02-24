@@ -8,9 +8,15 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
+from langchain_core.embeddings import Embeddings
+from langchain_core.language_models import BaseChatModel
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from pydantic import SecretStr
 
 # `python ingestion/ingest_lancedb.py` 실행 시 프로젝트 루트를 import 경로에 보정한다.
 if __package__ in {None, ""}:
@@ -22,6 +28,10 @@ load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
 from ingestion.steps.chunk_step import run_chunk_step
 from ingestion.steps.embedding_step import run_embedding_step
 from ingestion.steps.upsert_lancedb_step import run_upsert_lancedb_step
+from rag_chatbot.shared.exceptions import BaseAppException, ExceptionDetail
+
+EMBED_MODEL = "text-embedding-3-small"
+ANNOTATION_MODEL = "gpt-4o-mini"
 
 
 def parse_args() -> argparse.Namespace:
@@ -36,7 +46,7 @@ def parse_args() -> argparse.Namespace:
         "--chunk-workers",
         type=int,
         default=0,
-        help="청킹 단계 멀티프로세스 워커 수 (0 이하이면 자동)",
+        help="청킹 단계 워커 수 (모델 객체 주입 모드에서는 1로 고정)",
     )
     parser.add_argument(
         "--sample",
@@ -46,8 +56,43 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _resolve_openai_api_key() -> str:
+    """OpenAI API 키를 검증해 반환한다."""
+
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not api_key:
+        detail = ExceptionDetail(
+            code="INGESTION_OPENAI_API_KEY_MISSING",
+            cause="OPENAI_API_KEY 환경 변수가 비어 있습니다.",
+        )
+        raise BaseAppException("ingestion 실행을 위해 OPENAI_API_KEY가 필요합니다.", detail)
+    return api_key
+
+
+def _build_annotation_model(*, api_key: str) -> BaseChatModel:
+    """표/이미지 주석용 ChatOpenAI 모델을 생성한다."""
+
+    return ChatOpenAI(
+        model=ANNOTATION_MODEL,
+        api_key=SecretStr(api_key),
+        temperature=0.0,
+    )
+
+
+def _build_embedder(*, api_key: str) -> Embeddings:
+    """임베딩 생성용 OpenAI 임베더를 생성한다."""
+
+    return OpenAIEmbeddings(
+        model=EMBED_MODEL,
+        api_key=api_key,
+    )
+
+
 def main() -> None:
     args = parse_args()
+    api_key = _resolve_openai_api_key()
+    annotation_model = _build_annotation_model(api_key=api_key)
+    embedder = _build_embedder(api_key=api_key)
 
     print(
         f"[진행][ingest][lancedb] 시작: input_root={args.input_root}, "
@@ -57,13 +102,14 @@ def main() -> None:
         args.input_root,
         chunk_workers=int(args.chunk_workers),
         sample=bool(args.sample),
+        annotation_model=annotation_model,
     )
     print(f"[진행][ingest][lancedb] 청킹 완료: count={len(chunks)}")
 
-    chunks = run_embedding_step(chunks)
+    chunks = run_embedding_step(chunks, embedder=embedder)
     print("[진행][ingest][lancedb] 임베딩 생성 완료")
 
-    run_upsert_lancedb_step(chunks)
+    run_upsert_lancedb_step(chunks, embedder=embedder)
     print("[진행][ingest][lancedb] 업서트 완료")
 
 

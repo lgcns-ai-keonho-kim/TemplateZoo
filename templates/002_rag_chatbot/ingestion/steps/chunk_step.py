@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from langchain_core.language_models import BaseChatModel
+
 from ingestion.core.chunking import chunk_sources
 from ingestion.core.file_parser import scan_input_files
 from ingestion.core.types import IngestionChunk
@@ -19,6 +21,7 @@ def run_chunk_step(
     *,
     chunk_workers: int | None = None,
     sample: bool = False,
+    annotation_model: BaseChatModel,
 ) -> list[IngestionChunk]:
     """문서를 스캔해 청크 목록을 생성한다."""
 
@@ -27,7 +30,7 @@ def run_chunk_step(
     if sample:
         files = _pick_one_file_per_extension(files)
         print(f"[진행][chunk] 샘플 모드 적용: 확장자별 파일 {len(files)}개")
-    return chunk_sources(files, workers=chunk_workers)
+    return chunk_sources(files, workers=chunk_workers, annotation_model=annotation_model)
 
 
 def _pick_one_file_per_extension(files: list[Path]) -> list[Path]:

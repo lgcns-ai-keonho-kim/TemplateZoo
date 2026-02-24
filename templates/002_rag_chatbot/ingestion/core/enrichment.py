@@ -1,16 +1,15 @@
 """
 목적: ingestion 청크의 임베딩 생성을 담당한다.
-설명: 임베딩 생성과 관련 클라이언트 생성 유틸을 제공한다.
+설명: 임베딩 생성과 차원 계산 유틸을 제공한다.
 디자인 패턴: 단계 보강 모듈
 참조: ingestion/steps/embedding_step.py
 """
 
 from __future__ import annotations
 
-import os
 import re
 
-from langchain_openai import OpenAIEmbeddings
+from langchain_core.embeddings import Embeddings
 
 from ingestion.core.types import IngestionChunk
 from rag_chatbot.shared.exceptions import BaseAppException, ExceptionDetail
@@ -25,7 +24,7 @@ _TABLE_EMBEDDING_PATTERN = re.compile(
 def attach_embeddings(
     chunks: list[IngestionChunk],
     *,
-    embedder: OpenAIEmbeddings,
+    embedder: Embeddings,
 ) -> list[IngestionChunk]:
     """청크 본문 임베딩을 생성한다."""
 
@@ -41,16 +40,7 @@ def attach_embeddings(
     return chunks
 
 
-def create_embedder() -> OpenAIEmbeddings:
-    """ingestion 단계에서 사용할 OpenAI 임베더를 생성한다."""
-
-    return OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        api_key=os.getenv("OPENAI_API_KEY", ""),
-    )
-
-
-def embedding_dimension(embedder: OpenAIEmbeddings) -> int:
+def embedding_dimension(embedder: Embeddings) -> int:
     """임베더 차원을 계산한다."""
 
     vector = embedder.embed_query("embedding dimension probe")
@@ -84,6 +74,5 @@ def _normalize_text(text: str) -> str:
 
 __all__ = [
     "attach_embeddings",
-    "create_embedder",
     "embedding_dimension",
 ]
