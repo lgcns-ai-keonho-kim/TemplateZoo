@@ -17,7 +17,7 @@ from langchain_core.callbacks import (
     AsyncCallbackManagerForLLMRun,
     CallbackManagerForLLMRun,
 )
-from langchain_core.language_models import BaseChatModel
+from langchain_core.language_models import BaseChatModel, BaseLLM
 from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage, BaseMessageChunk
 from langchain_core.outputs import ChatGenerationChunk, ChatResult
 
@@ -45,7 +45,7 @@ class LLMClient(BaseChatModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    _model: BaseChatModel = PrivateAttr()
+    _model: BaseChatModel | BaseLLM = PrivateAttr()
     _logger: Logger = PrivateAttr()
     _name: str = PrivateAttr()
     _log_payload: bool = PrivateAttr(default=False)
@@ -56,7 +56,7 @@ class LLMClient(BaseChatModel):
 
     def __init__(
         self,
-        model: BaseChatModel,
+        model: BaseChatModel | BaseLLM,
         name: str = "llm-client",
         logger: Optional[Logger] = None,
         log_repository: Optional[LogRepository] = None,

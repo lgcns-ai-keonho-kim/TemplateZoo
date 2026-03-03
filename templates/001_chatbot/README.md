@@ -187,10 +187,12 @@ docs/                   # 개발 문서
 | 문서 허브 | [docs/README.md](docs/README.md) | 전체 맵, 변경 진입점 |
 | Setup 개요 | [docs/setup/overview.md](docs/setup/overview.md) | 인프라/환경 문서 인덱스 |
 | Setup ENV | [docs/setup/env.md](docs/setup/env.md) | `.env` 키 전체 설명 |
-| Setup SQLite Vec | [docs/setup/sqlite_vec.md](docs/setup/sqlite_vec.md) | SQLite + sqlite-vec 구성 |
+| Setup SQLite | [docs/setup/sqlite.md](docs/setup/sqlite.md) | SQLite 기본 저장소(CRUD) 구성 |
+| Setup LanceDB | [docs/setup/lancedb.md](docs/setup/lancedb.md) | LanceDB 벡터 검색 구성 |
 | Setup PostgreSQL | [docs/setup/postgresql_pgvector.md](docs/setup/postgresql_pgvector.md) | PostgreSQL + pgvector 설치/연동 |
 | Setup MongoDB | [docs/setup/mongodb.md](docs/setup/mongodb.md) | MongoDB 설치/연동 |
 | Setup FileSystem | [docs/setup/filesystem.md](docs/setup/filesystem.md) | 파일 시스템 로그 연동 |
+| Setup Troubleshooting | [docs/setup/troubleshooting.md](docs/setup/troubleshooting.md) | 공통 장애 복구 가이드 |
 | API 개요 | [docs/api/overview.md](docs/api/overview.md) | API 계층 책임/라우팅 |
 | API Chat | [docs/api/chat.md](docs/api/chat.md) | `/chat` 인터페이스, SSE |
 | API UI | [docs/api/ui.md](docs/api/ui.md) | `/ui-api/chat` 인터페이스 |
