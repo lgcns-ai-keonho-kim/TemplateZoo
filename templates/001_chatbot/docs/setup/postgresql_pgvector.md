@@ -22,35 +22,22 @@
 
 ## 3. 설치 방법
 
-아래 중 한 가지 방식으로 설치한다.
-
-### 3-1. Docker 기반 (가장 빠른 검증)
-
-```bash
-docker run --name pg-playground \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_DB=playground \
-  -p 5432:5432 \
-  -d pgvector/pgvector:pg16
-```
-
-### 3-2. Ubuntu/Debian 패키지 기반
+Ubuntu 기준 설치 절차:
 
 ```bash
 sudo apt update
 sudo apt install -y postgresql postgresql-contrib
-# PostgreSQL 버전에 맞는 pgvector 패키지를 설치한다.
+# Ubuntu에 설치된 PostgreSQL 메이저 버전에 맞는 pgvector 패키지를 선택한다.
 # 예: postgresql-16-pgvector, postgresql-15-pgvector
 sudo apt install -y postgresql-16-pgvector
+sudo systemctl enable --now postgresql
 ```
 
-### 3-3. macOS(Homebrew)
+설치 확인:
 
 ```bash
-brew install postgresql@16
-brew services start postgresql@16
-brew install pgvector
+systemctl status postgresql --no-pager
+ss -ltnp | rg ':5432'
 ```
 
 ## 4. DB/계정/확장 초기화

@@ -8,7 +8,7 @@
 1. 실제 파일 경로와 동일한 문서 경로를 사용한다.
 2. API 인터페이스는 라우터/모델 코드 기준으로만 기술한다.
 3. 동작 순서와 실패 복구 절차를 함께 제공한다.
-4. 예시 코드는 현재 저장소의 구현 방식과 일치해야 한다.
+4. 예시 코드는 현재 저장소 구현 방식과 일치해야 한다.
 
 ## 문서 트리
 
@@ -39,10 +39,12 @@ docs/
   setup/
     overview.md
     env.md
-    sqlite_vec.md
+    sqlite.md
+    lancedb.md
     postgresql_pgvector.md
     mongodb.md
     filesystem.md
+    troubleshooting.md
   static/
     ui.md
 ```
@@ -69,10 +71,12 @@ docs/
 | --- | --- |
 | setup 문서 인덱스 | `docs/setup/overview.md` |
 | `.env` 키 상세/반영 여부 | `docs/setup/env.md` |
-| SQLite + sqlite-vec 구성 | `docs/setup/sqlite_vec.md` |
+| SQLite 기본 저장소(CRUD) | `docs/setup/sqlite.md` |
+| LanceDB 벡터 검색 구성 | `docs/setup/lancedb.md` |
 | PostgreSQL + pgvector 구성 | `docs/setup/postgresql_pgvector.md` |
 | MongoDB 구성 | `docs/setup/mongodb.md` |
 | 파일 시스템 연동 | `docs/setup/filesystem.md` |
+| 통합 장애 대응 | `docs/setup/troubleshooting.md` |
 
 ## 실행 경로 요약
 
@@ -107,7 +111,7 @@ flowchart LR
 1. 증상 위치를 먼저 분리한다: UI 렌더, API 응답, SSE 스트림, 저장소.
 2. `request_id` 단위로 스트림 이벤트를 추적한다.
 3. `ServiceExecutor` 상태(`IDLE/QUEUED/RUNNING/COMPLETED/FAILED`)를 확인한다.
-4. 저장 실패는 `ChatHistoryRepository`와 DB 엔진 로그를 분리해 본다.
+4. 인프라/TLS/인증 이슈는 `docs/setup/troubleshooting.md`에서 즉시 복구 절차를 따른다.
 
 ### 3. 구조 변경
 
@@ -123,7 +127,7 @@ flowchart LR
 | 채팅 제출/이벤트 인터페이스 변경 | `src/chatbot/api/chat/routers/*.py` | `docs/api/chat.md`, `docs/static/ui.md` |
 | 세션 목록/삭제 정책 변경 | `src/chatbot/api/ui/routers/*.py` | `docs/api/ui.md`, `docs/static/ui.md` |
 | 응답 품질/분기 정책 변경 | `src/chatbot/core/chat/nodes/*.py` | `docs/core/chat.md`, `docs/shared/chat.md` |
-| 저장 스키마/엔진 변경 | `src/chatbot/shared/chat/repositories/*.py` | `docs/shared/chat.md`, `docs/integrations/db.md` |
+| 저장 스키마/엔진 변경 | `src/chatbot/shared/chat/repositories/*.py` | `docs/shared/chat.md`, `docs/integrations/db.md`, `docs/setup/troubleshooting.md` |
 | SSE/큐/재시도 정책 변경 | `src/chatbot/shared/chat/services/service_executor.py` | `docs/shared/chat.md`, `docs/shared/runtime.md` |
 | FE 렌더/연결 처리 변경 | `src/chatbot/static/js/chat/*.js` | `docs/static/ui.md`, `docs/api/chat.md` |
 
@@ -132,5 +136,5 @@ flowchart LR
 1. 문서에 기록한 모든 경로가 실제 파일로 존재하는지 확인한다.
 2. UI 세션 경로가 `/ui-api/chat/sessions*` 형태로 통일되어 있는지 확인한다.
 3. SSE 식별자가 `task_id`가 아닌 `request_id`인지 확인한다.
-4. static 문서의 호출 순서가 `api_transport.js`와 일치하는지 확인한다.
-5. 문서 예시 페이로드의 필드명이 Pydantic 모델과 일치하는지 확인한다.
+4. static 문서 호출 순서가 `api_transport.js`와 일치하는지 확인한다.
+5. 문서 예시 페이로드 필드명이 Pydantic 모델과 일치하는지 확인한다.

@@ -7,19 +7,15 @@
 
 from __future__ import annotations
 import os
-from langchain_openai import ChatOpenAI
-from pydantic import SecretStr
-
+from langchain_google_genai import ChatGoogleGenerativeAI
 from chatbot.core.chat.prompts import CHAT_PROMPT
 from chatbot.integrations.llm import LLMClient
 from chatbot.shared.chat.nodes import LLMNode
 
-_model = ChatOpenAI(
-    model=os.getenv("OPENAI_MODEL", ""),
-    api_key=SecretStr(
-        os.getenv("OPENAI_API_KEY", "")
-    ),
-    reasoning_effort='minimal',
+_model = ChatGoogleGenerativeAI(
+    model=os.getenv("GEMINI_MODEL", ""),
+    project=os.getenv("GEMINI_PROJECT", ""),
+    thinking_level="minimal",
 )
 
 
