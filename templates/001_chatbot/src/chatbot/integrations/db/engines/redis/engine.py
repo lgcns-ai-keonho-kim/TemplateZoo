@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from chatbot.shared.logging import Logger, create_default_logger
 from chatbot.integrations.db.base.engine import BaseDBEngine
@@ -31,10 +31,13 @@ from chatbot.integrations.db.engines.redis.vector_scorer import (
     RedisVectorScorer,
 )
 
+redis: Any | None
 try:
-    import redis
+    import redis as _redis
 except ImportError:  # pragma: no cover - 환경 의존 로딩
     redis = None
+else:  # pragma: no cover - 환경 의존 로딩
+    redis = _redis
 
 
 class RedisEngine(BaseDBEngine):
@@ -185,7 +188,8 @@ class RedisEngine(BaseDBEngine):
     ) -> VectorSearchResponse:
         client = self._connection.ensure_client()
         resolved_schema = ensure_schema(schema, request.collection)
-        if not resolved_schema.vector_field:
+        target_vector_field = request.vector_field or resolved_schema.vector_field
+        if not target_vector_field:
             raise RuntimeError("벡터 필드가 정의되어 있지 않습니다.")
         if not self._enable_vector:
             raise RuntimeError("벡터 검색이 비활성화되었습니다.")

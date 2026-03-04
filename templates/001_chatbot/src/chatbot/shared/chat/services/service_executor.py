@@ -36,6 +36,7 @@ class ServiceExecutor(ServiceExecutorPort):
     _STATUS_RUNNING = "RUNNING"
     _STATUS_COMPLETED = "COMPLETED"
     _STATUS_FAILED = "FAILED"
+    _TERMINAL_STATUS = {_STATUS_COMPLETED, _STATUS_FAILED}
     _ALLOWED_STATUS = {
         _STATUS_IDLE,
         _STATUS_QUEUED,
@@ -618,8 +619,15 @@ class ServiceExecutor(ServiceExecutorPort):
             return
         with self._lock:
             current = self._session_statuses.get(candidate)
-            # 실행 중(RUNNING) 상태를 큐 등록(QUEUED)으로 역전시키지 않는다.
-            if current == self._STATUS_RUNNING and normalized == self._STATUS_QUEUED:
+            if current in self._TERMINAL_STATUS:
+                # 완료/실패 상태는 최종 상태로 간주해 회귀를 막는다.
+                return
+            # 워커가 이미 실행을 시작했거나 끝낸 뒤 submit_job의 QUEUED가 늦게 도착할 수 있다.
+            if normalized == self._STATUS_QUEUED and current in {
+                self._STATUS_RUNNING,
+                self._STATUS_COMPLETED,
+                self._STATUS_FAILED,
+            }:
                 return
             self._session_statuses[candidate] = normalized
 

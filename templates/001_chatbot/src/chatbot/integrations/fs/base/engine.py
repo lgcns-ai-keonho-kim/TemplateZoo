@@ -2,7 +2,7 @@
 목적: 파일 시스템 엔진 인터페이스를 제공한다.
 설명: 파일 쓰기/읽기/목록/이동/복사를 위한 표준 메서드를 정의한다.
 디자인 패턴: 전략 패턴
-참조: src/chatbot/integrations/fs/engines/local.py
+참조: src/rag_chatbot/integrations/fs/engines/local.py
 """
 
 from __future__ import annotations

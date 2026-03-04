@@ -2,7 +2,7 @@
 목적: DB 통합 인터페이스에서 공통으로 사용하는 모델을 정의한다.
 설명: 컬렉션/문서/필터/정렬/페이지네이션/벡터 검색 모델을 제공한다.
 디자인 패턴: 데이터 전송 객체(DTO)
-참조: src/chatbot/integrations/db/base/engine.py
+참조: src/rag_chatbot/integrations/db/base/engine.py
 """
 
 from __future__ import annotations
@@ -232,6 +232,10 @@ class VectorSearchRequest(BaseModel):
     top_k: int = Field(default=10, ge=1)
     filter_expression: Optional[FilterExpression] = None
     include_vectors: bool = Field(default=False)
+    vector_field: Optional[str] = Field(
+        default=None,
+        description="검색 대상 벡터 필드명(None이면 스키마 기본 vector_field 사용)",
+    )
 
 
 class VectorSearchResult(BaseModel):

@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Any, Dict
 
 from chatbot.integrations.db.base.models import CollectionSchema, Document, Vector
 
@@ -30,16 +30,31 @@ class MongoDocumentMapper:
     def from_record(self, data: Dict[str, object], schema: CollectionSchema) -> Document:
         """MongoDB 레코드를 Document 모델로 변환한다."""
 
-        payload = data.get(schema.payload_field, {}) if schema.payload_field else {}
+        payload: dict[str, Any] = {}
+        if schema.payload_field:
+            raw_payload = data.get(schema.payload_field, {})
+            if isinstance(raw_payload, dict):
+                payload = {str(key): value for key, value in raw_payload.items()}
         vector = None
         if schema.vector_field:
             raw_vector = data.get(schema.vector_field)
-            if raw_vector is not None:
-                vector = Vector(values=list(raw_vector), dimension=len(raw_vector))
-        fields = {}
+            if isinstance(raw_vector, (list, tuple)) and raw_vector:
+                normalized_vector: list[float] = []
+                for item in raw_vector:
+                    if not isinstance(item, (int, float, str)):
+                        normalized_vector = []
+                        break
+                    try:
+                        normalized_vector.append(float(item))
+                    except (TypeError, ValueError):
+                        normalized_vector = []
+                        break
+                if normalized_vector:
+                    vector = Vector(values=normalized_vector, dimension=len(normalized_vector))
+        fields: dict[str, Any] = {}
         if not schema.payload_field:
             fields = {
-                key: value
+                str(key): value
                 for key, value in data.items()
                 if key not in {"_id", schema.vector_field}
             }

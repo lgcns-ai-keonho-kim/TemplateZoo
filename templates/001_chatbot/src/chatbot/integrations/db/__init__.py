@@ -9,6 +9,7 @@ from chatbot.integrations.db.client import DBClient
 from chatbot.integrations.db.query_builder import DeleteBuilder
 from chatbot.integrations.db.engines import (
     ElasticsearchEngine,
+    LanceDBEngine,
     MongoDBEngine,
     PostgresEngine,
     RedisEngine,
@@ -22,6 +23,7 @@ __all__ = [
     "ReadBuilder",
     "WriteBuilder",
     "DeleteBuilder",
+    "LanceDBEngine",
     "SQLiteEngine",
     "RedisEngine",
     "ElasticsearchEngine",

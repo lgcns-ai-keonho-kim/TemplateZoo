@@ -6,12 +6,14 @@
 """
 
 from chatbot.integrations.db.engines.elasticsearch import ElasticsearchEngine
+from chatbot.integrations.db.engines.lancedb import LanceDBEngine
 from chatbot.integrations.db.engines.mongodb import MongoDBEngine
 from chatbot.integrations.db.engines.postgres import PostgresEngine
 from chatbot.integrations.db.engines.redis import RedisEngine
 from chatbot.integrations.db.engines.sqlite import SQLiteEngine
 
 __all__ = [
+    "LanceDBEngine",
     "SQLiteEngine",
     "RedisEngine",
     "ElasticsearchEngine",

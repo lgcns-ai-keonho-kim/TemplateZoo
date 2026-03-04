@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from chatbot.shared.logging import Logger
 
@@ -30,7 +30,7 @@ class ElasticConnectionManager:
         self._ca_certs = ca_certs
         self._verify_certs = verify_certs
         self._ssl_assert_fingerprint = ssl_assert_fingerprint
-        self._client: Optional[object] = None
+        self._client: Any | None = None
 
     def connect(self) -> None:
         """Elasticsearch 연결을 초기화한다."""

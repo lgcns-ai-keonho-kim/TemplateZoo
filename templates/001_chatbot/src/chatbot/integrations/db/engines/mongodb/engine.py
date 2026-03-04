@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from chatbot.shared.logging import Logger, create_default_logger
 from chatbot.integrations.db.base.engine import BaseDBEngine
@@ -27,10 +27,13 @@ from chatbot.integrations.db.engines.mongodb.filter_builder import (
 )
 from chatbot.integrations.db.engines.mongodb.schema_manager import MongoSchemaManager
 
+MongoClient: Any | None
 try:
-    from pymongo import MongoClient
+    from pymongo import MongoClient as _MongoClient
 except ImportError:  # pragma: no cover - 환경 의존 로딩
     MongoClient = None
+else:  # pragma: no cover - 환경 의존 로딩
+    MongoClient = _MongoClient
 
 
 class MongoDBEngine(BaseDBEngine):
@@ -187,7 +190,7 @@ class MongoDBEngine(BaseDBEngine):
         request: VectorSearchRequest,
         schema: Optional[CollectionSchema] = None,
     ) -> VectorSearchResponse:
-        if schema and not schema.vector_field:
+        if schema and not (request.vector_field or schema.vector_field):
             raise RuntimeError("벡터 필드가 정의되어 있지 않습니다.")
         raise RuntimeError("MongoDB 벡터 검색은 비활성화되어 있습니다.")
 

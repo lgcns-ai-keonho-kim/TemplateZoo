@@ -2,7 +2,7 @@
 목적: DB 세션/트랜잭션 추상화를 제공한다.
 설명: 트랜잭션 제어와 with 문 사용을 위한 인터페이스를 정의한다.
 디자인 패턴: 템플릿 메서드, 컨텍스트 매니저
-참조: src/chatbot/integrations/db/base/engine.py
+참조: src/rag_chatbot/integrations/db/base/engine.py
 """
 
 from __future__ import annotations
