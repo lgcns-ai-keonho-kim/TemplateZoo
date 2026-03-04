@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from collections.abc import Mapping
@@ -38,6 +39,7 @@ _DEFAULT_LANCEDB_URI = "data/db/vector"
 _RAG_COLLECTION = "rag_chunks"
 _BODY_TOP_K = 5
 _RAG_EMBEDDING_DIM = resolve_gemini_embedding_dim()
+_RAG_QUERY_EMBED_MAX_CONCURRENCY = 8
 
 
 class RagRetrievedChunk(TypedDict):
@@ -132,7 +134,7 @@ def _validate_existing_rag_vector_dimension() -> None:
 _validate_existing_rag_vector_dimension()
 
 
-def _run_rag_retrieve_step(state: Mapping[str, Any]) -> dict[str, Any]:
+async def _run_rag_retrieve_step(state: Mapping[str, Any]) -> dict[str, Any]:
     """질의 목록 기반으로 벡터 검색 원본 청크를 생성한다."""
 
     # 현재 그래프에서는 rag_keyword_postprocess_node가 rag_queries를 보장한다.
@@ -164,9 +166,8 @@ def _run_rag_retrieve_step(state: Mapping[str, Any]) -> dict[str, Any]:
         )
         raise BaseAppException("RAG 검색 질의가 비어 있습니다.", detail)
 
-    # 질의 임베딩은 단건 순차 호출 대신 배치 호출로 생성한다.
-    # (embed_query N회 -> embed_documents 1회)
-    query_vectors = _build_query_vectors(normalized_queries)
+    # 질의 임베딩은 aembed_query를 질의별 병렬 호출해 생성한다.
+    query_vectors = await _abuild_query_vectors(normalized_queries)
 
     search_requests = [
         VectorSearchRequest(
@@ -259,30 +260,41 @@ def _run_rag_retrieve_step(state: Mapping[str, Any]) -> dict[str, Any]:
     return {"rag_retrieved_chunks": retrieved_chunks}
 
 
-def _build_query_vectors(queries: list[str]) -> dict[str, list[float]]:
-    """RAG 질의 목록의 임베딩 벡터를 배치로 생성한다."""
+async def _abuild_query_vectors(queries: list[str]) -> dict[str, list[float]]:
+    """RAG 질의 목록의 임베딩 벡터를 비동기 병렬 호출로 생성한다."""
 
-    try:
-        vectors = _rag_retrieve_embedder.embed_documents(queries)
-    except BaseAppException:
-        raise
-    except Exception as error:
-        detail = ExceptionDetail(
-            code="RAG_QUERY_EMBED_FAILED",
-            cause=f"query_count={len(queries)}, error={error!s}",
-        )
-        raise BaseAppException("RAG 질의 임베딩 생성에 실패했습니다.", detail) from None
+    if not queries:
+        return {}
 
-    if len(vectors) != len(queries):
+    max_concurrency = max(
+        1,
+        min(len(queries), int(_RAG_QUERY_EMBED_MAX_CONCURRENCY)),
+    )
+    semaphore = asyncio.Semaphore(max_concurrency)
+
+    async def _embed_single_query(query: str) -> tuple[str, list[float]]:
+        async with semaphore:
+            try:
+                vector = await _rag_retrieve_embedder.aembed_query(query)
+            except BaseAppException:
+                raise
+            except Exception as error:
+                detail = ExceptionDetail(
+                    code="RAG_QUERY_EMBED_FAILED",
+                    cause=f"query={query!r}, error={error!s}",
+                )
+                raise BaseAppException("RAG 질의 임베딩 생성에 실패했습니다.", detail) from None
+        return query, np.asarray(vector, dtype=np.float32).tolist()
+
+    pairs = await asyncio.gather(*[_embed_single_query(query) for query in queries])
+    query_vectors: dict[str, list[float]] = {query: vector for query, vector in pairs}
+
+    if len(query_vectors) != len(queries):
         detail = ExceptionDetail(
             code="RAG_QUERY_EMBED_COUNT_MISMATCH",
-            cause=f"expected={len(queries)}, actual={len(vectors)}",
+            cause=f"expected={len(queries)}, actual={len(query_vectors)}",
         )
         raise BaseAppException("RAG 질의 임베딩 결과 개수가 일치하지 않습니다.", detail)
-
-    query_vectors: dict[str, list[float]] = {}
-    for query, vector in zip(queries, vectors, strict=True):
-        query_vectors[query] = np.asarray(vector, dtype=np.float32).tolist()
     return query_vectors
 
 
