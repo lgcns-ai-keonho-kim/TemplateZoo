@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 from enum import Enum
 
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import SecretStr
 
 from rag_chatbot.core.chat.prompts import CONTEXT_STRATEGY_PROMPT
@@ -31,10 +31,10 @@ CONTEXT_STRATEGY_REUSE_LAST_ASSISTANT = ContextStrategy.REUSE_LAST_ASSISTANT.val
 CONTEXT_STRATEGY_USE_RAG = ContextStrategy.USE_RAG.value
 
 _context_strategy_logger: Logger = create_default_logger("ContextStrategyNode")
-_context_strategy_model = ChatOpenAI(
-    model_name=os.getenv("OPENAI_MODEL", ""),
-    openai_api_key=SecretStr(os.getenv("OPENAI_API_KEY", "")),
-    reasoning_effort="minimal",
+_context_strategy_model = ChatGoogleGenerativeAI(
+    model=os.getenv("GEMINI_MODEL", ""),
+    project=os.getenv("GEMINI_PROJECT", ""),
+    thinking_level="minimal",
 )
 _context_strategy_llm_client = LLMClient(
     model=_context_strategy_model,

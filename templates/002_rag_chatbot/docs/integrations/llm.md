@@ -123,12 +123,17 @@
 ## 7. 사용 예시
 
 ```python
-from langchain_openai import ChatOpenAI
-from pydantic import SecretStr
+import os
+
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from rag_chatbot.integrations.llm import LLMClient
 
-model = ChatOpenAI(model="gpt-4o-mini", api_key=SecretStr("..."))
+model = ChatGoogleGenerativeAI(
+    model=os.getenv("GEMINI_MODEL", ""),
+    project=os.getenv("GEMINI_PROJECT", ""),
+    thinking_level="minimal",
+)
 client = LLMClient(model=model, name="chat-response-llm")
 
 result = client.invoke("안녕하세요")
@@ -175,5 +180,6 @@ for chunk in client.stream("스트리밍 테스트"):
 ## 11. 관련 문서
 
 - `docs/integrations/overview.md`
+- `docs/integrations/embedding.md`
 - `docs/shared/logging.md`
 - `docs/core/chat.md`

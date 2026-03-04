@@ -2,7 +2,7 @@
 목적: integrations 패키지의 공개 API를 제공한다.
 설명: DB/LLM 통합 모듈을 한 번에 노출한다.
 디자인 패턴: 퍼사드
-참조: src/rag_chatbot/integrations/db, src/rag_chatbot/integrations/llm
+참조: src/rag_chatbot/integrations/db, src/rag_chatbot/integrations/llm, src/rag_chatbot/integrations/embedding
 """
 
 from rag_chatbot.integrations.db import (
@@ -17,6 +17,7 @@ from rag_chatbot.integrations.db import (
     SQLiteEngine,
     WriteBuilder,
 )
+from rag_chatbot.integrations.embedding import EmbeddingClient
 from rag_chatbot.integrations.llm import LLMClient
 
 __all__ = [
@@ -31,4 +32,5 @@ __all__ = [
     "MongoDBEngine",
     "PostgresEngine",
     "LLMClient",
+    "EmbeddingClient",
 ]

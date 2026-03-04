@@ -2,7 +2,7 @@
 목적: 테스트 공통 환경/픽스처/로깅 훅을 단일화해 제공한다.
 설명: .env 로딩, DB 기본 env 준비, Ollama fixture, Chat E2E 서버 fixture를 함께 제공한다.
 디자인 패턴: 테스트 픽스처 + 테스트 훅
-참조: tests/e2e/conftest.py, pyproject.toml
+참조: tests/e2e/test_chat_api_server_e2e.py, pyproject.toml
 """
 
 from __future__ import annotations
@@ -16,29 +16,21 @@ import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator
+from typing import TYPE_CHECKING, Callable, Iterator
 
 import httpx
 import pytest
 from dotenv import load_dotenv
+
+if TYPE_CHECKING:
+    from chatbot.integrations.llm import LLMClient
 
 
 _LOGGER = logging.getLogger("tests")
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _OLLAMA_BASE_URL = "http://127.0.0.1:11434"
 _OLLAMA_EMBED_MODEL = "embeddinggemma:300m-qat-q8_0"
-_E2E_CLIENT_TIMEOUT = httpx.Timeout(
-    connect=float(os.getenv("E2E_CONNECT_TIMEOUT_SECONDS", "10.0")),
-    read=float(os.getenv("E2E_READ_TIMEOUT_SECONDS", "60.0")),
-    write=float(os.getenv("E2E_WRITE_TIMEOUT_SECONDS", "30.0")),
-    pool=float(os.getenv("E2E_POOL_TIMEOUT_SECONDS", "10.0")),
-)
-_E2E_SERVER_READY_TIMEOUT_SECONDS = float(
-    os.getenv("E2E_SERVER_READY_TIMEOUT_SECONDS", "30.0")
-)
-_E2E_SERVER_SHUTDOWN_TIMEOUT_SECONDS = float(
-    os.getenv("E2E_SERVER_SHUTDOWN_TIMEOUT_SECONDS", "15.0")
-)
+_E2E_CLIENT_TIMEOUT = httpx.Timeout(connect=10.0, read=60.0, write=30.0, pool=10.0)
 
 
 def _load_env_files() -> None:
@@ -100,6 +92,7 @@ def _build_redis_url() -> str | None:
         return f"redis://:{password}@{host}:{port}/{db}"
     return f"redis://{host}:{port}/{db}"
 
+
 def _build_elasticsearch_hosts() -> str | None:
     """Elasticsearch HOSTS 문자열을 조합한다."""
 
@@ -132,6 +125,14 @@ class ChatServerContext:
     chat_db_path: Path
 
 
+@dataclass(frozen=True)
+class GeminiRuntimeConfig:
+    """Gemini 런타임 설정 컨텍스트."""
+
+    model: str
+    project: str
+
+
 def _find_free_port() -> int:
     """사용 가능한 로컬 포트를 반환한다."""
 
@@ -143,7 +144,7 @@ def _find_free_port() -> int:
 def _wait_for_server_ready(
     process: subprocess.Popen[str],
     base_url: str,
-    timeout_seconds: float = _E2E_SERVER_READY_TIMEOUT_SECONDS,
+    timeout_seconds: float = 30.0,
 ) -> None:
     """서버 헬스체크 응답이 가능할 때까지 대기한다."""
 
@@ -164,30 +165,7 @@ def _wait_for_server_ready(
         except Exception as error:  # noqa: BLE001 - 재시도 루프 유지
             last_error = error
         time.sleep(0.2)
-
-    stdout_tail = ""
-    stderr_tail = ""
-    if process.poll() is None:
-        process.terminate()
-        try:
-            process.wait(timeout=_E2E_SERVER_SHUTDOWN_TIMEOUT_SECONDS)
-        except subprocess.TimeoutExpired:
-            process.kill()
-            process.wait(timeout=_E2E_SERVER_SHUTDOWN_TIMEOUT_SECONDS)
-
-    try:
-        stdout, stderr = process.communicate(timeout=_E2E_SERVER_SHUTDOWN_TIMEOUT_SECONDS)
-        stdout_tail = str(stdout or "")[-1200:]
-        stderr_tail = str(stderr or "")[-1200:]
-    except Exception:  # noqa: BLE001 - 진단 정보 보강 실패는 무시
-        pass
-
-    raise RuntimeError(
-        "E2E 서버 기동 대기 타임아웃: "
-        f"base_url={base_url}, timeout_seconds={timeout_seconds}, last_error={last_error}\n"
-        f"stdout_tail:\n{stdout_tail}\n"
-        f"stderr_tail:\n{stderr_tail}"
-    )
+    raise RuntimeError(f"E2E 서버 기동 대기 타임아웃: {last_error}")
 
 
 def _build_ollama_embeddings():
@@ -209,6 +187,30 @@ def _build_ollama_embeddings():
     return OllamaEmbeddings(**kwargs)
 
 
+def _require_env_value(key: str) -> str:
+    """필수 환경 변수를 검증해 반환한다."""
+
+    value = (os.getenv(key) or "").strip()
+    if not value:
+        raise RuntimeError(f"테스트를 위해 {key} 환경 변수가 필요합니다.")
+    return value
+
+
+def _build_gemini_model(config: GeminiRuntimeConfig):
+    """Gemini 모델 클라이언트를 생성한다."""
+
+    try:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+    except ImportError as error:
+        raise RuntimeError("테스트를 위해 langchain-google-genai 패키지가 필요합니다.") from error
+
+    return ChatGoogleGenerativeAI(
+        model=config.model,
+        project=config.project,
+        thinking_level="minimal",
+    )
+
+
 @pytest.fixture(scope="session")
 def ollama_embeddings():
     """Ollama 임베딩 클라이언트를 반환한다."""
@@ -217,17 +219,47 @@ def ollama_embeddings():
 
 
 @pytest.fixture(scope="session")
-def chat_server_context() -> Iterator[ChatServerContext]:
-    """Chat API 서버를 실제 프로세스로 띄운 뒤 컨텍스트를 반환한다."""
+def gemini_runtime_config() -> GeminiRuntimeConfig:
+    """Gemini 테스트 런타임 설정을 반환한다."""
 
-    # 현재 앱의 노드 조립(core/chat/nodes/*)은 OpenAI 환경 변수를 사용한다.
-    openai_api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
-    openai_model = (os.getenv("OPENAI_MODEL") or "").strip()
-    if not openai_api_key or not openai_model:
-        raise RuntimeError(
-            "E2E 테스트를 위해 OPENAI_API_KEY와 OPENAI_MODEL이 필요합니다. "
-            "현재 앱 런타임은 OPENAI_*를 사용합니다."
-        )
+    return GeminiRuntimeConfig(
+        model=_require_env_value("GEMINI_MODEL"),
+        project=_require_env_value("GEMINI_PROJECT"),
+    )
+
+
+@pytest.fixture(scope="session")
+def gemini_llm_client_factory(
+    gemini_runtime_config: GeminiRuntimeConfig,
+) -> Callable[..., LLMClient]:
+    """Gemini 기반 LLMClient 생성 팩토리를 반환한다."""
+
+    from chatbot.integrations.llm import LLMClient
+
+    def _factory(
+        *,
+        name: str = "gemini-test-llm",
+        logging_engine: object | None = None,
+        background_runner: Callable[..., None] | None = None,
+    ) -> LLMClient:
+        kwargs: dict[str, object] = {
+            "model": _build_gemini_model(gemini_runtime_config),
+            "name": name,
+        }
+        if logging_engine is not None:
+            kwargs["logging_engine"] = logging_engine
+        if background_runner is not None:
+            kwargs["background_runner"] = background_runner
+        return LLMClient(**kwargs)
+
+    return _factory
+
+
+@pytest.fixture(scope="session")
+def chat_server_context(
+    gemini_runtime_config: GeminiRuntimeConfig,
+) -> Iterator[ChatServerContext]:
+    """Chat API 서버를 실제 프로세스로 띄운 뒤 컨텍스트를 반환한다."""
 
     port = _find_free_port()
     base_url = f"http://127.0.0.1:{port}"
@@ -239,7 +271,7 @@ def chat_server_context() -> Iterator[ChatServerContext]:
         "uv",
         "run",
         "uvicorn",
-        "rag_chatbot.api.main:app",
+        "chatbot.api.main:app",
         "--host",
         "127.0.0.1",
         "--port",
@@ -247,8 +279,8 @@ def chat_server_context() -> Iterator[ChatServerContext]:
     ]
     env = os.environ.copy()
     env["CHAT_DB_PATH"] = str(chat_db_path)
-    env["OPENAI_API_KEY"] = openai_api_key
-    env["OPENAI_MODEL"] = openai_model
+    env["GEMINI_PROJECT"] = gemini_runtime_config.project
+    env["GEMINI_MODEL"] = gemini_runtime_config.model
     env["PYTHONUNBUFFERED"] = "1"
 
     process = subprocess.Popen(
@@ -266,15 +298,15 @@ def chat_server_context() -> Iterator[ChatServerContext]:
         if process.poll() is None:
             process.terminate()
             try:
-                process.wait(timeout=_E2E_SERVER_SHUTDOWN_TIMEOUT_SECONDS)
+                process.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 process.kill()
-                process.wait(timeout=_E2E_SERVER_SHUTDOWN_TIMEOUT_SECONDS)
+                process.wait(timeout=5)
         try:
-            process.communicate(timeout=_E2E_SERVER_SHUTDOWN_TIMEOUT_SECONDS)
+            process.communicate(timeout=5)
         except subprocess.TimeoutExpired:
             process.kill()
-            process.communicate(timeout=_E2E_SERVER_SHUTDOWN_TIMEOUT_SECONDS)
+            process.communicate(timeout=5)
         tmp_dir.cleanup()
 
 

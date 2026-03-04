@@ -77,6 +77,14 @@ class DBClient:
         with self._engine_lock:
             self._engine.create_collection(schema_snapshot)
 
+    def delete_collection(self, name: str) -> None:
+        """컬렉션을 삭제한다."""
+
+        with self._engine_lock:
+            self._engine.delete_collection(name)
+        with self._schema_lock:
+            self._schemas.pop(name, None)
+
     def add_column(self, collection: str, column: ColumnSpec) -> None:
         """컬럼을 추가한다."""
 
@@ -219,6 +227,26 @@ class DBClient:
             raise ValueError("벡터 필드가 정의되어 있지 않습니다.")
         if not self._engine.supports_vector_search:
             raise RuntimeError("이 엔진은 벡터 검색을 지원하지 않습니다.")
+
+        vector_values = list(request.vector.values or [])
+        if not vector_values:
+            raise ValueError("벡터 검색 요청의 벡터 값이 비어 있습니다.")
+
+        actual_dim = len(vector_values)
+        requested_dim = request.vector.dimension
+        if requested_dim is not None and int(requested_dim) != actual_dim:
+            raise ValueError(
+                "요청 벡터 차원이 실제 벡터 길이와 다릅니다. "
+                f"dimension={int(requested_dim)}, actual={actual_dim}"
+            )
+
+        schema_dim = resolved_schema.resolve_vector_dimension()
+        if schema_dim is not None and int(schema_dim) != actual_dim:
+            raise ValueError(
+                "요청 벡터 차원이 컬렉션 스키마와 다릅니다. "
+                f"schema_dim={int(schema_dim)}, actual={actual_dim}"
+            )
+
         resolved_schema.validate_filter_expression(request.filter_expression)
         if self._should_serialize_read_io():
             with self._engine_lock:

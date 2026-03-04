@@ -1,6 +1,6 @@
 """
 목적: 표 주석(요약/설명) 생성 유틸을 제공한다.
-설명: 추출된 HTML 표와 페이지 텍스트를 입력받아 [TBL] 태그 포맷 본문을 생성한다.
+설명: 추출된 HTML 표와 페이지 컨텍스트(텍스트/이미지)를 입력받아 [TBL] 태그 포맷 본문을 생성한다.
 디자인 패턴: 함수형 유틸 모듈
 참조: ingestion/core/file_parser.py, ingestion/core/pdf_tables.py
 """
@@ -8,10 +8,12 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import os
 import re
 from dataclasses import dataclass
-from typing import Sequence
+from pathlib import Path
+from typing import Sequence, cast
 
 from langchain_core.messages import HumanMessage
 from langchain_core.language_models import BaseChatModel
@@ -25,7 +27,7 @@ _TABLE_ANALYSIS_PATTERN = re.compile(
 _MAX_PROMPT_TABLE_CHARS = 40_000
 _MAX_PAGE_TEXT_CHARS = 6_000
 
-_TABLE_PROMPT_TEMPLATE = """
+_TABLE_TEXT_PROMPT_TEMPLATE = """
 <system>
 You are a table analysis specialist. Your sole task is to generate structured annotations for HTML tables based on the provided table markup and surrounding page text.
 </system>
@@ -45,12 +47,47 @@ Your response MUST adhere to the following rules without exception:
 Reproduce this structure exactly:
 
 [TBL]
+<TBL>HTML table</TBL>
 <SUMMARY>5문장 이내 요약</SUMMARY>
 <DESCRIPTION>3문단 이내 상세 설명</DESCRIPTION>
-[TBL]
+[/TBL]
 </output_format>
 
 <input>
+  <table_html>{table_html}</table_html>
+  <page_text>{page_text}</page_text>
+</input>
+""".strip()
+
+_TABLE_IMAGE_PROMPT_TEMPLATE = """
+<system>
+You are a table analysis specialist. Your sole task is to generate structured annotations for HTML tables based on the provided page image and surrounding page text.
+</system>
+
+<instructions>
+Analyze the table using the page image as the primary source. The table HTML is provided as a structural reference.
+Generate a structured annotation using ONLY information that is visible in the page image or explicitly present in the page text.
+Do not infer, assume, or hallucinate content.
+
+Your response MUST adhere to the following rules without exception:
+  1. Output ONLY the annotation block below — no preamble, explanation, commentary, or trailing text.
+  2. SUMMARY must be written in 5 sentences or fewer.
+  3. DESCRIPTION must be written in 3 paragraphs or fewer.
+  4. Write all content in Korean.
+</instructions>
+
+<output_format>
+Reproduce this structure exactly:
+
+[TBL]
+<TBL>HTML table</TBL>
+<SUMMARY>5문장 이내 요약</SUMMARY>
+<DESCRIPTION>3문단 이내 상세 설명</DESCRIPTION>
+[/TBL]
+</output_format>
+
+<input>
+  <page_image_path>{page_image_path}</page_image_path>
   <table_html>{table_html}</table_html>
   <page_text>{page_text}</page_text>
 </input>
@@ -65,6 +102,7 @@ class TableAnnotationTask:
     page_num: int
     table_html: str
     page_text: str
+    page_image_path: Path | None = None
 
 
 def annotate_table_tasks(
@@ -126,14 +164,17 @@ async def _annotate_single_task(
     table_html_full = _normalize_full_table_html(task.table_html)
     table_html_for_prompt = _normalize_prompt_table_html(table_html_full)
     page_text = _normalize_page_text(task.page_text)
-    prompt = _TABLE_PROMPT_TEMPLATE.format(
-        table_html=table_html_for_prompt,
-        page_text=page_text,
-    )
 
     try:
         async with semaphore:
-            response = await model.ainvoke([HumanMessage(content=prompt)])
+            response = await _invoke_table_model(
+                model=model,
+                task=task,
+                table_html_for_prompt=table_html_for_prompt,
+                page_text=page_text,
+            )
+    except BaseAppException:
+        raise
     except Exception as error:
         detail = ExceptionDetail(
             code="INGESTION_TABLE_ANNOTATION_FAILED",
@@ -148,12 +189,54 @@ async def _annotate_single_task(
     summary, description = _extract_summary_description(raw)
     body = (
         "[TBL]\n"
-        f"<HTML>{table_html_full}</HTML>\n"
+        f"<TBL>{table_html_full}</TBL>\n"
         f"<SUMMARY>{summary}</SUMMARY>\n"
         f"<DESCRIPTION>{description}</DESCRIPTION>\n"
         "[/TBL]"
     )
     return task.task_id, body
+
+
+async def _invoke_table_model(
+    *,
+    model: BaseChatModel,
+    task: TableAnnotationTask,
+    table_html_for_prompt: str,
+    page_text: str,
+) -> object:
+    """표 주석 모델 호출을 수행한다."""
+
+    if task.page_image_path is None:
+        prompt = _TABLE_TEXT_PROMPT_TEMPLATE.format(
+            table_html=table_html_for_prompt,
+            page_text=page_text,
+        )
+        return await model.ainvoke([HumanMessage(content=prompt)])
+
+    page_image_path = Path(task.page_image_path)
+    if not page_image_path.exists():
+        detail = ExceptionDetail(
+            code="INGESTION_TABLE_PAGE_IMAGE_NOT_FOUND",
+            cause=f"task_id={task.task_id}, path={page_image_path.as_posix()}",
+        )
+        raise BaseAppException("표 주석용 페이지 이미지를 찾을 수 없습니다.", detail)
+
+    prompt = _TABLE_IMAGE_PROMPT_TEMPLATE.format(
+        page_image_path=page_image_path.as_posix(),
+        table_html=table_html_for_prompt,
+        page_text=page_text,
+    )
+    image_data_url = _to_data_url(page_image_path)
+    return await model.ainvoke(
+        [
+            HumanMessage(
+                content=[
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": image_data_url}},
+                ]
+            )
+        ]
+    )
 
 
 def _normalize_full_table_html(table_html: str) -> str:
@@ -183,6 +266,22 @@ def _normalize_page_text(text: str) -> str:
     return normalized[:_MAX_PAGE_TEXT_CHARS]
 
 
+def _to_data_url(image_path: Path) -> str:
+    """이미지 파일을 data URL 문자열로 변환한다."""
+
+    raw = image_path.read_bytes()
+    encoded = base64.b64encode(raw).decode("ascii")
+    suffix = image_path.suffix.lower()
+    if suffix == ".jpg":
+        suffix = ".jpeg"
+    mime = {
+        ".png": "image/png",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+    }.get(suffix, "image/png")
+    return f"data:{mime};base64,{encoded}"
+
+
 def _extract_message_text(message: object) -> str:
     content = getattr(message, "content", message)
     if isinstance(content, str):
@@ -194,12 +293,14 @@ def _extract_message_text(message: object) -> str:
                 texts.append(item)
                 continue
             if isinstance(item, dict):
-                text = item.get("text")
+                item_dict = cast(dict[str, object], item)
+                text = item_dict.get("text")
                 if text is not None:
                     texts.append(str(text))
         return "".join(texts)
     if isinstance(content, dict):
-        text = content.get("text")
+        content_dict = cast(dict[str, object], content)
+        text = content_dict.get("text")
         return "" if text is None else str(text)
     return str(content)
 

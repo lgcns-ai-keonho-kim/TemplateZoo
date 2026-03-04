@@ -12,7 +12,7 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import SecretStr
 
 from rag_chatbot.core.chat.prompts import RELEVANCE_FILTER_PROMPT
@@ -23,11 +23,13 @@ from rag_chatbot.shared.logging import Logger, create_default_logger
 
 _rag_relevance_judge_logger: Logger = create_default_logger("RagRelevanceJudgeNode")
 _BINARY_PATTERN = re.compile(r"\b([01])\b")
-_rag_relevance_judge_model = ChatOpenAI(
-    model_name=os.getenv("OPENAI_MODEL", ""),
-    openai_api_key=SecretStr(os.getenv("OPENAI_API_KEY", "")),
-    reasoning_effort="minimal",
+
+_rag_relevance_judge_model = ChatGoogleGenerativeAI(
+    model=os.getenv("GEMINI_MODEL", ""),
+    project=os.getenv("GEMINI_PROJECT", ""),
+    thinking_level="minimal",
 )
+
 _rag_relevance_judge_llm_client = LLMClient(
     model=_rag_relevance_judge_model,
     name="chat-rag-relevance-judge-llm",

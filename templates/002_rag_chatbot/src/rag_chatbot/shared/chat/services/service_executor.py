@@ -1,6 +1,7 @@
 """
 목적: Chat 실행 오케스트레이션을 제공한다.
 설명: JobQueue 소비 워커와 EventBuffer 기반 SSE 중계를 관리한다.
+      그래프 내부 이벤트를 공개 이벤트(start/token/references/done/error)로 정규화한다.
 디자인 패턴: 실행 코디네이터
 참조: src/rag_chatbot/shared/chat/interface/ports.py
 """
@@ -491,6 +492,8 @@ class ServiceExecutor(ServiceExecutorPort):
         return candidate
 
     def _normalize_graph_event(self, event: Any) -> dict[str, Any] | None:
+        """그래프 이벤트를 공개 이벤트 스키마로 정규화한다."""
+
         if not isinstance(event, dict):
             return None
         node = str(event.get("node") or "").strip()
@@ -526,6 +529,7 @@ class ServiceExecutor(ServiceExecutorPort):
 
         if event_name == "references":
             payload = data if isinstance(data, list) else []
+            # node가 비어 있는 경우 과거 호환을 위해 rag를 기본 노드명으로 사용한다.
             return {
                 "event": self._EVENT_REFERENCES,
                 "node": node or "rag",
