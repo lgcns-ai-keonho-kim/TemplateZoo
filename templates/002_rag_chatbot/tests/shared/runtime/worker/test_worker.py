@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import threading
 
-from chatbot.shared.runtime.queue import InMemoryQueue
-from chatbot.shared.runtime.worker import Worker, WorkerConfig, WorkerState
+from rag_chatbot.shared.runtime.queue import InMemoryQueue
+from rag_chatbot.shared.runtime.worker import Worker, WorkerConfig, WorkerState
 
 
 def test_worker_processes_items_with_context_manager() -> None:

@@ -10,8 +10,8 @@ from __future__ import annotations
 import logging
 import os
 
-from chatbot.integrations.db import DBClient
-from chatbot.integrations.db.engines.mongodb import MongoDBEngine
+from rag_chatbot.integrations.db import DBClient
+from rag_chatbot.integrations.db.engines.mongodb import MongoDBEngine
 
 
 _LOGGER = logging.getLogger("tests.crud")
@@ -107,7 +107,7 @@ def test_mongodb_engine_query_dsl() -> None:
 
 
 def _collection_schema(name: str, dimension: int | None):
-    from chatbot.integrations.db.base import CollectionSchema
+    from rag_chatbot.integrations.db.base import CollectionSchema
 
     return CollectionSchema(
         name=name,
@@ -124,7 +124,7 @@ def _collection_name(prefix: str) -> str:
 
 
 def _doc(doc_id: str, payload: dict):
-    from chatbot.integrations.db.base import Document
+    from rag_chatbot.integrations.db.base import Document
 
     return Document(doc_id=doc_id, payload=payload, vector=None)
 

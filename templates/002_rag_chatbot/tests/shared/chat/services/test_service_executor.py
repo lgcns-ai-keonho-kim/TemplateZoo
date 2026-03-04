@@ -10,10 +10,10 @@ import time
 import json
 from dataclasses import dataclass
 
-from chatbot.shared.chat.services.service_executor import ServiceExecutor
-from chatbot.shared.exceptions import BaseAppException, ExceptionDetail
-from chatbot.shared.runtime.buffer import EventBufferConfig, InMemoryEventBuffer
-from chatbot.shared.runtime.queue import InMemoryQueue, QueueConfig
+from rag_chatbot.shared.chat.services.service_executor import ServiceExecutor
+from rag_chatbot.shared.exceptions import BaseAppException, ExceptionDetail
+from rag_chatbot.shared.runtime.buffer import EventBufferConfig, InMemoryEventBuffer
+from rag_chatbot.shared.runtime.queue import InMemoryQueue, QueueConfig
 
 
 def _extract_payload(raw: str) -> dict:

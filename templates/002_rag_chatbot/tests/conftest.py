@@ -23,7 +23,7 @@ import pytest
 from dotenv import load_dotenv
 
 if TYPE_CHECKING:
-    from chatbot.integrations.llm import LLMClient
+    from rag_chatbot.integrations.llm import LLMClient
 
 
 _LOGGER = logging.getLogger("tests")
@@ -234,7 +234,7 @@ def gemini_llm_client_factory(
 ) -> Callable[..., LLMClient]:
     """Gemini 기반 LLMClient 생성 팩토리를 반환한다."""
 
-    from chatbot.integrations.llm import LLMClient
+    from rag_chatbot.integrations.llm import LLMClient
 
     def _factory(
         *,
@@ -271,7 +271,7 @@ def chat_server_context(
         "uv",
         "run",
         "uvicorn",
-        "chatbot.api.main:app",
+        "rag_chatbot.api.main:app",
         "--host",
         "127.0.0.1",
         "--port",

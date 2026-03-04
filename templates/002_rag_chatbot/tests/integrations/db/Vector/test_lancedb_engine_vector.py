@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from typing import List
 
-from chatbot.integrations.db import DBClient
-from chatbot.integrations.db.base import Vector, VectorSearchRequest
-from chatbot.integrations.db.engines.lancedb import LanceDBEngine
+from rag_chatbot.integrations.db import DBClient
+from rag_chatbot.integrations.db.base import Vector, VectorSearchRequest
+from rag_chatbot.integrations.db.engines.lancedb import LanceDBEngine
 
 
 def test_lancedb_engine_vector_search(tmp_path, ollama_embeddings) -> None:
@@ -55,7 +55,7 @@ def test_lancedb_engine_vector_search(tmp_path, ollama_embeddings) -> None:
 
 
 def _collection_schema(name: str, dimension: int | None):
-    from chatbot.integrations.db.base import CollectionSchema
+    from rag_chatbot.integrations.db.base import CollectionSchema
 
     return CollectionSchema(
         name=name,
@@ -72,7 +72,7 @@ def _collection_name(prefix: str) -> str:
 
 
 def _doc(doc_id: str, payload: dict, vector: List[float] | None = None):
-    from chatbot.integrations.db.base import Document
+    from rag_chatbot.integrations.db.base import Document
 
     return Document(
         doc_id=doc_id,

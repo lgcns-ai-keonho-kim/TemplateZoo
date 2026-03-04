@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from chatbot.shared.runtime.thread_pool import ThreadPool, ThreadPoolConfig
+from rag_chatbot.shared.runtime.thread_pool import ThreadPool, ThreadPoolConfig
 
 
 def test_thread_pool_submit_and_shutdown() -> None:

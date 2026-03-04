@@ -9,11 +9,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable
 
-from chatbot.integrations.fs import FileLogRepository
-from chatbot.shared.logging import InMemoryLogger
+from rag_chatbot.integrations.fs import FileLogRepository
+from rag_chatbot.shared.logging import InMemoryLogger
 
 if TYPE_CHECKING:
-    from chatbot.integrations.llm import LLMClient
+    from rag_chatbot.integrations.llm import LLMClient
 
 
 def test_llm_client_file_logging(

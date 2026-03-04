@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from chatbot.integrations.fs.engines import LocalFSEngine
+from rag_chatbot.integrations.fs.engines import LocalFSEngine
 
 
 def test_local_engine_write_read_move_copy(tmp_path):

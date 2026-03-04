@@ -10,8 +10,8 @@ from __future__ import annotations
 import logging
 import os
 
-from chatbot.integrations.db import DBClient
-from chatbot.integrations.db.engines.elasticsearch import ElasticsearchEngine
+from rag_chatbot.integrations.db import DBClient
+from rag_chatbot.integrations.db.engines.elasticsearch import ElasticsearchEngine
 
 
 _LOGGER = logging.getLogger("tests.crud")
@@ -125,7 +125,7 @@ def _drop_none(params: dict) -> dict:
 
 
 def _collection_schema(name: str, dimension: int | None):
-    from chatbot.integrations.db.base import CollectionSchema
+    from rag_chatbot.integrations.db.base import CollectionSchema
 
     return CollectionSchema(
         name=name,
@@ -142,6 +142,6 @@ def _collection_name(prefix: str) -> str:
 
 
 def _doc(doc_id: str, payload: dict):
-    from chatbot.integrations.db.base import Document
+    from rag_chatbot.integrations.db.base import Document
 
     return Document(doc_id=doc_id, payload=payload, vector=None)

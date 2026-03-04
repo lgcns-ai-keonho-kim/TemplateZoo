@@ -13,7 +13,7 @@ from collections.abc import Callable
 
 import httpx
 
-from chatbot.core.chat.const.messages import SafeguardRejectionMessage
+from rag_chatbot.core.chat.const.messages import SafeguardRejectionMessage
 
 _STREAM_TIMEOUT = httpx.Timeout(connect=10.0, read=60.0, write=30.0, pool=10.0)
 _HISTORY_WAIT_TIMEOUT_SECONDS = 30.0
