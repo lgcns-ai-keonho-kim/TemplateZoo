@@ -6,6 +6,9 @@
 """
 
 from rag_chatbot.shared.config.loader import ConfigLoader
-from rag_chatbot.shared.config.runtime_env_loader import RuntimeEnvironmentLoader
+from rag_chatbot.shared.config.runtime_env_loader import (
+    RuntimeEnvironmentLoader,
+    resolve_gemini_embedding_dim,
+)
 
-__all__ = ["ConfigLoader", "RuntimeEnvironmentLoader"]
+__all__ = ["ConfigLoader", "RuntimeEnvironmentLoader", "resolve_gemini_embedding_dim"]

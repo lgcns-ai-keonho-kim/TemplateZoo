@@ -9,7 +9,12 @@ from __future__ import annotations
 
 from langchain_core.embeddings import Embeddings
 
-from ingestion.core.db import build_lancedb_schema, create_lancedb_client, ensure_collection
+from ingestion.core.db import (
+    build_lancedb_schema,
+    create_lancedb_client,
+    ensure_collection,
+    validate_existing_vector_dimension,
+)
 from ingestion.core.documents import batched, to_lancedb_documents
 from ingestion.core.enrichment import embedding_dimension
 from ingestion.core.types import IngestionChunk
@@ -19,6 +24,7 @@ def run_upsert_lancedb_step(
     chunks: list[IngestionChunk],
     *,
     embedder: Embeddings,
+    reset: bool = False,
 ) -> None:
     """LanceDB 업서트를 수행한다."""
 
@@ -32,7 +38,19 @@ def run_upsert_lancedb_step(
 
     db_client = create_lancedb_client()
     schema = build_lancedb_schema(embedding_dim)
+    if reset:
+        print(
+            f"[진행][upsert][lancedb] --reset 활성화: 기존 컬렉션 삭제 후 재생성 "
+            f"(collection={schema.name})"
+        )
+        db_client.connect()
+        db_client.delete_collection(schema.name)
     ensure_collection(db_client, schema)
+    validate_existing_vector_dimension(
+        db_client,
+        schema=schema,
+        expected_dim=embedding_dim,
+    )
 
     documents = to_lancedb_documents(chunks)
     total_batches = max(1, (len(documents) + 99) // 100)

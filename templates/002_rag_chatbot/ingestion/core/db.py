@@ -11,10 +11,11 @@ import os
 
 from ingestion.core.types import RAG_COLLECTION
 from rag_chatbot.integrations.db import DBClient
-from rag_chatbot.integrations.db.base import CollectionSchema, ColumnSpec
+from rag_chatbot.integrations.db.base import CollectionSchema, ColumnSpec, Pagination, Query
 from rag_chatbot.integrations.db.engines.elasticsearch import ElasticsearchEngine
 from rag_chatbot.integrations.db.engines.lancedb import LanceDBEngine
 from rag_chatbot.integrations.db.engines.postgres import PostgresEngine
+from rag_chatbot.shared.exceptions import BaseAppException, ExceptionDetail
 from rag_chatbot.shared.logging import Logger, create_default_logger
 
 
@@ -141,6 +142,50 @@ def ensure_collection(db_client: DBClient, schema: CollectionSchema) -> None:
     db_client.create_collection(schema)
 
 
+def validate_existing_vector_dimension(
+    db_client: DBClient,
+    *,
+    schema: CollectionSchema,
+    expected_dim: int,
+    error_code: str = "INGESTION_EMBEDDING_DIMENSION_MISMATCH",
+) -> None:
+    """기존 컬렉션 벡터 차원과 현재 임베딩 차원 호환성을 검증한다."""
+
+    db_client.register_schema(schema)
+    documents = db_client.fetch(
+        schema.name,
+        Query(pagination=Pagination(limit=1, offset=0)),
+    )
+    if not documents:
+        return
+
+    vector = documents[0].vector.values if documents[0].vector is not None else []
+    if not vector:
+        detail = ExceptionDetail(
+            code="INGESTION_EMBEDDING_VECTOR_MISSING",
+            cause=f"collection={schema.name}, doc_id={documents[0].doc_id}",
+        )
+        raise BaseAppException("기존 벡터 데이터의 차원을 확인할 수 없습니다.", detail)
+
+    existing_dim = len(vector)
+    if existing_dim == int(expected_dim):
+        return
+
+    engine_name = str(getattr(db_client.engine, "name", "unknown"))
+    detail = ExceptionDetail(
+        code=error_code,
+        cause=(
+            "벡터 차원 불일치: "
+            f"engine={engine_name}, collection={schema.name}, expected_dim={int(expected_dim)}, "
+            f"existing_dim={existing_dim}"
+        ),
+    )
+    raise BaseAppException(
+        "기존 저장소 벡터 차원이 현재 임베딩 차원과 다릅니다. 컬렉션을 재생성한 뒤 ingestion을 다시 실행하세요.",
+        detail,
+    )
+
+
 __all__ = [
     "create_logger",
     "create_lancedb_client",
@@ -150,4 +195,5 @@ __all__ = [
     "build_postgres_schema",
     "build_elasticsearch_schema",
     "ensure_collection",
+    "validate_existing_vector_dimension",
 ]

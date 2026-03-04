@@ -1,6 +1,6 @@
 """
 목적: ingestion 입력 파일을 스캔하고 텍스트를 추출한다.
-설명: 확장자 필터링, 파일별 텍스트 추출, 헤더 구조 추정 메타데이터 생성을 담당한다.
+설명: 확장자 필터링, 파일별 텍스트/표/이미지 주석 추출, 레이아웃 메타데이터 생성을 담당한다.
 디자인 패턴: 함수형 파서 모듈
 참조: ingestion/core/chunking.py, ingestion/steps/chunk_step.py
 """
@@ -23,7 +23,8 @@ from ingestion.core.docx_layout import (
     resolve_docx_layout_metrics as _resolve_docx_layout_metrics,
 )
 from ingestion.core.image_annotation import ImageAnnotationTask, annotate_image_tasks
-from ingestion.core.pdf_assets import PdfTextBlock, extract_pdf_page_assets
+from ingestion.core.pdf_assets import PdfPageAsset, PdfTextBlock, extract_pdf_page_assets
+from ingestion.core.pdf_page_capture import capture_pdf_pages
 from ingestion.core.pdf_tables import extract_pdf_tables_by_page
 from ingestion.core.table_annotation import TableAnnotationTask, annotate_table_tasks
 from rag_chatbot.shared.exceptions import BaseAppException, ExceptionDetail
@@ -228,13 +229,18 @@ def _read_pdf_blocks(
     *,
     annotation_model: BaseChatModel,
 ) -> list[tuple[str, dict[str, object]]]:
-    page_assets = extract_pdf_page_assets(path)
-    table_htmls_by_page = extract_pdf_tables_by_page(path)
+    """PDF를 페이지 단위로 파싱하고 표/이미지 주석을 병합해 반환한다."""
 
-    page_text_lookup = {page.page_num: page.page_text for page in page_assets}
+    # 페이지 자산(텍스트/이미지 후보)과 페이지 캡처 이미지를 함께 준비한다.
+    page_assets = extract_pdf_page_assets(path)
+    page_numbers = [page.page_num for page in page_assets]
+    page_images_by_page = capture_pdf_pages(path, page_numbers=page_numbers)
+    table_htmls_by_page = extract_pdf_tables_by_page(path)
+    page_context_lookup = _build_pdf_page_context_text_lookup(page_assets)
     table_tasks: list[TableAnnotationTask] = []
     for page_num, table_htmls in table_htmls_by_page.items():
-        page_text = page_text_lookup.get(page_num, "")
+        page_text = page_context_lookup.get(page_num, "")
+        page_image_path = page_images_by_page.get(page_num)
         for table_index, table_html in enumerate(table_htmls, start=1):
             task_id = f"pdf::{path.name}::p{page_num}::t{table_index}"
             table_tasks.append(
@@ -243,6 +249,7 @@ def _read_pdf_blocks(
                     page_num=page_num,
                     table_html=table_html,
                     page_text=page_text,
+                    page_image_path=page_image_path,
                 )
             )
     table_bodies = annotate_table_tasks(table_tasks, model=annotation_model)
@@ -267,16 +274,26 @@ def _read_pdf_blocks(
             )
         )
 
+    # 현재 PDF 이미지 주석은 페이지 단위(페이지 캡처 1장)로 생성한다.
     image_tasks: list[ImageAnnotationTask] = []
     for page_asset in page_assets:
-        for image_path in page_asset.image_paths:
-            image_tasks.append(
-                ImageAnnotationTask(
-                    page_num=page_asset.page_num,
-                    image_path=image_path,
-                    page_text=page_asset.page_text,
-                )
+        if not page_asset.image_paths:
+            continue
+        page_text = page_context_lookup.get(page_asset.page_num, "")
+        page_image_path = page_images_by_page.get(page_asset.page_num)
+        if page_image_path is None:
+            detail = ExceptionDetail(
+                code="INGESTION_PDF_PAGE_IMAGE_MISSING",
+                cause=f"path={path}, page_num={page_asset.page_num}",
             )
+            raise BaseAppException("PDF 페이지 캡처 이미지를 찾을 수 없습니다.", detail)
+        image_tasks.append(
+            ImageAnnotationTask(
+                page_num=page_asset.page_num,
+                image_path=page_image_path,
+                page_text=page_text,
+            )
+        )
 
     image_rows_by_page: dict[int, list[tuple[str, dict[str, object]]]] = {}
     for image_body, image_metadata in annotate_image_tasks(
@@ -315,6 +332,43 @@ def _read_pdf_blocks(
         rows.extend(image_rows_by_page.get(page_asset.page_num, []))
 
     return rows
+
+
+def _build_pdf_page_context_text_lookup(
+    page_assets: list[PdfPageAsset],
+) -> dict[int, str]:
+    """페이지 번호별 앞/현재/뒤 페이지 결합 문맥 텍스트를 생성한다."""
+
+    page_text_lookup: dict[int, str] = {}
+    for page_asset in page_assets:
+        page_num_raw = page_asset.page_num
+        page_text_raw = page_asset.page_text
+        try:
+            page_num = int(page_num_raw)
+        except (TypeError, ValueError):
+            continue
+        if page_num <= 0:
+            continue
+        page_text_lookup[page_num] = str(page_text_raw or "").strip()
+
+    if not page_text_lookup:
+        return {}
+
+    context_lookup: dict[int, str] = {}
+    for page_num in sorted(page_text_lookup.keys()):
+        parts: list[str] = []
+        prev_text = page_text_lookup.get(page_num - 1, "").strip()
+        current_text = page_text_lookup.get(page_num, "").strip()
+        next_text = page_text_lookup.get(page_num + 1, "").strip()
+        if prev_text:
+            parts.append(f"[이전 페이지]\n{prev_text}")
+        if current_text:
+            parts.append(f"[현재 페이지]\n{current_text}")
+        if next_text:
+            parts.append(f"[다음 페이지]\n{next_text}")
+        context_lookup[page_num] = "\n\n".join(parts).strip()
+
+    return context_lookup
 
 
 def _estimate_pdf_body_font_size(blocks: list[PdfTextBlock]) -> float:

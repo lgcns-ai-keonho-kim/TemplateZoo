@@ -13,7 +13,10 @@ from typing import Optional, Sequence
 
 from dotenv import load_dotenv
 
+from rag_chatbot.shared.exceptions import BaseAppException, ExceptionDetail
 from rag_chatbot.shared.logging import Logger, create_default_logger
+
+_DEFAULT_GEMINI_EMBEDDING_DIM = 1024
 
 
 class RuntimeEnvironmentLoader:
@@ -139,3 +142,33 @@ class RuntimeEnvironmentLoader:
         raise FileNotFoundError(
             f"환경 파일을 찾을 수 없습니다: {candidate}"
         )
+
+
+def resolve_gemini_embedding_dim(
+    *,
+    env_key: str = "GEMINI_EMBEDDING_DIM",
+    default: int = _DEFAULT_GEMINI_EMBEDDING_DIM,
+) -> int:
+    """Gemini 임베딩 차원 값을 검증해 반환한다."""
+
+    raw_value = str(os.getenv(env_key, "") or "").strip()
+    if not raw_value:
+        return int(default)
+
+    try:
+        resolved = int(raw_value)
+    except (TypeError, ValueError):
+        detail = ExceptionDetail(
+            code="GEMINI_EMBEDDING_DIM_INVALID",
+            cause=f"{env_key} 값이 정수가 아닙니다: value={raw_value!r}",
+        )
+        raise BaseAppException("Gemini 임베딩 차원 설정이 올바르지 않습니다.", detail) from None
+
+    if resolved <= 0:
+        detail = ExceptionDetail(
+            code="GEMINI_EMBEDDING_DIM_INVALID",
+            cause=f"{env_key} 값은 1 이상의 정수여야 합니다: value={resolved}",
+        )
+        raise BaseAppException("Gemini 임베딩 차원 설정이 올바르지 않습니다.", detail)
+
+    return resolved

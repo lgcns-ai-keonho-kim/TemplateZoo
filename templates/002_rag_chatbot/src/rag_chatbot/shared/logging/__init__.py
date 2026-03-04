@@ -6,6 +6,7 @@
 """
 
 from rag_chatbot.shared.logging.db_repository import DBLogRepository
+from rag_chatbot.shared.logging.embedding_repository import EmbeddingLogRepository
 from rag_chatbot.shared.logging.llm_repository import LLMLogRepository
 from rag_chatbot.shared.logging.logger import InMemoryLogger, LogRepository, Logger, create_default_logger
 from rag_chatbot.shared.logging.models import LogContext, LogLevel, LogRecord
@@ -19,5 +20,6 @@ __all__ = [
     "InMemoryLogger",
     "DBLogRepository",
     "LLMLogRepository",
+    "EmbeddingLogRepository",
     "create_default_logger",
 ]

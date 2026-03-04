@@ -61,14 +61,19 @@ logger.error("실패 시나리오 기록")
 ### 4-3. LLM 로그 저장소로 연결 예시
 
 ```python
-from langchain_openai import ChatOpenAI
-from pydantic import SecretStr
+import os
+
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from rag_chatbot.integrations.fs import FileLogRepository
 from rag_chatbot.integrations.llm import LLMClient
 
 repo = FileLogRepository(base_dir="data/logs/llm")
-model = ChatOpenAI(model="gpt-4o-mini", api_key=SecretStr("..."))
+model = ChatGoogleGenerativeAI(
+    model=os.getenv("GEMINI_MODEL", ""),
+    project=os.getenv("GEMINI_PROJECT", ""),
+    thinking_level="minimal",
+)
 
 client = LLMClient(
     model=model,

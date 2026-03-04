@@ -218,6 +218,124 @@ def _print_parallel_node_call_report(call_counts: dict[str, int]) -> None:
         print(f"[리포트] node={node_name}, total_calls={calls}")
 
 
+def _install_llm_call_hooks() -> dict[str, int]:
+    """LLMClient 메서드 호출 횟수 계측 훅을 설치한다."""
+
+    from rag_chatbot.integrations.llm.client import LLMClient
+
+    llm_call_counts: dict[str, int] = defaultdict(int)
+    lock = threading.Lock()
+
+    original_generate = LLMClient._generate
+    original_agenerate = LLMClient._agenerate
+    original_stream = LLMClient._stream
+    original_astream = LLMClient._astream
+
+    def _count_call(client: Any, action: str) -> None:
+        client_name = str(getattr(client, "_name", "unknown-llm-client"))
+        with lock:
+            llm_call_counts["total"] += 1
+            llm_call_counts[f"action:{action}"] += 1
+            llm_call_counts[f"client:{client_name}"] += 1
+            llm_call_counts[f"client:{client_name}|action:{action}"] += 1
+
+    def counted_generate(
+        self: Any,
+        messages: list[Any],
+        stop: list[str] | None = None,
+        run_manager: object | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        _count_call(self, "invoke")
+        return original_generate(
+            self,
+            messages,
+            stop=stop,
+            run_manager=run_manager,
+            **kwargs,
+        )
+
+    async def counted_agenerate(
+        self: Any,
+        messages: list[Any],
+        stop: list[str] | None = None,
+        run_manager: object | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        _count_call(self, "ainvoke")
+        return await original_agenerate(
+            self,
+            messages,
+            stop=stop,
+            run_manager=run_manager,
+            **kwargs,
+        )
+
+    def counted_stream(
+        self: Any,
+        messages: list[Any],
+        stop: list[str] | None = None,
+        run_manager: object | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        _count_call(self, "stream")
+        return original_stream(
+            self,
+            messages,
+            stop=stop,
+            run_manager=run_manager,
+            **kwargs,
+        )
+
+    async def counted_astream(
+        self: Any,
+        messages: list[Any],
+        stop: list[str] | None = None,
+        run_manager: object | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        _count_call(self, "astream")
+        async for chunk in original_astream(
+            self,
+            messages,
+            stop=stop,
+            run_manager=run_manager,
+            **kwargs,
+        ):
+            yield chunk
+
+    LLMClient._generate = counted_generate
+    LLMClient._agenerate = counted_agenerate
+    LLMClient._stream = counted_stream
+    LLMClient._astream = counted_astream
+    return llm_call_counts
+
+
+def _print_llm_call_report(llm_call_counts: dict[str, int]) -> None:
+    """LLM 호출 횟수 리포트를 출력한다."""
+
+    total = int(llm_call_counts.get("total", 0))
+    print(f"[리포트] 전체 LLM 호출 횟수={total}")
+
+    action_keys = sorted(
+        [key for key in llm_call_counts.keys() if key.startswith("action:")]
+    )
+    if action_keys:
+        print("[리포트] LLM 액션별 호출 횟수")
+        for key in action_keys:
+            action = key.removeprefix("action:")
+            print(f"[리포트] action={action}, calls={int(llm_call_counts[key])}")
+
+    client_keys = sorted(
+        [key for key in llm_call_counts.keys() if key.startswith("client:") and "|action:" not in key]
+    )
+    if client_keys:
+        print("[리포트] LLM 클라이언트별 호출 횟수")
+        for key in client_keys:
+            client = key.removeprefix("client:")
+            print(f"[리포트] client={client}, calls={int(llm_call_counts[key])}")
+
+
 async def _run_astream(
     chat_graph: Any,
     session_id: str,
@@ -277,6 +395,7 @@ def main() -> int:
     print(f"[입력] session_id={session_id}")
 
     node_timings = _install_node_timing_hooks()
+    llm_call_counts = _install_llm_call_hooks()
 
     from rag_chatbot.core.chat import chat_graph
 
@@ -292,6 +411,7 @@ def main() -> int:
     else:
         print("[메트릭] TTFT=측정 불가(response 시작 이벤트 없음)")
     print(f"[메트릭] 총 실행 시간={total_elapsed_ms:.2f}ms")
+    _print_llm_call_report(llm_call_counts=llm_call_counts)
     call_counts = _print_node_timing_report(node_timings=node_timings)
     _print_parallel_node_call_report(call_counts=call_counts)
     return exit_code

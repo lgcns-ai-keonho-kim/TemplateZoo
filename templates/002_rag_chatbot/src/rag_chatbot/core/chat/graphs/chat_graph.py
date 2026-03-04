@@ -1,6 +1,6 @@
 """
 목적: Chat 그래프 조립과 기본 싱글턴 인스턴스를 제공한다.
-설명: safeguard -> rag 단계 노드 -> response / blocked 분기 그래프를 모듈 레벨에서 조립한다.
+설명: safeguard -> context_strategy -> 다단 RAG -> response / blocked 분기 그래프를 모듈 레벨에서 조립한다.
 디자인 패턴: 모듈 조립 + 싱글턴
 참조: src/rag_chatbot/shared/chat/graph/base_chat_graph.py
 """
@@ -136,6 +136,7 @@ builder.add_edge("blocked", END)
 checkpointer = InMemorySaver()
 
 # Stream 할 노드 정의
+# - rag_format에서 생성한 rag_references는 상위 계층에서 SSE references 이벤트로 정규화된다.
 stream_node: StreamNodeConfig = {
     "safeguard": ["safeguard_result"],
     "safeguard_route": ["safeguard_route", "safeguard_result"],

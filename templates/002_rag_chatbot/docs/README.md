@@ -35,10 +35,12 @@ docs/
     overview.md
     db.md
     llm.md
+    embedding.md
     fs.md
   setup/
     overview.md
     env.md
+    ingestion.md
     lancedb.md
     postgresql_pgvector.md
     mongodb.md
@@ -61,6 +63,7 @@ docs/
 | `src/rag_chatbot/shared/chat` | `docs/shared/chat.md` |
 | `src/rag_chatbot/shared/runtime` | `docs/shared/runtime.md` |
 | `src/rag_chatbot/integrations` | `docs/integrations/overview.md` |
+| `ingestion` | `docs/setup/ingestion.md` |
 | `src/rag_chatbot/static` | `docs/static/ui.md` |
 
 ## 설치/환경 문서
@@ -69,6 +72,7 @@ docs/
 | --- | --- |
 | setup 문서 인덱스 | `docs/setup/overview.md` |
 | `.env` 키 상세/반영 여부 | `docs/setup/env.md` |
+| 통합 ingestion 실행/시퀀스 | `docs/setup/ingestion.md` |
 | 파일 기반 LanceDB 구성 | `docs/setup/lancedb.md` |
 | PostgreSQL + pgvector 구성 | `docs/setup/postgresql_pgvector.md` |
 | MongoDB 구성 | `docs/setup/mongodb.md` |
@@ -102,35 +106,23 @@ flowchart LR
 3. 실행기/저장소 영향도를 확인한다. (`docs/shared/chat.md`)
 4. UI 연동 순서를 맞춘다. (`docs/static/ui.md`)
 
-### 2. 장애 대응
+### 2. ingestion 변경
+
+1. `docs/setup/ingestion.md`에서 단계별 영향 범위를 먼저 확인한다.
+2. 백엔드별 차이점(`lancedb/postgres/elasticsearch`)을 점검한다.
+3. `--reset` 필요 여부와 차원 정책(`GEMINI_EMBEDDING_DIM`)을 확정한다.
+
+### 3. 장애 대응
 
 1. 증상 위치를 먼저 분리한다: UI 렌더, API 응답, SSE 스트림, 저장소.
 2. `request_id` 단위로 스트림 이벤트를 추적한다.
 3. `ServiceExecutor` 상태(`IDLE/QUEUED/RUNNING/COMPLETED/FAILED`)를 확인한다.
 4. 저장 실패는 `ChatHistoryRepository`와 DB 엔진 로그를 분리해 본다.
 
-### 3. 구조 변경
-
-1. `api/*`는 HTTP 경계만 유지한다.
-2. 유스케이스 오케스트레이션은 `shared/chat/services`에 둔다.
-3. 영속화 규칙은 `shared/chat/repositories`에 모은다.
-4. 외부 라이브러리 의존은 `integrations/*`에 격리한다.
-
-## 변경 유형별 진입점
-
-| 변경 유형 | 시작 파일 | 반드시 함께 확인할 문서 |
-| --- | --- | --- |
-| 채팅 제출/이벤트 인터페이스 변경 | `src/rag_chatbot/api/chat/routers/*.py` | `docs/api/chat.md`, `docs/static/ui.md` |
-| 세션 목록/삭제 정책 변경 | `src/rag_chatbot/api/ui/routers/*.py` | `docs/api/ui.md`, `docs/static/ui.md` |
-| 응답 품질/분기 정책 변경 | `src/rag_chatbot/core/chat/nodes/*.py` | `docs/core/chat.md`, `docs/shared/chat.md` |
-| 저장 스키마/엔진 변경 | `src/rag_chatbot/shared/chat/repositories/*.py` | `docs/shared/chat.md`, `docs/integrations/db.md` |
-| SSE/큐/재시도 정책 변경 | `src/rag_chatbot/shared/chat/services/service_executor.py` | `docs/shared/chat.md`, `docs/shared/runtime.md` |
-| FE 렌더/연결 처리 변경 | `src/rag_chatbot/static/js/chat/*.js` | `docs/static/ui.md`, `docs/api/chat.md` |
-
 ## 문서 동기화 체크리스트
 
-1. 문서에 기록한 모든 경로가 실제 파일로 존재하는지 확인한다.
+1. 문서에 기록한 경로/명령이 실제 파일 및 CLI 옵션과 일치하는지 확인한다.
 2. UI 세션 경로가 `/ui-api/chat/sessions*` 형태로 통일되어 있는지 확인한다.
-3. SSE 식별자가 `task_id`가 아닌 `request_id`인지 확인한다.
-4. static 문서의 호출 순서가 `api_transport.js`와 일치하는지 확인한다.
-5. 문서 예시 페이로드의 필드명이 Pydantic 모델과 일치하는지 확인한다.
+3. SSE 식별자가 `request_id`인지 확인한다.
+4. ingestion 문서의 `--backend`, `--reset`, 비동기 임베딩 설명이 코드와 일치하는지 확인한다.
+5. `.env` 예시값이 `.env.sample`과 충돌하지 않는지 확인한다.

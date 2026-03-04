@@ -1,6 +1,7 @@
 """
 목적: RAG 검색 노드를 제공한다.
-설명: 질의 목록을 임베딩해 벡터 검색 원본 청크를 생성한다.
+설명: 질의 목록을 임베딩해 벡터 검색 원본 청크(`rag_retrieved_chunks`)를 생성한다.
+      최종 `rag_context`/`rag_references` 생성은 rag_format 노드에서 수행한다.
 디자인 패턴: 모듈 조립 + 함수 주입
 참조: src/rag_chatbot/shared/chat/nodes/function_node.py, src/rag_chatbot/core/chat/nodes/rag_chunk_dedup_node.py
 """
@@ -15,19 +16,28 @@ from pathlib import Path
 from typing import Any, Literal, TypedDict
 
 import numpy as np
-from langchain_openai import OpenAIEmbeddings
-from pydantic import SecretStr
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 from rag_chatbot.integrations.db import DBClient
-from rag_chatbot.integrations.db.base import CollectionSchema, ColumnSpec, Vector, VectorSearchRequest
+from rag_chatbot.integrations.db.base import (
+    CollectionSchema,
+    ColumnSpec,
+    Pagination,
+    Query,
+    Vector,
+    VectorSearchRequest,
+)
 from rag_chatbot.integrations.db.engines.lancedb import LanceDBEngine
+from rag_chatbot.integrations.embedding import EmbeddingClient
 from rag_chatbot.shared.chat.nodes.function_node import function_node
+from rag_chatbot.shared.config import resolve_gemini_embedding_dim
 from rag_chatbot.shared.exceptions import BaseAppException, ExceptionDetail
 from rag_chatbot.shared.logging import Logger, create_default_logger
 
 _DEFAULT_LANCEDB_URI = "data/db/vector"
 _RAG_COLLECTION = "rag_chunks"
 _BODY_TOP_K = 5
+_RAG_EMBEDDING_DIM = resolve_gemini_embedding_dim()
 
 
 class RagRetrievedChunk(TypedDict):
@@ -49,6 +59,7 @@ _rag_retrieve_schema = CollectionSchema(
     primary_key="chunk_id",
     payload_field=None,
     vector_field="emb_body",
+    vector_dimension=_RAG_EMBEDDING_DIM,
     columns=[
         ColumnSpec(name="chunk_id", data_type="TEXT", is_primary=True),
         ColumnSpec(name="index", data_type="INTEGER"),
@@ -56,7 +67,7 @@ _rag_retrieve_schema = CollectionSchema(
         ColumnSpec(name="file_path", data_type="TEXT", nullable=False),
         ColumnSpec(name="body", data_type="TEXT", nullable=False),
         ColumnSpec(name="metadata", data_type="TEXT"),
-        ColumnSpec(name="emb_body", is_vector=True, dimension=1536),
+        ColumnSpec(name="emb_body", is_vector=True, dimension=_RAG_EMBEDDING_DIM),
     ],
 )
 
@@ -73,10 +84,52 @@ _rag_retrieve_db_client.register_schema(_rag_retrieve_schema)
 _rag_retrieve_db_client.connect()
 _rag_retrieve_db_client.create_collection(_rag_retrieve_schema)
 
-_rag_retrieve_embedder = OpenAIEmbeddings(
-    model="text-embedding-3-small",
-    openai_api_key=SecretStr(os.getenv("OPENAI_API_KEY", "")),
+_rag_retrieve_embedder = EmbeddingClient(
+    model=GoogleGenerativeAIEmbeddings(
+        model=os.getenv("GEMINI_EMBEDDING_MODEL", ""),
+        project=os.getenv("GEMINI_PROJECT", ""),
+        output_dimensionality=_RAG_EMBEDDING_DIM,
+    ),
+    name="rag-retrieve-embedding",
 )
+
+
+def _validate_existing_rag_vector_dimension() -> None:
+    """RAG 컬렉션 기존 벡터 차원이 현재 설정과 호환되는지 검증한다."""
+
+    documents = _rag_retrieve_db_client.fetch(
+        _RAG_COLLECTION,
+        Query(pagination=Pagination(limit=1, offset=0)),
+    )
+    if not documents:
+        return
+
+    vector = documents[0].vector.values if documents[0].vector is not None else []
+    if not vector:
+        detail = ExceptionDetail(
+            code="RAG_EMBEDDING_VECTOR_MISSING",
+            cause=f"collection={_RAG_COLLECTION}, doc_id={documents[0].doc_id}",
+        )
+        raise BaseAppException("RAG 저장소의 기존 벡터를 확인할 수 없습니다.", detail)
+
+    existing_dim = len(vector)
+    if existing_dim == _RAG_EMBEDDING_DIM:
+        return
+
+    detail = ExceptionDetail(
+        code="RAG_EMBEDDING_DIMENSION_MISMATCH",
+        cause=(
+            "벡터 차원 불일치: "
+            f"collection={_RAG_COLLECTION}, expected_dim={_RAG_EMBEDDING_DIM}, existing_dim={existing_dim}"
+        ),
+    )
+    raise BaseAppException(
+        "RAG 검색 벡터 차원이 ingestion 차원과 다릅니다. ingestion을 다시 실행해 벡터 저장소를 재구성하세요.",
+        detail,
+    )
+
+
+_validate_existing_rag_vector_dimension()
 
 
 def _run_rag_retrieve_step(state: Mapping[str, Any]) -> dict[str, Any]:
@@ -111,14 +164,9 @@ def _run_rag_retrieve_step(state: Mapping[str, Any]) -> dict[str, Any]:
         )
         raise BaseAppException("RAG 검색 질의가 비어 있습니다.", detail)
 
-    # 임베딩은 float32로 정규화해 벡터 표현을 일관되게 유지한다.
-    query_vectors = {
-        query: np.asarray(
-            _rag_retrieve_embedder.embed_query(query),
-            dtype=np.float32,
-        ).tolist()
-        for query in normalized_queries
-    }
+    # 질의 임베딩은 단건 순차 호출 대신 배치 호출로 생성한다.
+    # (embed_query N회 -> embed_documents 1회)
+    query_vectors = _build_query_vectors(normalized_queries)
 
     search_requests = [
         VectorSearchRequest(
@@ -199,7 +247,7 @@ def _run_rag_retrieve_step(state: Mapping[str, Any]) -> dict[str, Any]:
             cause="rag_chunks 컬렉션에 검색 결과가 없습니다.",
         )
         raise BaseAppException(
-            "RAG 검색 결과가 없습니다. `uv run python ingestion/ingest_lancedb.py --input-root data/ingestion-doc` 명령으로 데이터 적재를 먼저 수행하세요.",
+            "RAG 검색 결과가 없습니다.",
             detail,
         )
 
@@ -209,6 +257,33 @@ def _run_rag_retrieve_step(state: Mapping[str, Any]) -> dict[str, Any]:
         % (len(normalized_queries), len(retrieved_chunks))
     )
     return {"rag_retrieved_chunks": retrieved_chunks}
+
+
+def _build_query_vectors(queries: list[str]) -> dict[str, list[float]]:
+    """RAG 질의 목록의 임베딩 벡터를 배치로 생성한다."""
+
+    try:
+        vectors = _rag_retrieve_embedder.embed_documents(queries)
+    except BaseAppException:
+        raise
+    except Exception as error:
+        detail = ExceptionDetail(
+            code="RAG_QUERY_EMBED_FAILED",
+            cause=f"query_count={len(queries)}, error={error!s}",
+        )
+        raise BaseAppException("RAG 질의 임베딩 생성에 실패했습니다.", detail) from None
+
+    if len(vectors) != len(queries):
+        detail = ExceptionDetail(
+            code="RAG_QUERY_EMBED_COUNT_MISMATCH",
+            cause=f"expected={len(queries)}, actual={len(vectors)}",
+        )
+        raise BaseAppException("RAG 질의 임베딩 결과 개수가 일치하지 않습니다.", detail)
+
+    query_vectors: dict[str, list[float]] = {}
+    for query, vector in zip(queries, vectors, strict=True):
+        query_vectors[query] = np.asarray(vector, dtype=np.float32).tolist()
+    return query_vectors
 
 
 rag_retrieve_node = function_node(
