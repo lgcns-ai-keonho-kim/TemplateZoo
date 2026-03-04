@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import time
 
-from chatbot.shared.runtime.buffer import EventBufferConfig, InMemoryEventBuffer
+from rag_chatbot.shared.runtime.buffer import EventBufferConfig, InMemoryEventBuffer
 
 
 def test_in_memory_event_buffer_gc_removes_expired_bucket() -> None:

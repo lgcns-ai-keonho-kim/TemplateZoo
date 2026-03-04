@@ -12,7 +12,7 @@ from uuid import uuid4
 
 import pytest
 
-from chatbot.shared.runtime.queue import QueueConfig, RedisQueue
+from rag_chatbot.shared.runtime.queue import QueueConfig, RedisQueue
 
 try:
     import redis

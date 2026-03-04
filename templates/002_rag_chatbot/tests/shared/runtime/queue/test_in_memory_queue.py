@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from chatbot.shared.runtime.queue import InMemoryQueue, QueueConfig
+from rag_chatbot.shared.runtime.queue import InMemoryQueue, QueueConfig
 
 
 def test_inmemory_queue_put_get_and_close() -> None:

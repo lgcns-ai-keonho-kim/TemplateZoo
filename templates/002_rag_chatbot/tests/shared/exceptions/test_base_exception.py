@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from chatbot.shared.exceptions import BaseAppException, ExceptionDetail
+from rag_chatbot.shared.exceptions import BaseAppException, ExceptionDetail
 
 
 def test_base_app_exception_to_dict() -> None:

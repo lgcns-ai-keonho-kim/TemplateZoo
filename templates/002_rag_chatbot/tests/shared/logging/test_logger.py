@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from chatbot.shared.logging import (
+from rag_chatbot.shared.logging import (
     InMemoryLogger,
     LogContext,
     LogLevel,

@@ -10,8 +10,8 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta, timezone
 
-from chatbot.integrations.fs import FileLogRepository, LocalFSEngine
-from chatbot.shared.logging import LogLevel, LogRecord
+from rag_chatbot.integrations.fs import FileLogRepository, LocalFSEngine
+from rag_chatbot.shared.logging import LogLevel, LogRecord
 
 
 def test_file_repository_sorting(tmp_path):
