@@ -1,0 +1,109 @@
+/*
+  목적: 도구 실행 추적 카드 스타일을 정의한다.
+  설명: assistant 응답 상단 인라인 카드의 상태(실행중/성공/실패) 표현을 담당한다.
+  디자인 패턴: 컴포넌트 스타일 분리
+  참조: ./messages.css, ./status.css, ../base/tokens.css
+*/
+.tool-trace-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.message > .tool-trace-list {
+  flex: 1 1 100%;
+  min-width: 0;
+  order: -1;
+  align-items: flex-start;
+}
+
+.message.assistant > .tool-trace-list .tool-trace-card {
+  width: 100%;
+  max-width: min(40%, 560px);
+}
+
+.tool-trace-list.is-hidden {
+  display: none;
+}
+
+.tool-trace-card {
+  border: 1px solid var(--border-soft);
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tool-trace-card.is-running {
+  border-color: rgba(126, 163, 197, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(126, 163, 197, 0.2);
+}
+
+.tool-trace-card.is-success {
+  border-color: rgba(76, 175, 143, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(76, 175, 143, 0.18);
+}
+
+.tool-trace-card.is-error {
+  border-color: rgba(224, 111, 117, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(224, 111, 117, 0.2);
+}
+
+.tool-trace-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tool-trace-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  word-break: break-word;
+}
+
+.tool-trace-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(126, 163, 197, 0.18);
+  color: var(--accent-strong);
+  flex-shrink: 0;
+}
+
+.tool-trace-card.is-success .tool-trace-badge {
+  background: rgba(76, 175, 143, 0.16);
+  color: var(--success);
+}
+
+.tool-trace-card.is-error .tool-trace-badge {
+  background: rgba(224, 111, 117, 0.18);
+  color: var(--danger);
+}
+
+.tool-trace-detail {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-sub);
+  word-break: break-word;
+}
+
+@media (max-width: 720px) {
+  .message.assistant > .tool-trace-list .tool-trace-card {
+    max-width: 100%;
+  }
+
+  .tool-trace-card {
+    padding: 9px 10px;
+  }
+
+  .tool-trace-detail {
+    font-size: 11px;
+  }
+}
