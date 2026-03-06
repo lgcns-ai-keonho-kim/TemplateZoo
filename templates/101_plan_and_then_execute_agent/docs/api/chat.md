@@ -1,4 +1,4 @@
-# API Chat 가이드
+# API Chat 문서
 
 이 문서는 `src/plan_and_then_execute_agent/api/chat` 모듈의 HTTP 인터페이스와 SSE 이벤트 계약을 현재 코드 기준으로 정리합니다.
 
@@ -167,19 +167,19 @@ sequenceDiagram
 | `CHAT_STREAM_TIMEOUT` | `504 Gateway Timeout` |
 | 기타 | `500 Internal Server Error` |
 
-## 7. 변경 작업 절차
+## 7. 확장 포인트
 
 ### 7-1. 요청 필드 추가
 
-1. `api/chat/models/stream.py`의 `SubmitChatRequest` 확장
-2. `create_chat.py`의 `submit_job` 인자 확장
-3. `ServiceExecutor` job payload 확장
+1. 요청 필드 확장은 `api/chat/models/stream.py`의 `SubmitChatRequest`에서 시작된다.
+2. 라우터 계층에서는 `create_chat.py`의 `submit_job` 인자와 전달 구조가 함께 맞춰진다.
+3. 실행 계층에서는 `ServiceExecutor` job payload가 동일 필드 집합으로 정렬된다.
 
 ### 7-2. 이벤트 필드 추가
 
-1. `ServiceExecutor` payload 생성/정규화 로직 수정
-2. 필요 시 `StreamPayload` 모델 갱신
-3. `docs/static/ui.md` 렌더 규칙 동기화
+1. 이벤트 필드 확장 지점은 `ServiceExecutor`의 payload 생성/정규화 로직이다.
+2. 공개 인터페이스가 바뀌는 경우 `StreamPayload` 모델이 함께 갱신된다.
+3. UI 반영 규칙은 `docs/static/ui.md`와 동일 필드 정의를 공유한다.
 
 ## 8. 트러블슈팅
 
@@ -190,17 +190,10 @@ sequenceDiagram
 | 항상 `error`로 종료됨 | 노드 예외 또는 timeout | `service_executor.py` | 오류 코드와 timeout 설정 점검 |
 | tool 이벤트 누락 | planner가 tool step을 생성하지 않음 | `planner_*`, `tool_exec_node.py` | plan_steps와 registry 등록 상태 확인 |
 
-## 9. 소스 매칭 점검 항목
-
-1. `POST /chat` 상태코드가 `202`인지 확인
-2. `GET /chat/{session_id}/events`의 `request_id` 필수 검증 유지 여부
-3. 이벤트 타입 집합이 `start/token/references/tool_start/tool_result/tool_error/done/error`과 일치하는지 확인
-4. node 설명이 실제 생성 노드와 일치하는지 확인
-
 ## 10. 관련 문서
 
 - `docs/api/overview.md`
 - `docs/api/ui.md`
 - `docs/core/chat.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`
 - `docs/static/ui.md`

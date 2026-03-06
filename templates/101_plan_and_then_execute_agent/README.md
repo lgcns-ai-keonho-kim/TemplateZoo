@@ -227,21 +227,21 @@ docs/                   # 개발 문서
 | 문서 허브 | [docs/README.md](docs/README.md) | 전체 맵, 변경 진입점 |
 | Setup 개요 | [docs/setup/overview.md](docs/setup/overview.md) | 환경/인프라 문서 인덱스 |
 | Setup ENV | [docs/setup/env.md](docs/setup/env.md) | `.env` 키 상세 설명 |
-| Setup LanceDB | [docs/setup/lancedb.md](docs/setup/lancedb.md) | 벡터 엔진 실험 가이드 |
+| Setup LanceDB | [docs/setup/lancedb.md](docs/setup/lancedb.md) | 벡터 엔진 실험 안내 |
 | Setup PostgreSQL | [docs/setup/postgresql_pgvector.md](docs/setup/postgresql_pgvector.md) | PostgreSQL + pgvector 구성 |
 | Setup MongoDB | [docs/setup/mongodb.md](docs/setup/mongodb.md) | MongoDB 구성 |
 | Setup FileSystem | [docs/setup/filesystem.md](docs/setup/filesystem.md) | 파일 시스템 로그 연동 |
 | API Chat | [docs/api/chat.md](docs/api/chat.md) | `/chat` 인터페이스, SSE |
 | Core Chat | [docs/core/chat.md](docs/core/chat.md) | 그래프/노드 동작 |
-| Shared Chat | [docs/shared/chat.md](docs/shared/chat.md) | 실행기/저장/멱등 규칙 |
+| Shared Chat | [docs/shared/chat/overview.md](docs/shared/chat/overview.md) | 실행기/저장/멱등 규칙 |
 
 ## 9. 테스트
 
-테스트 정책:
+테스트 범위:
 
-1. 기본 원칙: 실제 구현/실환경 경로를 우선 사용한다.
-2. 예외: Tool 계층 단위 테스트에서는 외부 의존성 대체를 위해 Tool 응답 payload mock을 사용할 수 있다.
-3. mock 사용 시 이벤트 계약(`tool_start/tool_result/tool_error`)과 식별 필드(`step_id`, `plan_id`)를 유지한다.
+1. 기본 테스트 경로는 실제 구현/실환경 기반 시나리오입니다.
+2. Tool 계층 단위 테스트는 Tool 응답 payload 기반 검증 시나리오를 포함합니다.
+3. Tool 관련 테스트는 이벤트 계약(`tool_start/tool_result/tool_error`)과 식별 필드(`step_id`, `plan_id`)를 동일하게 유지합니다.
 
 전체:
 

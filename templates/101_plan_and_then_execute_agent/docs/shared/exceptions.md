@@ -1,4 +1,4 @@
-# Shared Exceptions 가이드
+# Shared Exceptions 문서
 
 이 문서는 `src/plan_and_then_execute_agent/shared/exceptions`의 공통 예외 모델과 사용 규칙을 코드 기준으로 정리한다.
 
@@ -80,12 +80,12 @@ if not session_id:
     raise BaseAppException("요청한 세션을 찾을 수 없습니다.", detail)
 ```
 
-## 6. 변경 작업 절차
+## 6. 확장 포인트
 
-1. 신규 오류 코드가 필요하면 먼저 코드 네이밍 규칙을 정의한다.
-2. 발생 지점에서 `detail.code`, `cause`를 채운다.
-3. API 라우터 예외 매핑 표를 함께 갱신한다.
-4. 문서의 오류 응답 예시를 동기화한다.
+1. 신규 오류 코드는 예외 코드 네이밍 규칙에 따라 추가된다.
+2. 오류 발생 지점에서는 `detail.code`와 `cause` 필드가 함께 채워진다.
+3. API 라우터 예외 매핑 표는 신규 코드와 동기화된다.
+4. 오류 응답 예시는 문서와 구현이 동일한 필드 구조를 유지한다.
 
 ## 7. 트러블슈팅
 
@@ -94,12 +94,6 @@ if not session_id:
 | 같은 오류가 500으로만 반환 | 라우터 매핑 누락 | `api/*/routers/common.py` | `detail.code` 매핑 추가 |
 | 응답 detail 필드가 비어 있음 | `to_dict()` 미사용 | 라우터 예외 변환 구간 | `error.to_dict()` 사용 |
 | 원인 추적이 어려움 | `cause` 미기록 | 예외 생성 지점 | `ExceptionDetail.cause` 채우기 |
-
-## 8. 소스 매칭 점검 항목
-
-1. 필드 정의가 `base.py`, `models.py`와 일치하는가
-2. 예외 변환 경로가 Chat/UI 라우터 공통 유틸과 일치하는가
-3. 문서 경로가 실제 파일 구조와 일치하는가
 
 ## 9. 관련 문서
 

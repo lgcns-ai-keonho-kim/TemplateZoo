@@ -1,4 +1,4 @@
-# MongoDB 구성 가이드
+# MongoDB 구성 문서
 
 이 문서는 MongoDB 설치, 인증 설정, `.env` 구성, 그리고 이 프로젝트의 저장소 조립에 연결하는 방법을 정리한다.
 
@@ -145,5 +145,5 @@ history_repository = ChatHistoryRepository(
 ## 10. 관련 문서
 
 - `docs/setup/env.md`
-- `docs/integrations/db.md`
-- `docs/shared/chat.md`
+- `docs/integrations/db/overview.md`
+- `docs/shared/chat/overview.md`

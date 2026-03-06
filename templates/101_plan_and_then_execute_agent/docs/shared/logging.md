@@ -1,4 +1,4 @@
-# Shared Logging 가이드
+# Shared Logging 문서
 
 이 문서는 `src/plan_and_then_execute_agent/shared/logging`의 로깅 인터페이스와 저장소 구현을 코드 기준으로 정리한다.
 
@@ -101,24 +101,22 @@ stdout JSON 출력 필드:
 2. 저장소 예외가 나도 핵심 비즈니스 흐름을 과도하게 중단하지 않도록 설계한다.
 3. 컨텍스트는 `request_id`, `trace_id` 중심으로 일관되게 전달한다.
 
-## 7. 변경 작업 절차
+## 7. 확장 포인트
 
 ## 7-1. 로그 필드 추가
 
-1. `LogRecord`에 필드 추가가 필요한지 먼저 검토한다.
-2. 저장소 변환 로직(`_to_fields`, `_from_document`)을 함께 수정한다.
-3. 기존 레코드 역호환 전략을 정의한다.
+1. 로그 필드 확장은 `LogRecord` 모델과 저장소 변환 로직(`_to_fields`, `_from_document`)에 동시에 반영된다.
+2. 필드 추가 시 기존 레코드 역호환 전략이 함께 정의된다.
 
 ## 7-2. DB 스키마 조정
 
-1. `db_repository.py` 또는 `llm_repository.py`의 `_default_schema`를 수정한다.
-2. 컬렉션 마이그레이션 전략을 준비한다.
-3. 조회 변환 로직을 같이 갱신한다.
+1. DB 스키마 기준은 `db_repository.py`/`llm_repository.py`의 `_default_schema`로 관리된다.
+2. 스키마 조정 시 컬렉션 마이그레이션과 조회 변환 로직이 같은 변경 단위로 움직인다.
 
-## 7-3. stdout 정책 변경
+## 7-3. stdout 동작 차이
 
-1. `LOG_STDOUT` 파싱 규칙을 변경할 경우 운영 스크립트와 함께 조정한다.
-2. 로그 수집기 포맷과 충돌 여부를 확인한다.
+1. stdout 출력 동작은 `LOG_STDOUT` 파싱 규칙과 운영 스크립트 설정의 조합으로 결정된다.
+2. 로그 수집기 포맷과의 호환성 점검이 필수 검토 항목이다.
 
 ## 8. 트러블슈팅
 
@@ -128,13 +126,6 @@ stdout JSON 출력 필드:
 | stdout 로그 미출력 | `LOG_STDOUT` 값 미설정 | `_read_emit_stdout_env` | 환경 변수값 확인 |
 | LLM 비용 필드가 비어 있음 | usage_metadata 누락 | `llm_repository.py` | metadata 수집 경로 점검 |
 | 조회 시 일부 로그가 사라짐 | 손상 레코드 스킵 | `db_repository.py`/`llm_repository.py` | 저장 포맷/파싱 오류 점검 |
-
-## 9. 소스 매칭 점검 항목
-
-1. 문서 레벨/필드 정의가 `models.py`와 일치하는가
-2. stdout 조건 설명이 `_in_memory_logger.py`와 일치하는가
-3. DB 컬럼 설명이 저장소 코드와 일치하는가
-4. 문서 경로가 실제 `shared/logging` 구조와 일치하는가
 
 ## 10. 관련 문서
 

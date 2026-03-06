@@ -1,4 +1,4 @@
-# Setup 가이드 개요
+# Setup 개요
 
 이 문서는 `docs/setup` 하위 환경/인프라 설정 문서를 빠르게 탐색하기 위한 인덱스입니다.
 
@@ -69,8 +69,3 @@ uv run uvicorn plan_and_then_execute_agent.api.main:app --host 0.0.0.0 --port 80
 | MongoDB | `integrations/db/engines/mongodb/*.py` |
 | 파일 시스템 연동 | `integrations/fs/*.py`, `shared/logging/logger.py`, `shared/logging/_log_repository_interface.py` |
 
-## 6. 문서 동기화 체크리스트
-
-1. 문서에 적힌 환경 변수 키가 `.env.sample` 또는 코드(`os.getenv`)와 일치하는지 확인합니다.
-2. SQLite 기본 경로 설명이 `CHAT_DB_PATH` 기본값과 일치하는지 확인합니다.
-3. PostgreSQL/MongoDB 전환 예시가 `ChatHistoryRepository(db_client=...)` 패턴과 일치하는지 확인합니다.

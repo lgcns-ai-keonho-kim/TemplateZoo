@@ -1,4 +1,4 @@
-# Static UI 구현 가이드
+# Static UI 구현 문서
 
 이 문서는 `src/plan_and_then_execute_agent/static`의 동작을 기준으로, 프런트엔드에서 분석/구현/확장할 때 필요한 내용을 한 번에 제공한다.
 
@@ -15,7 +15,7 @@
 
 이 문서가 다루지 않는 범위:
 
-1. 디자인 시스템/스타일 가이드
+1. 디자인 시스템/스타일 기준
 2. 서버 내부 아키텍처 상세
 
 ## 2. 코드 읽기 순서
@@ -398,16 +398,6 @@ interface StreamState {
 3. 삭제된 세션의 pending request 무효화
 4. stale event(`request_id` 불일치) 무시
 
-## 10. 구현 체크리스트
-
-1. UI API와 Chat API를 분리된 모듈에서 호출하는가
-2. `request_id` 검증 로직이 있는가
-3. 중복 전송 방지 잠금(`isLoading`/`isSending`)이 있는가
-4. 스트림 종료 시 리소스 정리(Abort, timer clear)가 되는가
-5. 스크롤 소유권이 `.chat-cell__messages`로 고정되어 있는가
-6. 삭제 후 active session fallback 규칙이 구현되어 있는가
-7. 에러 메시지가 사용자/개발자 관점으로 분리되어 있는가
-
 ## 11. 검증 시나리오
 
 1. 첫 진입(세션 없음)
@@ -442,7 +432,7 @@ interface StreamState {
 
 - `docs/api/chat.md`
 - `docs/api/ui.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`
 - `docs/shared/runtime.md`
 
 ## 13. 빠른 구현 절차(신규 프런트엔드 기준)
@@ -734,8 +724,6 @@ export function useChatStream() {
 
 1. `ref` 상태와 로컬 변수(handle)의 생명주기를 명확히 분리한다.
 2. 라우트 변경으로 컴포넌트가 교체될 때 `onBeforeUnmount` 정리가 필수다.
-
-## 17. 변경 요구사항별 수정 지점
 
 ## 17-1. 세션 목록을 100개로 늘리고 싶을 때
 
