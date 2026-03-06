@@ -1,6 +1,6 @@
-# API Chat 가이드
+# API Chat 레퍼런스
 
-이 문서는 `src/chatbot/api/chat` 모듈의 HTTP 인터페이스와 SSE 종료 규칙을 코드 기준으로 설명한다.
+이 문서는 `src/chatbot/api/chat` 모듈의 HTTP 인터페이스와 SSE 종료 동작을 코드 기준으로 설명한다.
 
 ## 1. 핵심 용어
 
@@ -56,7 +56,7 @@
 - Status: `200 OK`
 - Content-Type: `text/event-stream`
 
-핵심 규칙:
+핵심 동작:
 
 1. 스트림 종료 이벤트는 `done` 또는 `error`다.
 2. `error` 종료는 비정상 연결이 아니라, 원인 정보가 포함된 정상 종료 시그널이다.
@@ -77,7 +77,7 @@
 2. `error_message`
 3. `metadata.error_code`
 
-## 5. 타임아웃 정렬 가이드
+## 5. 타임아웃 정렬 레퍼런스
 
 타임아웃은 서버/클라이언트를 함께 맞춰야 한다.
 

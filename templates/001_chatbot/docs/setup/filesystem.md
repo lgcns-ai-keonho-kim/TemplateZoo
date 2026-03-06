@@ -1,4 +1,4 @@
-# 파일 시스템 연동 가이드
+# 파일 시스템 연동 레퍼런스
 
 이 문서는 `src/chatbot/integrations/fs`를 이용해 로그를 파일로 저장하는 방법과,
 원격 스토리지 엔진으로 확장할 때 필요한 구현 포인트를 정리한다.
@@ -20,13 +20,13 @@
 
 ## 3. 기본 동작 구조
 
-`FileLogRepository` 저장 규칙:
+`FileLogRepository` 저장 동작:
 
 1. 경로: `<base_dir>/<YYYYMMDD>/<uuid>.log`
 2. 내용: `LogRecord` JSON 문자열
 3. 인코딩: `utf-8`
 
-조회 규칙:
+조회 동작:
 
 1. `.log` 파일 재귀 탐색
 2. JSON 파싱/모델 검증 성공 레코드 수집

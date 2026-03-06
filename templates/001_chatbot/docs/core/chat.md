@@ -1,6 +1,6 @@
-# Core Chat 가이드
+# Core Chat 레퍼런스
 
-이 문서는 `src/chatbot/core/chat`의 도메인 모델, 그래프 조립, 노드 실행 규칙을 코드 기준으로 설명한다.
+이 문서는 `src/chatbot/core/chat`의 도메인 모델, 그래프 조립, 노드 실행 기준을 코드 기준으로 설명한다.
 
 ## 1. 용어 정리
 
@@ -114,7 +114,7 @@ flowchart LR
     B --> END
 ```
 
-구성 규칙:
+구성:
 
 1. 진입점은 `safeguard`다.
 2. `safeguard_route`는 `safeguard_route` 값을 읽어 다음 노드를 결정한다.
@@ -152,7 +152,7 @@ flowchart LR
 
 - 파일: `src/chatbot/core/chat/nodes/safeguard_route_node.py`
 - 내부 구현: `shared.chat.nodes.BranchNode`
-- 규칙:
+- 기준:
   1. `PASS -> response`
   2. 그 외 -> `blocked`
   3. `PROMPT_INJETION` 오타는 `PROMPT_INJECTION`으로 정규화
@@ -184,7 +184,7 @@ flowchart LR
 
 - 파일: `src/chatbot/core/chat/prompts/safeguard_prompt.py`
 - 입력 변수: `user_message`
-- 출력 토큰 규칙: `PASS`, `PII`, `HARMFUL`, `PROMPT_INJECTION`
+- 출력 토큰 기준: `PASS`, `PII`, `HARMFUL`, `PROMPT_INJECTION`
 
 ## 7. 상수 인터페이스
 
@@ -217,7 +217,7 @@ flowchart LR
 
 `src/chatbot/shared/chat/services/service_executor.py`는 core 이벤트를 API 이벤트로 변환한다.
 
-핵심 규칙:
+핵심 동작:
 
 1. `response`의 `token` 이벤트를 SSE token으로 전달
 2. `blocked`의 `assistant_message`를 SSE token으로 변환
@@ -229,7 +229,7 @@ flowchart LR
 
 예시: `JAILBREAK` 추가
 
-1. `SAFEGUARD_PROMPT` 라벨 규칙을 수정한다.
+1. `SAFEGUARD_PROMPT` 라벨 기준을 수정한다.
 2. `safeguard_route_node`의 `allowed_selectors`를 확장한다.
 3. 분기 정책을 `branch_map` 또는 `default_branch`에 반영한다.
 4. 필요 시 `SafeguardRejectionMessage`에 문구를 추가한다.

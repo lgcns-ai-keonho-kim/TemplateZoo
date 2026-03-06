@@ -1,4 +1,4 @@
-# PostgreSQL + pgvector 구성 가이드
+# PostgreSQL + pgvector 구성 레퍼런스
 
 이 문서는 PostgreSQL 설치부터 pgvector 확장 활성화, 그리고 이 프로젝트 저장소에 주입하는 단계까지 정리한다.
 목표는 SQLite 기본 저장소를 PostgreSQL 기반으로 교체해도 코드 수정 범위를 최소화하는 것이다.
@@ -128,7 +128,7 @@ history_repository = ChatHistoryRepository(
 | 벡터 쿼리 시 `type "vector" does not exist` | pgvector 확장 미설치 | `\dx`, `CREATE EXTENSION` 실행 여부 | 확장 설치 후 재시도 |
 | DSN/호스트 설정 혼선 | `POSTGRES_DSN` 우선 적용 | `.env`, 런타임 조립 코드 | DSN 또는 분리 키 중 하나로 통일 |
 
-## 9. 운영 전 체크리스트
+## 9. 운영 전 확인 항목
 
 1. `POSTGRES_*` 값이 런타임 환경별(`dev/stg/prod`)로 분리되어 있는가
 2. 비밀번호/접속정보가 시크릿 스토어로 관리되는가

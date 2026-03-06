@@ -3,12 +3,12 @@
 이 문서는 `src/chatbot` 기준으로 문서를 읽고, 기능을 빠르게 추가/수정하기 위한 진입점이다.
 핵심 모듈 문서는 코드 구조와 1:1로 맞췄고, `docs/setup/*`는 실행 환경/인프라 설정 절차를 다룬다.
 
-## 문서 사용 원칙
+## 문서 구성 특징
 
-1. 실제 파일 경로와 동일한 문서 경로를 사용한다.
-2. API 인터페이스는 라우터/모델 코드 기준으로만 기술한다.
-3. 동작 순서와 실패 복구 절차를 함께 제공한다.
-4. 예시 코드는 현재 저장소 구현 방식과 일치해야 한다.
+1. 실제 파일 경로와 동일한 문서 경로로 정리되어 있다.
+2. API 인터페이스 설명은 라우터/모델 코드 기준으로 구성되어 있다.
+3. 동작 순서와 실패 복구 절차를 함께 담는다.
+4. 예시 코드는 현재 저장소 구현 방식과 맞춘다.
 
 ## 문서 트리
 
@@ -97,7 +97,7 @@ flowchart LR
     Nodes --> LLM["integrations/llm/LLMClient"]
 ```
 
-## 빠른 작업 절차
+## 참조 흐름
 
 ### 1. 기능 추가
 
@@ -117,12 +117,12 @@ flowchart LR
 
 1. `api/*`는 HTTP 경계만 유지한다.
 2. 유스케이스 오케스트레이션은 `shared/chat/services`에 둔다.
-3. 영속화 규칙은 `shared/chat/repositories`에 모은다.
+3. 영속화 기준은 `shared/chat/repositories`에 모은다.
 4. 외부 라이브러리 의존은 `integrations/*`에 격리한다.
 
 ## 변경 유형별 진입점
 
-| 변경 유형 | 시작 파일 | 반드시 함께 확인할 문서 |
+| 변경 유형 | 시작 파일 | 함께 확인할 문서 |
 | --- | --- | --- |
 | 채팅 제출/이벤트 인터페이스 변경 | `src/chatbot/api/chat/routers/*.py` | `docs/api/chat.md`, `docs/static/ui.md` |
 | 세션 목록/삭제 정책 변경 | `src/chatbot/api/ui/routers/*.py` | `docs/api/ui.md`, `docs/static/ui.md` |
@@ -131,7 +131,7 @@ flowchart LR
 | SSE/큐/재시도 정책 변경 | `src/chatbot/shared/chat/services/service_executor.py` | `docs/shared/chat.md`, `docs/shared/runtime.md` |
 | FE 렌더/연결 처리 변경 | `src/chatbot/static/js/chat/*.js` | `docs/static/ui.md`, `docs/api/chat.md` |
 
-## 문서 동기화 체크리스트
+## 문서 동기화 확인 항목
 
 1. 문서에 기록한 모든 경로가 실제 파일로 존재하는지 확인한다.
 2. UI 세션 경로가 `/ui-api/chat/sessions*` 형태로 통일되어 있는지 확인한다.

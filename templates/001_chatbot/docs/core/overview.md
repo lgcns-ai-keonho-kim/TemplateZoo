@@ -1,4 +1,4 @@
-# Core 모듈 가이드
+# Core 모듈 레퍼런스
 
 이 문서는 `src/chatbot/core` 계층의 책임 경계와 학습 순서를 코드 기준으로 정리한다.
 
@@ -12,7 +12,7 @@
 | 상태 | 노드 사이를 흐르는 공통 키 집합 | `src/chatbot/core/chat/state/graph_state.py` |
 | 프롬프트 | LLM 노드에 주입되는 텍스트 템플릿 | `src/chatbot/core/chat/prompts/*.py` |
 | 상수 | 저장소/페이지/문맥 길이 같은 운영 기본값 | `src/chatbot/core/chat/const/settings.py` |
-| 스트림 노드 정책 | 어떤 노드의 어떤 이벤트를 외부에 노출할지 정한 규칙 | `chat_graph.py`의 `stream_node` |
+| 스트림 노드 정책 | 어떤 노드의 어떤 이벤트를 외부에 노출할지 정한 기준 | `chat_graph.py`의 `stream_node` |
 
 ## 2. 디렉터리와 관련 스크립트
 
@@ -35,7 +35,7 @@
 
 ## 3. 의존성 경계
 
-핵심 규칙:
+핵심 동작:
 
 1. `core`는 FastAPI 타입에 의존하지 않는다.
 2. HTTP DTO는 `api/*/models`에만 둔다.

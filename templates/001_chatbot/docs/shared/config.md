@@ -1,6 +1,6 @@
-# Shared Config 가이드
+# Shared Config 레퍼런스
 
-이 문서는 `src/chatbot/shared/config`의 설정 병합과 런타임 환경 로딩 규칙을 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/shared/config`의 설정 병합과 런타임 환경 로딩 기준을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -33,14 +33,14 @@
 
 - `build(overrides=None)`
 
-동작 규칙:
+동작:
 
 1. 추가된 소스는 등록 순서대로 병합한다.
 2. 나중에 등록한 소스가 같은 키를 덮어쓴다.
 3. dict-dict 충돌은 재귀 병합한다.
 4. `overrides`는 최종 우선순위다.
 
-## 3-3. 환경 변수 파싱 규칙
+## 3-3. 환경 변수 파싱 기준
 
 기본 구분자:
 
@@ -53,7 +53,7 @@ APP__DB__HOST=127.0.0.1
 -> {"app": {"db": {"host": "127.0.0.1"}}}
 ```
 
-값 변환 규칙:
+값 변환 기준:
 
 1. `true/false` -> bool
 2. `null/none` -> None
@@ -111,7 +111,7 @@ alias:
 
 1. `RuntimeEnvironmentLoader`의 key candidates를 조정한다.
 2. alias 맵을 함께 갱신한다.
-3. 운영 배포 스크립트의 ENV 주입 규칙을 동기화한다.
+3. 운영 배포 스크립트의 ENV 주입 기준을 동기화한다.
 
 ## 6-3. 중첩 구분자 변경
 
@@ -125,7 +125,7 @@ alias:
 | --- | --- | --- | --- |
 | 환경값이 local로 고정됨 | ENV 후보 키 미주입 | `runtime_env_loader.py` | `ENV`/`APP_ENV` 주입 확인 |
 | JSON 설정이 반영되지 않음 | 경로 오타 또는 required=False | `loader.py` | 파일 존재 여부와 로그 확인 |
-| 숫자/불린이 문자열로 남음 | 파싱 규칙 외 문자열 | `loader.py` | 입력값 형식 조정 또는 후처리 추가 |
+| 숫자/불린이 문자열로 남음 | 파싱 기준 외 문자열 | `loader.py` | 입력값 형식 조정 또는 후처리 추가 |
 | 예상과 다른 설정이 최종값으로 적용 | 병합 우선순위 착오 | `ConfigLoader.build` 호출부 | 소스 등록 순서 재정렬 |
 
 ## 8. 소스 매칭 점검 항목

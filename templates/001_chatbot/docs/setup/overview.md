@@ -1,4 +1,4 @@
-# Setup 가이드 개요
+# Setup 레퍼런스 개요
 
 이 문서는 `docs/setup` 하위의 인프라/환경 설정 문서를 빠르게 탐색하기 위한 인덱스다.
 애플리케이션 코드 구조(`src/chatbot/*`) 문서와 달리, 이 폴더는 실행 환경 구성과 외부 시스템 준비 절차를 다룬다.
@@ -73,7 +73,7 @@
 | MongoDB | `src/chatbot/integrations/db/engines/mongodb/*.py` |
 | 파일 시스템 연동 | `src/chatbot/integrations/fs/*.py`, `src/chatbot/shared/logging/logger.py` |
 
-## 6. 문서 동기화 체크리스트
+## 6. 문서 동기화 확인 항목
 
 1. 문서의 환경 변수 키가 `.env.sample` 또는 코드(`os.getenv`)와 일치하는지 확인한다.
 2. 설치 문서의 경로/명령이 실제 런타임 조립 지점(`runtime.py`)과 연결되는지 확인한다.

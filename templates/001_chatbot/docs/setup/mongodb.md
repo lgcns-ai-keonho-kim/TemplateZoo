@@ -1,4 +1,4 @@
-# MongoDB 구성 가이드
+# MongoDB 구성 레퍼런스
 
 이 문서는 MongoDB 설치, 인증 설정, `.env` 구성, 그리고 프로젝트 저장소 조립 연결 방법을 정리한다.
 핵심은 `authSource`와 계정 생성 DB를 일치시키는 것이다.
@@ -72,7 +72,7 @@ MONGODB_AUTH_DB=admin
 # MONGODB_URI=mongodb://admin:admin@127.0.0.1:27017/?authSource=admin
 ```
 
-## 6. `authSource` 핵심 규칙
+## 6. `authSource` 핵심 기준
 
 1. `MONGODB_AUTH_DB`가 설정되면 해당 값이 인증 DB로 사용된다.
 2. `MONGODB_AUTH_DB`가 비어 있고 사용자/비밀번호가 있으면 `MONGODB_DB`가 인증 DB로 사용된다.

@@ -1,4 +1,4 @@
-# Static UI 구현 가이드
+# Static UI 구현 레퍼런스
 
 이 문서는 `src/chatbot/static`의 동작을 기준으로, 프런트엔드에서 분석/구현/확장할 때 필요한 내용을 한 번에 제공한다.
 
@@ -9,13 +9,13 @@
 1. 실제 코드 기준 모듈 책임
 2. 백엔드 API/SSE 인터페이스
 3. 부트스트랩/전송/삭제 시퀀스
-4. 상태 모델과 전이 규칙
-5. 실패 처리와 복구 규칙
+4. 상태 모델과 전이 기준
+5. 실패 처리와 복구 기준
 6. React/Vue 전환 시 구현 구조
 
 이 문서가 다루지 않는 범위:
 
-1. 디자인 시스템/스타일 가이드
+1. 디자인 시스템/스타일 레퍼런스
 2. 서버 내부 아키텍처 상세
 
 ## 2. 코드 읽기 순서
@@ -48,7 +48,7 @@
 }
 ```
 
-`grid_manager`는 활성 셀 전환 시 반드시 기존 셀의 `destroy()`를 호출한다.
+`grid_manager`는 활성 셀 전환 시 기존 셀의 `destroy()`를 호출한다.
 
 ## 4. 백엔드 인터페이스
 
@@ -181,7 +181,7 @@ SSE payload:
 - `GET /chat/{session_id}`
 - Done 후 서버 기준 최종 동기화가 필요할 때 사용
 
-## 4-3. API 에러 파싱 규칙
+## 4-3. API 에러 파싱 기준
 
 `api_transport.parseErrorMessage()`는 아래 순서로 메시지를 추출한다.
 
@@ -292,7 +292,7 @@ IDLE -> SENDING -> STOPPED
 FOLLOWING <-> PAUSED_BY_USER
 ```
 
-## 7. 스트림 처리 규칙
+## 7. 스트림 처리 동작
 
 `chat_cell.connectStream()` 기준.
 
@@ -369,14 +369,14 @@ interface StreamState {
 3. 삭제된 세션의 pending request 무효화
 4. stale event(`request_id` 불일치) 무시
 
-## 10. 구현 체크리스트
+## 10. 구현 확인 항목
 
 1. UI API와 Chat API를 분리된 모듈에서 호출하는가
 2. `request_id` 검증 로직이 있는가
 3. 중복 전송 방지 잠금(`isLoading`/`isSending`)이 있는가
 4. 스트림 종료 시 리소스 정리(Abort, timer clear)가 되는가
 5. 스크롤 소유권이 `.chat-cell__messages`로 고정되어 있는가
-6. 삭제 후 active session fallback 규칙이 구현되어 있는가
+6. 삭제 후 active session fallback 기준이 구현되어 있는가
 7. 에러 메시지가 사용자/개발자 관점으로 분리되어 있는가
 
 ## 11. 검증 시나리오
@@ -436,7 +436,7 @@ interface StreamState {
 
 1. 모든 함수가 `Promise`를 반환한다.
 2. 에러 메시지는 `message -> detail -> detail.message -> status fallback` 순서로 추출한다.
-3. URL path segment는 반드시 `encodeURIComponent`를 적용한다.
+3. URL path segment에는 `encodeURIComponent`를 적용한다.
 
 ### 13-2. 2단계: 세션 스토어 구현
 
@@ -495,11 +495,11 @@ interface ChatPanelState {
 
 ### 13-4. 4단계: 히스토리/프리뷰 동기화
 
-필수 규칙:
+필수 기준:
 
 1. user 입력 직후 preview를 즉시 갱신한다.
 2. assistant 완료 후 최종 첫 줄로 preview를 다시 갱신한다.
-3. 최대 길이 정책(현재 60자)을 일관되게 적용한다.
+3. 최대 길이 정책(현재 60자)을 동일하게 적용한다.
 
 완료 기준:
 
@@ -508,7 +508,7 @@ interface ChatPanelState {
 
 ### 13-5. 5단계: 스크롤 소유권 구현
 
-필수 규칙:
+필수 기준:
 
 1. 스크롤 컨테이너는 채팅 본문(`.chat-cell__messages`)만 사용한다.
 2. 사용자가 하단 근처에 있을 때만 자동 스크롤을 유지한다.
@@ -542,7 +542,7 @@ interface ChatPanelState {
 
 프레임워크 전환 시에도 이 키를 유지하면, 정적 UI와 사용자 경험이 동일하다.
 
-## 14-3. SSE 이벤트별 UI 반영 규칙
+## 14-3. SSE 이벤트별 UI 반영 기준
 
 | `type` | 조건 | UI 상태 | 버블 처리 | 비고 |
 | --- | --- | --- | --- | --- |
@@ -641,7 +641,7 @@ function useChatStream() {
 
 1. `requestId` 비교는 ref 기반으로 관리해야 stale closure를 피하기 쉽다.
 2. 세션 전환 시 `closeStream()`을 먼저 호출한다.
-3. `useEffect` cleanup에서 반드시 스트림을 닫는다.
+3. `useEffect` cleanup에서 스트림을 닫는다.
 
 ## 16. Vue 구현 최소 스켈레톤
 
@@ -706,7 +706,7 @@ export function useChatStream() {
 1. `ref` 상태와 로컬 변수(handle)의 생명주기를 명확히 분리한다.
 2. 라우트 변경으로 컴포넌트가 교체될 때 `onBeforeUnmount` 정리가 필수다.
 
-## 17. 변경 요구사항별 수정 지점
+## 17. 변경 유형별 수정 지점
 
 ## 17-1. 세션 목록을 100개로 늘리고 싶을 때
 

@@ -1,4 +1,4 @@
-# Shared Runtime 가이드
+# Shared Runtime 레퍼런스
 
 이 문서는 `src/chatbot/shared/runtime`의 Queue, EventBuffer, Worker, ThreadPool 구성요소를 코드 기준으로 정리한다.
 
@@ -103,7 +103,7 @@ InMemoryQueue + InMemoryEventBuffer + ServiceExecutor
 3. 등록: 데코레이터(`__call__`) 또는 직접 핸들러 지정
 4. 수명주기: `start`, `stop`, context manager
 
-동작 규칙:
+동작:
 
 1. 아이템 처리 실패 시 `max_retries`까지 재시도한다.
 2. 재시도 초과 시 상태를 ERROR로 전환한다.
@@ -118,7 +118,7 @@ InMemoryQueue + InMemoryEventBuffer + ServiceExecutor
 3. 데코레이터: `task`
 4. 종료: `shutdown(wait=True)`
 
-동작 규칙:
+동작:
 
 1. `submit` 시 자동으로 executor를 생성한다.
 2. 완료된 future는 내부 목록에서 제거한다.
