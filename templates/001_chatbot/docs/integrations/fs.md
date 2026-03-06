@@ -1,4 +1,4 @@
-# Integrations FS 가이드
+# Integrations FS 레퍼런스
 
 이 문서는 `src/chatbot/integrations/fs`의 파일 시스템 추상화와 파일 로그 저장소 동작을 코드 기준으로 정리한다.
 
@@ -46,14 +46,14 @@
 
 ## 5. FileLogRepository 동작
 
-## 5-1. 저장 규칙
+## 5-1. 저장 동작
 
 1. 저장 경로: `<base_dir>/<YYYYMMDD>/<uuid>.log`
 2. 포맷: `LogRecord` JSON 문자열
 3. 인코딩: 기본 `SharedConst.DEFAULT_ENCODING`(`utf-8`)
 4. base_dir가 비어 있으면 초기화 시 `ValueError`
 
-## 5-2. 조회 규칙
+## 5-2. 조회 동작
 
 1. `.log` 파일을 재귀 탐색한다.
 2. JSON 파싱/모델 검증 성공 레코드를 수집한다.
@@ -84,9 +84,9 @@ logger.info("서비스 시작")
 2. `FileLogRepository(engine=...)`로 주입한다.
 3. 기존 로깅 호출 코드는 유지한다.
 
-## 7-2. 파일명 규칙 변경
+## 7-2. 파일명 기준 변경
 
-1. `_create_log_path` 규칙을 변경한다.
+1. `_create_log_path` 기준을 변경한다.
 2. 조회 정렬 기준(timestamp)은 유지한다.
 3. 운영 보관 정책(일자/크기 롤링)을 함께 정의한다.
 
@@ -100,14 +100,14 @@ logger.info("서비스 시작")
 | 증상 | 원인 후보 | 확인 스크립트 | 조치 |
 | --- | --- | --- | --- |
 | 로그 파일이 생성되지 않음 | base_dir 권한/경로 문제 | `file_repository.py`, `local.py` | 경로 권한 및 parent 생성 여부 확인 |
-| 동일 파일명 충돌 오류 | 외부에서 파일명 고정 사용 | `LocalFSEngine.write_text` | 고유 파일명 규칙 유지 |
+| 동일 파일명 충돌 오류 | 외부에서 파일명 고정 사용 | `LocalFSEngine.write_text` | 고유 파일명 기준 유지 |
 | 조회 결과에 WARNING 로그가 많음 | 로그 파일 손상 | `FileLogRepository._read_record` | 로그 생성 경로/직렬화 오류 점검 |
 | 목록이 비어 있음 | suffix 필터 또는 base_dir 오설정 | `LocalFSEngine.list_files` | 확장자/디렉터리 값 점검 |
 
 ## 9. 소스 매칭 점검 항목
 
 1. 인터페이스 메서드 목록이 `base/engine.py`와 일치하는가
-2. 저장 경로 규칙 설명이 `file_repository.py`와 일치하는가
+2. 저장 경로 기준 설명이 `file_repository.py`와 일치하는가
 3. fallback 처리 설명이 `_fallback_record` 구현과 일치하는가
 4. 문서 경로가 실제 `src/chatbot/integrations/fs` 구조와 일치하는가
 

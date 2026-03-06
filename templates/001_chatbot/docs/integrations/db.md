@@ -1,4 +1,4 @@
-# Integrations DB 가이드
+# Integrations DB 레퍼런스
 
 이 문서는 `src/chatbot/integrations/db`의 공통 인터페이스, Query DSL, 엔진별 차이, 교체 절차를 코드 기준으로 정리한다.
 
@@ -36,7 +36,7 @@
 4. 벡터 검색: `vector_search`
 5. 속성: `name`, `supports_vector_search`
 
-## 4. Query DSL 규칙
+## 4. Query DSL 기준
 
 예시:
 

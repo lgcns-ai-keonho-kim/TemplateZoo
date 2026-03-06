@@ -1,4 +1,4 @@
-# API UI 가이드
+# API UI 레퍼런스
 
 이 문서는 `src/chatbot/api/ui` 모듈을 기준으로 UI 전용 API의 인터페이스, 동작 순서, 수정 지점을 정리한다.
 
@@ -10,7 +10,7 @@
 | UI 서비스 | Core ChatService 호출 결과를 UI DTO로 변환하는 계층 | `src/chatbot/api/ui/services/chat_service.py` |
 | UI DTO | UI에서 직접 소비하는 요청/응답 모델 | `src/chatbot/api/ui/models/*.py` |
 | 매퍼 | Core 엔티티를 UI DTO로 바꾸는 순수 함수 | `src/chatbot/api/ui/utils/mappers.py` |
-| 페이지네이션 | 목록 조회 범위를 `limit`, `offset`으로 제어하는 규칙 | `list_sessions.py`, `list_messages.py` |
+| 페이지네이션 | 목록 조회 범위를 `limit`, `offset`으로 제어하는 기준 | `list_sessions.py`, `list_messages.py` |
 
 ## 2. 관련 스크립트
 
@@ -75,7 +75,7 @@ sequenceDiagram
 
 ## 4. 엔드포인트 인터페이스
 
-## 4-1. 공통 규칙
+## 4-1. 공통 동작
 
 1. Prefix는 `/ui-api/chat`다.
 2. Query `limit`의 허용 범위는 `1..200`이다.
@@ -113,7 +113,7 @@ Response:
 }
 ```
 
-동작 규칙:
+동작:
 
 1. 제목이 비어 있으면 저장소 기본 제목이 적용된다.
 2. 생성 응답은 `session_id`만 반환한다.
@@ -146,7 +146,7 @@ Response:
 }
 ```
 
-동작 규칙:
+동작:
 
 1. 정렬은 저장소의 `updated_at DESC`를 따른다.
 2. 응답의 `limit`, `offset`은 요청 값을 그대로 반환한다.
@@ -180,7 +180,7 @@ Response:
 }
 ```
 
-동작 규칙:
+동작:
 
 1. 세션이 없으면 `CHAT_SESSION_NOT_FOUND` 예외를 발생시킨다.
 2. 메시지 순서는 `sequence ASC`다.
@@ -201,16 +201,16 @@ Response:
 }
 ```
 
-동작 규칙:
+동작:
 
 1. 세션과 메시지를 함께 삭제한다.
 2. 없는 세션이면 `404`를 반환한다.
 
-## 5. 검증 규칙과 오류 응답
+## 5. 검증 기준과 오류 응답
 
 ## 5-1. Query와 Body 검증
 
-| 항목 | 규칙 | 실패 상태 |
+| 항목 | 기준 | 실패 상태 |
 | --- | --- | --- |
 | `limit` | `1 <= limit <= 200` | `422` |
 | `offset` | `offset >= 0` | `422` |
@@ -258,7 +258,7 @@ Response:
 1. `src/chatbot/api/ui/models/session.py`에 필드를 추가한다.
 2. `src/chatbot/api/ui/utils/mappers.py`의 매핑을 수정한다.
 3. 필요하면 `src/chatbot/shared/chat/repositories/history_repository.py` 조회 데이터를 확장한다.
-4. `docs/static/ui.md` 렌더링 규칙을 갱신한다.
+4. `docs/static/ui.md` 렌더링 기준을 갱신한다.
 
 ## 7-2. 정렬 정책 변경
 
@@ -281,7 +281,7 @@ Response:
 예시: soft delete 적용
 
 1. 저장소 `delete_session()` 정책을 변경한다.
-2. `ChatService.delete_session()`의 예외 규칙을 유지 또는 조정한다.
+2. `ChatService.delete_session()`의 예외 기준을 유지 또는 조정한다.
 3. API 응답의 `deleted` 의미를 문서에 명확히 정의한다.
 4. 정적 UI의 삭제 후 fallback 동작을 점검한다.
 
@@ -301,7 +301,7 @@ Response:
 ```bash
 curl -X POST "http://localhost:8000/ui-api/chat/sessions" \
   -H "Content-Type: application/json" \
-  -d '{"title":"요구사항 분석"}'
+  -d '{"title":"기능 분석"}'
 ```
 
 ## 9-2. 세션 목록 조회
@@ -328,7 +328,7 @@ curl -X DELETE "http://localhost:8000/ui-api/chat/sessions/<SESSION_ID>"
 | --- | --- | --- | --- |
 | 목록이 비어 보임 | 조회 조건 또는 정렬 문제 | `history_repository.list_sessions()` | 정렬 필드와 페이징 확인 |
 | 없는 세션이 500으로 응답 | 예외 매핑 누락 | `ui/routers/common.py` | `CHAT_SESSION_NOT_FOUND -> 404` 매핑 유지 |
-| 삭제 후 화면 미반영 | 프런트 fallback 누락 | `static/js/ui/grid_manager.js` | 삭제 후 활성 세션 전환 규칙 보완 |
+| 삭제 후 화면 미반영 | 프런트 fallback 누락 | `static/js/ui/grid_manager.js` | 삭제 후 활성 세션 전환 기준 보완 |
 | 메시지 순서가 뒤섞임 | 저장소 정렬 변경 영향 | `history_repository.list_messages()` | `sequence ASC` 유지 |
 
 ## 11. 소스 매칭 점검 항목

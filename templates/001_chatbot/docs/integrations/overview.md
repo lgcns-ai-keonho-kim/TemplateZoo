@@ -1,4 +1,4 @@
-# Integrations 모듈 가이드
+# Integrations 모듈 레퍼런스
 
 이 문서는 `src/chatbot/integrations` 계층의 책임, 구성 요소, 교체 절차를 코드 기준으로 정리한다.
 
@@ -23,7 +23,7 @@
 
 ## 3. 책임 경계
 
-핵심 규칙:
+핵심 동작:
 
 1. API 라우터는 integrations 구현체를 직접 생성하지 않는다.
 2. shared 서비스 계층이 integrations를 사용한다.

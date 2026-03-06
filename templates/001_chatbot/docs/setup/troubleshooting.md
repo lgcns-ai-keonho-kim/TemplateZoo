@@ -1,6 +1,6 @@
 # Setup 트러블슈팅 허브
 
-이 문서는 최근 운영/테스트에서 반복된 장애를 빠르게 복구하기 위한 중앙 가이드다.
+이 문서는 최근 운영/테스트에서 반복된 장애를 빠르게 복구하기 위한 중앙 레퍼런스다.
 각 섹션은 `증상 -> 원인 -> 즉시 실행 명령 -> 기대 출력 -> 조치 -> 재발 방지` 순서로 구성한다.
 
 ## 1. Elasticsearch TLS 오류 분기
@@ -31,7 +31,7 @@ curl --cacert "$ELASTICSEARCH_CA_CERTS" -u "$ELASTICSEARCH_USER:$ELASTICSEARCH_P
 2. 서버 인증서 체인과 일치하는 CA 파일로 교체
 3. 테스트/서버 프로세스 재시작
 
-재발 방지 체크리스트:
+재발 방지 확인 항목:
 
 1. `.env`에 상대경로 대신 절대경로 사용
 2. 배포 전 `curl --cacert` 헬스체크를 자동화
@@ -65,7 +65,7 @@ chown "$(whoami):$(id -gn)" "$ELASTICSEARCH_CA_CERTS"
 chmod 644 "$ELASTICSEARCH_CA_CERTS"
 ```
 
-재발 방지 체크리스트:
+재발 방지 확인 항목:
 
 1. 인증서 파일 생성 스크립트에서 소유자/권한을 즉시 고정
 2. CI/사전 점검에 `head "$ELASTICSEARCH_CA_CERTS"`를 포함
@@ -107,7 +107,7 @@ mongosh "mongodb://$MONGODB_USER:$MONGODB_PW@$MONGODB_HOST:$MONGODB_PORT/admin?a
 1. `.env`에 `MONGODB_AUTH_DB=admin` 명시(계정이 admin DB 기준일 때)
 2. 또는 계정을 `MONGODB_DB` 기준으로 재생성해 일치시킴
 
-재발 방지 체크리스트:
+재발 방지 확인 항목:
 
 1. 사용자 생성 스크립트와 `.env`의 인증 DB를 같은 값으로 표준화
 2. `MONGODB_URI` 직접 사용 시 `authSource` 명시
@@ -145,12 +145,12 @@ curl -i http://127.0.0.1:8001/health
 2. `GEMINI_MODEL`, `GEMINI_PROJECT`, `CHAT_DB_PATH` 등 필수 env 재확인
 3. 서버 stdout/stderr를 확인해 초기화 예외를 먼저 제거
 
-재발 방지 체크리스트:
+재발 방지 확인 항목:
 
 1. E2E 시작 전 `/health` 선확인 루틴 유지
 2. 로컬/CI 환경별 서버 부팅 시간 프로파일 기록
 
-## 4. SSE `ReadTimeout` 및 `done/error` 종료 규칙
+## 4. SSE `ReadTimeout` 및 `done/error` 종료 동작
 
 ### 4-1. 증상 A: `httpx.ReadTimeout`
 
@@ -179,7 +179,7 @@ curl -N "http://127.0.0.1:8001/chat/<session_id>/events?request_id=<request_id>"
 1. 서버 `CHAT_STREAM_TIMEOUT_SECONDS`와 테스트 클라이언트 read timeout을 함께 상향
 2. 모델 응답 시간 분포에 맞춰 timeout 기준을 통일
 
-재발 방지 체크리스트:
+재발 방지 확인 항목:
 
 1. E2E timeout 값을 단일 상수로 관리
 2. 느린 외부 LLM 환경을 고려한 안전 마진 확보
@@ -191,7 +191,7 @@ curl -N "http://127.0.0.1:8001/chat/<session_id>/events?request_id=<request_id>"
 1. 실제 종료 이벤트가 `error`인 경우
 2. 테스트가 `done`만 성공으로 간주하는 경우
 
-핵심 규칙:
+핵심 동작:
 
 1. SSE 정상 종료 이벤트는 `done` 또는 `error` 둘 다 가능하다.
 2. `error` 종료는 실패 원인 파악을 위한 정상적인 종료 시그널이다.
@@ -212,7 +212,7 @@ rg -n '"type": "(start|token|done|error)"' /tmp/chat_events.log
 1. 테스트 단언을 `done` 강제에서 `done/error` 종료 확인으로 개선
 2. `error`일 때 `error_message`, `metadata.error_code`를 함께 검증
 
-재발 방지 체크리스트:
+재발 방지 확인 항목:
 
 1. 테스트 케이스 설계에서 성공/실패 종료 시나리오를 분리
 2. `error` 이벤트 본문을 진단 정보로 보존
@@ -245,7 +245,7 @@ printf 'GEMINI_MODEL=%s\nGEMINI_PROJECT=%s\n' "$GEMINI_MODEL" "$GEMINI_PROJECT"
 1. `.env`에 `GEMINI_MODEL`, `GEMINI_PROJECT` 명시
 2. 테스트/서버 재시작으로 env 재로딩
 
-재발 방지 체크리스트:
+재발 방지 확인 항목:
 
 1. 필수 env 누락 시 fixture 단계에서 즉시 실패하도록 유지
 2. 팀 공용 `.env` 템플릿과 실제 배포 변수 이름을 동일하게 관리

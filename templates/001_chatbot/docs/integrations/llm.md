@@ -1,6 +1,6 @@
-# Integrations LLM 가이드
+# Integrations LLM 레퍼런스
 
-이 문서는 `src/chatbot/integrations/llm/client.py`의 `LLMClient` 인터페이스와 동작 규칙을 정리한다.
+이 문서는 `src/chatbot/integrations/llm/client.py`의 `LLMClient` 인터페이스와 동작 기준을 정리한다.
 
 ## 1. 핵심 용어
 
@@ -27,7 +27,7 @@
 3. 동기 스트림: `stream`
 4. 비동기 스트림: `astream`
 
-## 4. 로깅 규칙
+## 4. 로깅 기준
 
 1. `logging_engine`은 `BaseDBEngine`, `Logger`, `LogRepository`를 허용한다.
 2. 로깅 실패는 본 호출을 깨지 않는 best-effort 정책을 따른다.

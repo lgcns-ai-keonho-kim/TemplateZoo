@@ -1,4 +1,4 @@
-# Shared Logging 가이드
+# Shared Logging 레퍼런스
 
 이 문서는 `src/chatbot/shared/logging`의 로깅 인터페이스와 저장소 구현을 코드 기준으로 정리한다.
 
@@ -90,7 +90,7 @@ stdout JSON 출력 필드:
 2. 일반 운영 로그 적재: `DBLogRepository`
 3. LLM 호출 비용/사용량 추적: `LLMLogRepository`
 
-## 6. 연동 규칙
+## 6. 연동 동작
 
 1. 호출 측은 `Logger` 인터페이스에만 의존한다.
 2. 저장소 예외가 나도 핵심 비즈니스 흐름을 과도하게 중단하지 않도록 설계한다.
@@ -112,7 +112,7 @@ stdout JSON 출력 필드:
 
 ## 7-3. stdout 정책 변경
 
-1. `LOG_STDOUT` 파싱 규칙을 변경할 경우 운영 스크립트와 함께 조정한다.
+1. `LOG_STDOUT` 파싱 기준을 변경할 경우 운영 스크립트와 함께 조정한다.
 2. 로그 수집기 포맷과 충돌 여부를 확인한다.
 
 ## 8. 트러블슈팅

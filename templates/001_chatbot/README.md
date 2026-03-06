@@ -192,7 +192,7 @@ docs/                   # 개발 문서
 | Setup PostgreSQL | [docs/setup/postgresql_pgvector.md](docs/setup/postgresql_pgvector.md) | PostgreSQL + pgvector 설치/연동 |
 | Setup MongoDB | [docs/setup/mongodb.md](docs/setup/mongodb.md) | MongoDB 설치/연동 |
 | Setup FileSystem | [docs/setup/filesystem.md](docs/setup/filesystem.md) | 파일 시스템 로그 연동 |
-| Setup Troubleshooting | [docs/setup/troubleshooting.md](docs/setup/troubleshooting.md) | 공통 장애 복구 가이드 |
+| Setup Troubleshooting | [docs/setup/troubleshooting.md](docs/setup/troubleshooting.md) | 공통 장애 복구 레퍼런스 |
 | API 개요 | [docs/api/overview.md](docs/api/overview.md) | API 계층 책임/라우팅 |
 | API Chat | [docs/api/chat.md](docs/api/chat.md) | `/chat` 인터페이스, SSE |
 | API UI | [docs/api/ui.md](docs/api/ui.md) | `/ui-api/chat` 인터페이스 |

@@ -1,6 +1,6 @@
-# Shared Exceptions 가이드
+# Shared Exceptions 레퍼런스
 
-이 문서는 `src/chatbot/shared/exceptions`의 공통 예외 모델과 사용 규칙을 코드 기준으로 정리한다.
+이 문서는 `src/chatbot/shared/exceptions`의 공통 예외 모델과 사용 기준을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -55,7 +55,7 @@
 }
 ```
 
-## 4. 사용 규칙
+## 4. 사용 기준
 
 1. 모듈별 커스텀 예외 대신 `BaseAppException`으로 통일한다.
 2. `detail.code`는 API 상태코드 매핑 기준으로 사용한다.
@@ -82,7 +82,7 @@ if not session_id:
 
 ## 6. 변경 작업 절차
 
-1. 신규 오류 코드가 필요하면 먼저 코드 네이밍 규칙을 정의한다.
+1. 신규 오류 코드가 필요하면 먼저 코드 네이밍 기준을 정의한다.
 2. 발생 지점에서 `detail.code`, `cause`를 채운다.
 3. API 라우터 예외 매핑 표를 함께 갱신한다.
 4. 문서의 오류 응답 예시를 동기화한다.

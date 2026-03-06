@@ -1,4 +1,4 @@
-# API 모듈 가이드
+# API 모듈 레퍼런스
 
 이 문서는 `src/chatbot/api` 계층의 실행 구조와 수정 절차를 코드 기준으로 정리한다.
 
@@ -62,7 +62,7 @@
 
 ## 5. 예외 처리 경계
 
-공통 원칙:
+공통 기준:
 
 1. 도메인 예외는 `BaseAppException`으로 통일한다.
 2. 라우터는 `to_http_exception()`으로 상태코드를 매핑한다.
@@ -87,7 +87,7 @@
 
 1. `src/chatbot/api/ui/services/chat_service.py`에서 조회/변환 정책을 수정한다.
 2. `src/chatbot/api/ui/models`와 `src/chatbot/api/ui/utils/mappers.py`를 동기화한다.
-3. `docs/api/ui.md`의 응답 예시와 기본 페이지 규칙을 갱신한다.
+3. `docs/api/ui.md`의 응답 예시와 기본 페이지 기준을 갱신한다.
 
 ### 6-3. 런타임 조립 변경
 

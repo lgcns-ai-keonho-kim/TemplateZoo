@@ -1,6 +1,6 @@
-# Shared Chat 가이드
+# Shared Chat 레퍼런스
 
-이 문서는 `src/chatbot/shared/chat` 모듈의 실행 흐름, 상태 전이, SSE 이벤트 처리 규칙을 정리한다.
+이 문서는 `src/chatbot/shared/chat` 모듈의 실행 흐름, 상태 전이, SSE 이벤트 처리 동작을 정리한다.
 
 ## 1. 핵심 구성
 
@@ -19,12 +19,12 @@ IDLE -> QUEUED -> RUNNING -> COMPLETED
 IDLE -> QUEUED -> RUNNING -> FAILED
 ```
 
-규칙:
+기준:
 
 1. RUNNING을 QUEUED로 역전시키지 않는다.
 2. timeout/예외는 FAILED로 기록한다.
 
-## 3. 이벤트 타입과 종료 규칙
+## 3. 이벤트 타입과 종료 동작
 
 외부 표준 이벤트:
 
@@ -39,7 +39,7 @@ IDLE -> QUEUED -> RUNNING -> FAILED
 2. `error`는 실패 원인 전달을 위한 정상 종료 경로다.
 3. 테스트에서 `done`만 성공 조건으로 강제하면 오탐이 발생할 수 있다.
 
-## 4. 타임아웃 설정 가이드
+## 4. 타임아웃 설정 레퍼런스
 
 관련 변수:
 
@@ -47,14 +47,14 @@ IDLE -> QUEUED -> RUNNING -> FAILED
 2. `CHAT_EVENT_BUFFER_POLL_TIMEOUT`
 3. `CHAT_JOB_QUEUE_POLL_TIMEOUT`
 
-운영 가이드:
+운영 레퍼런스:
 
 1. 서버 timeout과 클라이언트 read timeout을 함께 조정한다.
 2. 느린 LLM 응답 시간 분포를 기준으로 안전 마진을 둔다.
 
-## 5. 멱등 저장 규칙
+## 5. 멱등 저장 동작
 
-`persist_assistant_message` 규칙:
+`persist_assistant_message` 기준:
 
 1. `is_request_committed(request_id)`로 기저장 여부 확인
 2. 미저장일 때만 assistant 메시지 저장
