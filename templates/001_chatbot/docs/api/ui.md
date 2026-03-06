@@ -345,5 +345,5 @@ curl -X DELETE "http://localhost:8000/ui-api/chat/sessions/<SESSION_ID>"
 - `docs/api/overview.md`
 - `docs/api/chat.md`
 - `docs/static/ui.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`
 - `docs/shared/exceptions.md`

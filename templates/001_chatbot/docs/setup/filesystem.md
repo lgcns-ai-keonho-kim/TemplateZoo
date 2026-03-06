@@ -79,7 +79,7 @@ client = LLMClient(
 
 ## 7. 관련 문서
 
-- `docs/integrations/fs.md`
-- `docs/integrations/llm.md`
+- `docs/integrations/fs/overview.md`
+- `docs/integrations/llm/overview.md`
 - `docs/setup/env.md`
 - `docs/setup/troubleshooting.md`

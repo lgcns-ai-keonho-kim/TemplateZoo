@@ -257,5 +257,5 @@ printf 'GEMINI_MODEL=%s\nGEMINI_PROJECT=%s\n' "$GEMINI_MODEL" "$GEMINI_PROJECT"
 - `docs/setup/sqlite.md`
 - `docs/setup/lancedb.md`
 - `docs/api/chat.md`
-- `docs/shared/chat.md`
-- `docs/integrations/db.md`
+- `docs/shared/chat/overview.md`
+- `docs/integrations/db/overview.md`

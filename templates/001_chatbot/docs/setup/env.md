@@ -172,4 +172,4 @@ head -n 1 "$ELASTICSEARCH_CA_CERTS"
 - `docs/setup/lancedb.md`
 - `docs/setup/postgresql_pgvector.md`
 - `docs/setup/mongodb.md`
-- `docs/integrations/db.md`
+- `docs/integrations/db/overview.md`

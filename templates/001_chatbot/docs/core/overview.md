@@ -81,4 +81,4 @@ core -> integrations
 
 - `docs/core/chat.md`
 - `docs/api/chat.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`

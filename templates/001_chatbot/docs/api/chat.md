@@ -100,6 +100,6 @@
 
 ## 7. 관련 문서
 
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`
 - `docs/setup/env.md`
 - `docs/setup/troubleshooting.md`

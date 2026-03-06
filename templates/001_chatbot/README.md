@@ -142,7 +142,7 @@ SSE `data` 예시:
 ### 5-3. DB 연동(선택)
 
 PostgreSQL, MongoDB, Redis, Elasticsearch, SQLite 관련 변수는 `.env.sample`을 참고한다.  
-엔진별 사용 방법은 `docs/integrations/db.md`를 따른다.
+엔진별 사용 방법은 `docs/integrations/db/overview.md`를 따른다.
 
 ## 6. 채팅 이력 초기화
 
@@ -197,11 +197,11 @@ docs/                   # 개발 문서
 | API Chat | [docs/api/chat.md](docs/api/chat.md) | `/chat` 인터페이스, SSE |
 | API UI | [docs/api/ui.md](docs/api/ui.md) | `/ui-api/chat` 인터페이스 |
 | Core Chat | [docs/core/chat.md](docs/core/chat.md) | 그래프/노드 동작 |
-| Shared Chat | [docs/shared/chat.md](docs/shared/chat.md) | 실행기/저장/멱등 |
+| Shared Chat | [docs/shared/chat/overview.md](docs/shared/chat/overview.md) | 실행기/저장/멱등 |
 | Shared Runtime | [docs/shared/runtime.md](docs/shared/runtime.md) | Queue/EventBuffer 구성 |
-| Integrations DB | [docs/integrations/db.md](docs/integrations/db.md) | DB 엔진/셋업 |
-| Integrations LLM | [docs/integrations/llm.md](docs/integrations/llm.md) | `LLMClient` 사용 |
-| Integrations FS | [docs/integrations/fs.md](docs/integrations/fs.md) | 파일 저장소 경로/정책 |
+| Integrations DB | [docs/integrations/db/overview.md](docs/integrations/db/overview.md) | DB 엔진/셋업 |
+| Integrations LLM | [docs/integrations/llm/overview.md](docs/integrations/llm/overview.md) | `LLMClient` 사용 |
+| Integrations FS | [docs/integrations/fs/overview.md](docs/integrations/fs/overview.md) | 파일 저장소 경로/정책 |
 | Static UI | [docs/static/ui.md](docs/static/ui.md) | UI 연동 순서/상태 관리 |
 
 ## 9. 테스트
