@@ -157,7 +157,7 @@ sequenceDiagram
 | `CHAT_STREAM_TIMEOUT` | `504 Gateway Timeout` |
 | 기타 | `500 Internal Server Error` |
 
-## 7. 변경 작업 절차
+## 7. 적용 시나리오
 
 ### 7-1. 요청 필드 추가
 
@@ -181,18 +181,10 @@ sequenceDiagram
 | 항상 `error`로 종료됨 | 노드 예외 또는 timeout | `service_executor.py` | 오류 코드와 timeout 설정 점검 |
 | references 이벤트가 비어 있음 | `rag_references` 생성 누락 | `rag_format_node.py` | RAG 포맷 단계 출력 점검 |
 
-## 9. 소스 매칭 점검 항목
-
-1. `POST /chat` 상태코드가 `202`인지 확인
-2. `GET /chat/{session_id}/events`의 `request_id` 필수 검증 유지 여부
-3. `SubmitChatRequest.context_window` 범위(1..100) 일치 여부
-4. 이벤트 타입 집합이 `start/token/references/done/error`와 일치하는지 확인
-5. node 설명이 실제 생성 노드와 일치하는지 확인
-
-## 10. 관련 문서
+## 9. 관련 문서
 
 - `docs/api/overview.md`
 - `docs/api/ui.md`
 - `docs/core/chat.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/README.md`
 - `docs/static/ui.md`

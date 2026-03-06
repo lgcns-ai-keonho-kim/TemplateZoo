@@ -132,7 +132,7 @@ history_repository = ChatHistoryRepository(db_client=DBClient(postgres_engine))
 | 연결은 되지만 테이블 생성 실패 | DB 권한 부족 | 계정 권한(`CREATE`, `USAGE`) 부여 |
 | DSN/호스트 설정 혼선 | `POSTGRES_DSN` 우선 적용 | DSN 또는 분리 키 중 하나로 통일 |
 
-## 9. 운영 체크리스트
+## 9. 운영 확인 항목
 
 1. `POSTGRES_*` 값을 `dev/stg/prod`별로 분리한다.
 2. 비밀번호/접속정보는 시크릿 스토어로 관리한다.
@@ -144,4 +144,4 @@ history_repository = ChatHistoryRepository(db_client=DBClient(postgres_engine))
 - `docs/setup/env.md`
 - `docs/setup/ingestion.md`
 - `docs/setup/lancedb.md`
-- `docs/integrations/db.md`
+- `docs/integrations/db/README.md`

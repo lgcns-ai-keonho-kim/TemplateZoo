@@ -35,7 +35,7 @@
 3. `timestamp` 오름차순 정렬 후 반환
 4. 손상 파일은 WARNING 레벨 fallback 레코드로 대체
 
-## 4. 로컬 파일 시스템 연동 절차
+## 4. 로컬 파일 시스템 연동 순서
 
 ### 4-1. 저장 디렉터리 설계
 
@@ -154,15 +154,8 @@ repository = FileLogRepository(base_dir="logs", engine=engine)
 | 조회 시 WARNING 로그 다수 | 파일 손상/중간 쓰기 실패 | `FileLogRepository._fallback_record` | 파일 생성 경로/쓰기 실패 원인 점검 |
 | 로그 목록 누락 | suffix/recursive 조건 오류 | `list_files` 구현 | 조건값 점검, 엔진 구현 보완 |
 
-## 8. 소스 매칭 체크리스트
-
-1. 인터페이스 메서드 목록이 `base/engine.py`와 일치하는가
-2. 저장 경로 규칙이 `file_repository.py` 구현과 일치하는가
-3. fallback 레코드 메타정보(`path`, `reason`)가 문서 설명과 일치하는가
-4. 커스텀 엔진 주입 방식이 `FileLogRepository(engine=...)` 패턴과 일치하는가
-
-## 9. 관련 문서
+## 8. 관련 문서
 
 - `docs/setup/env.md`
-- `docs/integrations/fs.md`
+- `docs/integrations/fs/README.md`
 - `docs/shared/logging.md`

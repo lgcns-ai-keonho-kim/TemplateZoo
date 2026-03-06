@@ -14,7 +14,7 @@
 | `docs/setup/mongodb.md` | MongoDB 설치, 인증, 엔진 연동 절차 | MongoDB 엔진 검증/전환 시 |
 | `docs/setup/filesystem.md` | 파일 시스템 기반 로그 저장소 연동 방식 | 로그 영속화/파일 백엔드 확장 시 |
 
-## 2. 권장 읽기 순서
+## 2. 읽기 순서
 
 1. `docs/setup/env.md`
 2. `docs/setup/ingestion.md`
@@ -71,10 +71,3 @@ uv run uvicorn rag_chatbot.api.main:app --host 0.0.0.0 --port 8000 --reload
 | MongoDB | `src/rag_chatbot/integrations/db/engines/mongodb/*.py` |
 | 파일 시스템 연동 | `src/rag_chatbot/integrations/fs/*.py`, `src/rag_chatbot/shared/logging/logger.py` |
 
-## 6. 문서 동기화 체크리스트
-
-1. 문서에 적힌 환경 변수 키가 `.env.sample` 또는 코드(`os.getenv`)와 일치하는지 확인한다.
-2. ingestion 명령이 `ingestion/ingest.py` 단일 엔트리로 통일되어 있는지 확인한다.
-3. `--reset` 동작 설명이 백엔드 구현과 일치하는지 확인한다.
-4. SQLite 기본 경로 설명이 `CHAT_DB_PATH` 기본값과 일치하는지 확인한다.
-5. PostgreSQL/MongoDB 전환 예시가 `ChatHistoryRepository(db_client=...)` 패턴과 일치하는지 확인한다.

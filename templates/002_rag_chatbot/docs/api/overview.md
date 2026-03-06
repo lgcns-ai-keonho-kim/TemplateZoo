@@ -73,7 +73,7 @@
 1. Chat API: `src/rag_chatbot/api/chat/routers/common.py`
 2. UI API: `src/rag_chatbot/api/ui/routers/common.py`
 
-## 6. 변경 작업 절차
+## 6. 적용 시나리오
 
 ### 6-1. Chat 엔드포인트 추가
 
@@ -95,15 +95,7 @@
 2. 라우터에서 런타임 구현체를 직접 생성하지 않는다.
 3. 종료 훅은 `src/rag_chatbot/api/main.py`의 lifespan 경계를 유지한다.
 
-## 7. 소스 매칭 점검 항목
-
-1. 문서의 엔드포인트 경로가 `src/rag_chatbot/api/const/chat.py` 상수 조합과 일치하는가
-2. 문서의 상태코드가 라우터 데코레이터 설정과 일치하는가
-3. 예외 매핑 표가 `common.py`의 실제 코드와 일치하는가
-4. 페이지네이션 기본값 설명이 `src/rag_chatbot/core/chat/const/settings.py`와 일치하는가
-5. 문서에 기재한 파일 경로가 실제 저장소에 존재하는가
-
-## 8. 관련 문서
+## 7. 관련 문서
 
 - `docs/api/chat.md`
 - `docs/api/ui.md`

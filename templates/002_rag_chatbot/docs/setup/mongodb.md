@@ -88,7 +88,7 @@ MONGODB_AUTH_DB=admin
 2. `MONGODB_AUTH_DB`가 비어 있고 계정 정보가 있으면 `MONGODB_DB`가 인증 DB로 사용된다.
 3. 인증을 쓰지 않으면 `MONGODB_USER`, `MONGODB_PW`를 비워둘 수 있다.
 
-## 6. 프로젝트 연동 절차
+## 6. 프로젝트 연동 순서
 
 현재 기본 조립은 SQLite다. MongoDB로 전환하려면 조립 코드를 교체한다.
 
@@ -135,7 +135,7 @@ history_repository = ChatHistoryRepository(
 | 연결은 되지만 데이터가 보이지 않음 | 다른 DB로 연결됨 | `MONGODB_DB` 값 | DB 이름 통일 |
 | 벡터 검색 API 사용 시 실패 | 구현상 미지원 | `mongodb/engine.py` | 벡터 기능 지원 엔진으로 분리 |
 
-## 9. 운영 체크리스트
+## 9. 운영 확인 항목
 
 1. 사용자 계정 최소 권한 원칙(`readWrite` 등)을 적용했는가
 2. 운영 환경에서 TLS/네트워크 ACL이 설정되었는가
@@ -145,5 +145,5 @@ history_repository = ChatHistoryRepository(
 ## 10. 관련 문서
 
 - `docs/setup/env.md`
-- `docs/integrations/db.md`
-- `docs/shared/chat.md`
+- `docs/integrations/db/README.md`
+- `docs/shared/chat/README.md`

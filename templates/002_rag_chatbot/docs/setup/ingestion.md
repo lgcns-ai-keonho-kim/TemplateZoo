@@ -140,7 +140,7 @@ uv run python ingestion/ingest.py --backend lancedb --chunk-workers 4
 | `INGESTION_EMBEDDING_DIMENSION_MISMATCH` | 기존 저장소 차원과 현재 차원 불일치 | `--reset`으로 재생성 후 재적재 |
 | `RAG 검색 결과가 없습니다` | 적재 데이터 없음 또는 질의 미스 | ingestion 재실행 후 검색 재확인 |
 
-## 10. 운영 체크리스트
+## 10. 운영 확인 항목
 
 1. `GEMINI_EMBEDDING_DIM`과 저장소 벡터 차원이 일치하는지 확인한다.
 2. 백엔드 전환 시 `--backend`와 환경 변수를 함께 바꾼다.
@@ -152,4 +152,4 @@ uv run python ingestion/ingest.py --backend lancedb --chunk-workers 4
 - `docs/setup/lancedb.md`
 - `docs/setup/postgresql_pgvector.md`
 - `docs/setup/env.md`
-- `docs/integrations/embedding.md`
+- `docs/integrations/embedding/README.md`

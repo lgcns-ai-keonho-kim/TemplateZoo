@@ -249,7 +249,7 @@ Response:
 | Mapper | 엔티티 -> DTO 변환 | 외부 의존성 접근 |
 | Core Service | 세션/메시지 도메인 처리 | UI 렌더링 책임 처리 |
 
-## 7. 변경 작업 절차
+## 7. 적용 시나리오
 
 ## 7-1. 응답 필드 추가
 
@@ -331,19 +331,10 @@ curl -X DELETE "http://localhost:8000/ui-api/chat/sessions/<SESSION_ID>"
 | 삭제 후 화면 미반영 | 프런트 fallback 누락 | `static/js/ui/grid_manager.js` | 삭제 후 활성 세션 전환 규칙 보완 |
 | 메시지 순서가 뒤섞임 | 저장소 정렬 변경 영향 | `history_repository.list_messages()` | `sequence ASC` 유지 |
 
-## 11. 소스 매칭 점검 항목
-
-1. 네 엔드포인트가 `/ui-api/chat` prefix 아래 등록되어 있는가
-2. 생성 API 상태코드가 `201`인가
-3. 목록 Query 범위가 `1..200`, `0+`인가
-4. `CHAT_SESSION_NOT_FOUND`가 `404`로 매핑되는가
-5. 문서의 기본 페이지 값이 코드 상수와 일치하는가
-6. 문서의 파일 경로가 실제 저장소에 존재하는가
-
-## 12. 관련 문서
+## 11. 관련 문서
 
 - `docs/api/overview.md`
 - `docs/api/chat.md`
 - `docs/static/ui.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/README.md`
 - `docs/shared/exceptions.md`

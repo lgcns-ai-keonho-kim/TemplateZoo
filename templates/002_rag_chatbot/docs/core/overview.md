@@ -1,6 +1,6 @@
 # Core 모듈 가이드
 
-이 문서는 `src/rag_chatbot/core` 계층의 책임 경계와 학습 순서를 코드 기준으로 정리한다.
+이 문서는 `src/rag_chatbot/core` 계층의 책임 경계와 읽기 흐름을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -55,7 +55,7 @@ core -> integrations
 4. 최종 응답 키는 모든 경로에서 `assistant_message`다.
 5. 스트림 노출 이벤트는 `stream_node`로 제한된다.
 
-## 5. 학습 순서
+## 5. 읽기 순서
 
 1. `src/rag_chatbot/core/chat/models/entities.py`
 2. `src/rag_chatbot/core/chat/state/graph_state.py`
@@ -64,15 +64,8 @@ core -> integrations
 5. `src/rag_chatbot/shared/chat/services/chat_service.py`
 6. `src/rag_chatbot/shared/chat/services/service_executor.py`
 
-## 6. 소스 매칭 점검 항목
-
-1. 문서의 노드 이름이 그래프 등록 이름과 일치하는가
-2. `assistant_message` 출력 키가 모든 최종 경로에서 유지되는가
-3. `rag_context`, `rag_references` 생성 노드 설명이 `rag_format_node`와 일치하는가
-4. 문서에 적은 스크립트 경로가 실제 저장소에 존재하는가
-
-## 7. 관련 문서
+## 6. 관련 문서
 
 - `docs/core/chat.md`
 - `docs/api/chat.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/README.md`

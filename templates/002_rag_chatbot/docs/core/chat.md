@@ -180,16 +180,9 @@ flowchart LR
 | 검색 결과가 없음 | 벡터 저장소 미적재 | `rag_retrieve_node.py`, `docs/setup/ingestion.md` | ingestion 재실행 |
 | done 이벤트인데 본문이 비어 있음 | `assistant_message` 누락 | `response_node.py`, `chat_service.py` | 출력 키 매핑 점검 |
 
-## 9. 소스 매칭 점검 항목
-
-1. 그래프 노드/엣지 순서가 `chat_graph.py`와 일치하는가
-2. `stream_node` 허용 이벤트 표가 코드와 일치하는가
-3. RAG 단계별 출력 키 설명이 각 `rag_*_node.py` 구현과 일치하는가
-4. 문서에 기록한 파일 경로가 실제 존재하는가
-
-## 10. 관련 문서
+## 9. 관련 문서
 
 - `docs/core/overview.md`
 - `docs/api/chat.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/README.md`
 - `docs/static/ui.md`

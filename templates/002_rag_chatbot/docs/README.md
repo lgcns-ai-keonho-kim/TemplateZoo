@@ -3,13 +3,6 @@
 이 문서는 `src/rag_chatbot` 기준으로 문서를 읽고, 기능을 빠르게 추가/수정하기 위한 진입점이다.
 핵심 모듈 문서는 코드 구조와 1:1로 맞췄고, `docs/setup/*`는 실행 환경/인프라 설정 절차를 다룬다.
 
-## 문서 사용 원칙
-
-1. 실제 파일 경로와 동일한 문서 경로를 사용한다.
-2. API 인터페이스는 라우터/모델 코드 기준으로만 기술한다.
-3. 동작 순서와 실패 복구 절차를 함께 제공한다.
-4. 예시 코드는 현재 저장소의 구현 방식과 일치해야 한다.
-
 ## 문서 트리
 
 ```text
@@ -25,7 +18,30 @@ docs/
     chat.md
   shared/
     overview.md
-    chat.md
+    chat/
+      README.md
+      interface/
+        ports.md
+      graph/
+        base_chat_graph.md
+      memory/
+        session_store.md
+      nodes/
+        _state_adapter.md
+        branch_node.md
+        fanout_branch_node.md
+        function_node.md
+        llm_node.md
+        message_node.md
+      repositories/
+        history_repository.md
+        schemas/
+          session_schema.md
+          message_schema.md
+          request_commit_schema.md
+      services/
+        chat_service.md
+        service_executor.md
     config.md
     const.md
     exceptions.md
@@ -33,10 +49,38 @@ docs/
     runtime.md
   integrations/
     overview.md
-    db.md
-    llm.md
-    embedding.md
-    fs.md
+    db/
+      README.md
+      client.md
+      base/
+        engine.md
+        models.md
+        pool.md
+        query_builder.md
+        session.md
+      query_builder/
+        read_builder.md
+        write_builder.md
+        delete_builder.md
+      engines/
+        sql_common.md
+        sqlite/*.md
+        postgres/*.md
+        lancedb/*.md
+        redis/*.md
+        mongodb/*.md
+        elasticsearch/*.md
+    llm/
+      README.md
+      client.md
+    embedding/
+      README.md
+      client.md
+    fs/
+      README.md
+      base/engine.md
+      engines/local.md
+      file_repository.md
   setup/
     overview.md
     env.md
@@ -60,9 +104,25 @@ docs/
 | `src/rag_chatbot/core` | `docs/core/overview.md` |
 | `src/rag_chatbot/core/chat` | `docs/core/chat.md` |
 | `src/rag_chatbot/shared` | `docs/shared/overview.md` |
-| `src/rag_chatbot/shared/chat` | `docs/shared/chat.md` |
+| `src/rag_chatbot/shared/chat` | `docs/shared/chat/README.md` |
+| `src/rag_chatbot/shared/chat/interface` | `docs/shared/chat/interface/ports.md` |
+| `src/rag_chatbot/shared/chat/graph` | `docs/shared/chat/graph/base_chat_graph.md` |
+| `src/rag_chatbot/shared/chat/memory` | `docs/shared/chat/memory/session_store.md` |
+| `src/rag_chatbot/shared/chat/nodes` | `docs/shared/chat/nodes/*.md` |
+| `src/rag_chatbot/shared/chat/repositories` | `docs/shared/chat/repositories/history_repository.md` |
+| `src/rag_chatbot/shared/chat/repositories/schemas` | `docs/shared/chat/repositories/schemas/*.md` |
+| `src/rag_chatbot/shared/chat/services` | `docs/shared/chat/services/chat_service.md`, `docs/shared/chat/services/service_executor.md` |
 | `src/rag_chatbot/shared/runtime` | `docs/shared/runtime.md` |
 | `src/rag_chatbot/integrations` | `docs/integrations/overview.md` |
+| `src/rag_chatbot/integrations/db` | `docs/integrations/db/README.md` |
+| `src/rag_chatbot/integrations/db/base` | `docs/integrations/db/base/*.md` |
+| `src/rag_chatbot/integrations/db/query_builder` | `docs/integrations/db/query_builder/*.md` |
+| `src/rag_chatbot/integrations/db/engines` | `docs/integrations/db/engines/sql_common.md`, `docs/integrations/db/engines/*/*.md` |
+| `src/rag_chatbot/integrations/llm` | `docs/integrations/llm/README.md`, `docs/integrations/llm/client.md` |
+| `src/rag_chatbot/integrations/embedding` | `docs/integrations/embedding/README.md`, `docs/integrations/embedding/client.md` |
+| `src/rag_chatbot/integrations/fs` | `docs/integrations/fs/README.md`, `docs/integrations/fs/file_repository.md` |
+| `src/rag_chatbot/integrations/fs/base` | `docs/integrations/fs/base/engine.md` |
+| `src/rag_chatbot/integrations/fs/engines` | `docs/integrations/fs/engines/local.md` |
 | `ingestion` | `docs/setup/ingestion.md` |
 | `src/rag_chatbot/static` | `docs/static/ui.md` |
 
@@ -97,13 +157,13 @@ flowchart LR
     Nodes --> LLM["integrations/llm/LLMClient"]
 ```
 
-## 빠른 작업 절차
+## 빠른 작업 흐름
 
 ### 1. 기능 추가
 
 1. API 인터페이스를 먼저 확정한다. (`docs/api/chat.md`, `docs/api/ui.md`)
 2. 도메인 상태/그래프 변경이 필요한지 확인한다. (`docs/core/chat.md`)
-3. 실행기/저장소 영향도를 확인한다. (`docs/shared/chat.md`)
+3. 실행기/저장소 영향도를 확인한다. (`docs/shared/chat/README.md`, `docs/shared/chat/services/*.md`, `docs/shared/chat/repositories/*.md`)
 4. UI 연동 순서를 맞춘다. (`docs/static/ui.md`)
 
 ### 2. ingestion 변경
@@ -118,11 +178,3 @@ flowchart LR
 2. `request_id` 단위로 스트림 이벤트를 추적한다.
 3. `ServiceExecutor` 상태(`IDLE/QUEUED/RUNNING/COMPLETED/FAILED`)를 확인한다.
 4. 저장 실패는 `ChatHistoryRepository`와 DB 엔진 로그를 분리해 본다.
-
-## 문서 동기화 체크리스트
-
-1. 문서에 기록한 경로/명령이 실제 파일 및 CLI 옵션과 일치하는지 확인한다.
-2. UI 세션 경로가 `/ui-api/chat/sessions*` 형태로 통일되어 있는지 확인한다.
-3. SSE 식별자가 `request_id`인지 확인한다.
-4. ingestion 문서의 `--backend`, `--reset`, 비동기 임베딩 설명이 코드와 일치하는지 확인한다.
-5. `.env` 예시값이 `.env.sample`과 충돌하지 않는지 확인한다.

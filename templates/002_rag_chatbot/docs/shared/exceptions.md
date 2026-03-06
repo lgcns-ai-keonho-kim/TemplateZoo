@@ -80,7 +80,7 @@ if not session_id:
     raise BaseAppException("요청한 세션을 찾을 수 없습니다.", detail)
 ```
 
-## 6. 변경 작업 절차
+## 6. 적용 시나리오
 
 1. 신규 오류 코드가 필요하면 먼저 코드 네이밍 규칙을 정의한다.
 2. 발생 지점에서 `detail.code`, `cause`를 채운다.
@@ -95,13 +95,7 @@ if not session_id:
 | 응답 detail 필드가 비어 있음 | `to_dict()` 미사용 | 라우터 예외 변환 구간 | `error.to_dict()` 사용 |
 | 원인 추적이 어려움 | `cause` 미기록 | 예외 생성 지점 | `ExceptionDetail.cause` 채우기 |
 
-## 8. 소스 매칭 점검 항목
-
-1. 필드 정의가 `base.py`, `models.py`와 일치하는가
-2. 예외 변환 경로가 Chat/UI 라우터 공통 유틸과 일치하는가
-3. 문서 경로가 실제 파일 구조와 일치하는가
-
-## 9. 관련 문서
+## 8. 관련 문서
 
 - `docs/shared/overview.md`
 - `docs/api/chat.md`
