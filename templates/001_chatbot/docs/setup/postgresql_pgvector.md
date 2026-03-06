@@ -138,5 +138,5 @@ history_repository = ChatHistoryRepository(
 ## 10. 관련 문서
 
 - `docs/setup/env.md`
-- `docs/integrations/db.md`
-- `docs/shared/chat.md`
+- `docs/integrations/db/overview.md`
+- `docs/shared/chat/overview.md`

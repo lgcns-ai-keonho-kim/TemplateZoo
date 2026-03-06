@@ -170,5 +170,5 @@ InMemoryQueue + InMemoryEventBuffer + ServiceExecutor
 ## 11. 관련 문서
 
 - `docs/shared/overview.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`
 - `docs/api/chat.md`

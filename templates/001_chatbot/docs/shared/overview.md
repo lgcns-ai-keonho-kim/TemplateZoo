@@ -49,12 +49,15 @@ shared -> integrations
 
 ## 5. 학습 순서
 
-1. `docs/shared/chat.md`
-2. `docs/shared/runtime.md`
-3. `docs/shared/config.md`
-4. `docs/shared/exceptions.md`
-5. `docs/shared/logging.md`
-6. `docs/shared/const.md`
+1. `docs/shared/chat/overview.md`
+2. `docs/shared/chat/services/service_executor.md`
+3. `docs/shared/chat/services/chat_service.md`
+4. `docs/shared/chat/repositories/history_repository.md`
+5. `docs/shared/runtime.md`
+6. `docs/shared/config.md`
+7. `docs/shared/exceptions.md`
+8. `docs/shared/logging.md`
+9. `docs/shared/const.md`
 
 ## 6. 변경 작업 절차
 
@@ -71,7 +74,10 @@ shared -> integrations
 
 ## 8. 관련 문서
 
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`
+- `docs/shared/chat/services/service_executor.md`
+- `docs/shared/chat/services/chat_service.md`
+- `docs/shared/chat/repositories/history_repository.md`
 - `docs/shared/runtime.md`
 - `docs/shared/config.md`
 - `docs/shared/exceptions.md`

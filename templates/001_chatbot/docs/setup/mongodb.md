@@ -143,5 +143,5 @@ history_repository = ChatHistoryRepository(db_client=DBClient(mongo_engine))
 
 - `docs/setup/env.md`
 - `docs/setup/troubleshooting.md`
-- `docs/integrations/db.md`
-- `docs/shared/chat.md`
+- `docs/integrations/db/overview.md`
+- `docs/shared/chat/overview.md`

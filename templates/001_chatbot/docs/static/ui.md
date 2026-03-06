@@ -413,7 +413,7 @@ interface StreamState {
 
 - `docs/api/chat.md`
 - `docs/api/ui.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`
 - `docs/shared/runtime.md`
 
 ## 13. 빠른 구현 절차(신규 프런트엔드 기준)

@@ -73,4 +73,4 @@ curl -sS http://127.0.0.1:11434/api/tags | head
 
 - `docs/setup/env.md`
 - `docs/setup/sqlite.md`
-- `docs/integrations/db.md`
+- `docs/integrations/db/overview.md`

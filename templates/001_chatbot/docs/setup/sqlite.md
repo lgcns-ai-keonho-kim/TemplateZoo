@@ -82,4 +82,4 @@ ls -l "$CHAT_DB_PATH"
 - `docs/setup/env.md`
 - `docs/setup/lancedb.md`
 - `docs/setup/postgresql_pgvector.md`
-- `docs/integrations/db.md`
+- `docs/integrations/db/overview.md`

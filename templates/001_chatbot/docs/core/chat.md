@@ -272,5 +272,5 @@ flowchart LR
 
 - `docs/core/overview.md`
 - `docs/api/chat.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`
 - `docs/static/ui.md`

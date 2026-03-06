@@ -25,7 +25,30 @@ docs/
     chat.md
   shared/
     overview.md
-    chat.md
+    chat/
+      overview.md
+      graph/
+        base_chat_graph.md
+      interface/
+        ports.md
+      memory/
+        session_store.md
+      nodes/
+        _state_adapter.md
+        branch_node.md
+        fanout_branch_node.md
+        function_node.md
+        llm_node.md
+        message_node.md
+      repositories/
+        history_repository.md
+        schemas/
+          session_schema.md
+          message_schema.md
+          request_commit_schema.md
+      services/
+        chat_service.md
+        service_executor.md
     config.md
     const.md
     exceptions.md
@@ -33,9 +56,43 @@ docs/
     runtime.md
   integrations/
     overview.md
-    db.md
-    llm.md
-    fs.md
+    db/
+      overview.md
+      client.md
+      base/
+        engine.md
+        models.md
+        pool.md
+        query_builder.md
+        session.md
+      query_builder/
+        read_builder.md
+        write_builder.md
+        delete_builder.md
+      engines/
+        sql_common.md
+        sqlite/
+          *.md
+        postgres/
+          *.md
+        mongodb/
+          *.md
+        redis/
+          *.md
+        lancedb/
+          *.md
+        elasticsearch/
+          *.md
+    llm/
+      overview.md
+      client.md
+    fs/
+      overview.md
+      base/
+        engine.md
+      engines/
+        local.md
+      file_repository.md
   setup/
     overview.md
     env.md
@@ -60,9 +117,19 @@ docs/
 | `src/chatbot/core` | `docs/core/overview.md` |
 | `src/chatbot/core/chat` | `docs/core/chat.md` |
 | `src/chatbot/shared` | `docs/shared/overview.md` |
-| `src/chatbot/shared/chat` | `docs/shared/chat.md` |
+| `src/chatbot/shared/chat` | `docs/shared/chat/overview.md` |
+| `src/chatbot/shared/chat/graph` | `docs/shared/chat/graph/base_chat_graph.md` |
+| `src/chatbot/shared/chat/interface` | `docs/shared/chat/interface/ports.md` |
+| `src/chatbot/shared/chat/memory` | `docs/shared/chat/memory/session_store.md` |
+| `src/chatbot/shared/chat/nodes` | `docs/shared/chat/nodes/llm_node.md`, `docs/shared/chat/nodes/branch_node.md` |
+| `src/chatbot/shared/chat/repositories` | `docs/shared/chat/repositories/history_repository.md`, `docs/shared/chat/repositories/schemas/*.md` |
+| `src/chatbot/shared/chat/services` | `docs/shared/chat/services/chat_service.md`, `docs/shared/chat/services/service_executor.md` |
 | `src/chatbot/shared/runtime` | `docs/shared/runtime.md` |
 | `src/chatbot/integrations` | `docs/integrations/overview.md` |
+| `src/chatbot/integrations/db` | `docs/integrations/db/overview.md` |
+| `src/chatbot/integrations/db/engines` | `docs/integrations/db/engines/*/*.md` |
+| `src/chatbot/integrations/llm` | `docs/integrations/llm/overview.md` |
+| `src/chatbot/integrations/fs` | `docs/integrations/fs/overview.md` |
 | `src/chatbot/static` | `docs/static/ui.md` |
 
 ## 설치/환경 문서
@@ -103,7 +170,7 @@ flowchart LR
 
 1. API 인터페이스를 먼저 확정한다. (`docs/api/chat.md`, `docs/api/ui.md`)
 2. 도메인 상태/그래프 변경이 필요한지 확인한다. (`docs/core/chat.md`)
-3. 실행기/저장소 영향도를 확인한다. (`docs/shared/chat.md`)
+3. 실행기/저장소 영향도를 확인한다. (`docs/shared/chat/services/service_executor.md`, `docs/shared/chat/repositories/history_repository.md`)
 4. UI 연동 순서를 맞춘다. (`docs/static/ui.md`)
 
 ### 2. 장애 대응
@@ -126,9 +193,9 @@ flowchart LR
 | --- | --- | --- |
 | 채팅 제출/이벤트 인터페이스 변경 | `src/chatbot/api/chat/routers/*.py` | `docs/api/chat.md`, `docs/static/ui.md` |
 | 세션 목록/삭제 정책 변경 | `src/chatbot/api/ui/routers/*.py` | `docs/api/ui.md`, `docs/static/ui.md` |
-| 응답 품질/분기 정책 변경 | `src/chatbot/core/chat/nodes/*.py` | `docs/core/chat.md`, `docs/shared/chat.md` |
-| 저장 스키마/엔진 변경 | `src/chatbot/shared/chat/repositories/*.py` | `docs/shared/chat.md`, `docs/integrations/db.md`, `docs/setup/troubleshooting.md` |
-| SSE/큐/재시도 정책 변경 | `src/chatbot/shared/chat/services/service_executor.py` | `docs/shared/chat.md`, `docs/shared/runtime.md` |
+| 응답 품질/분기 정책 변경 | `src/chatbot/core/chat/nodes/*.py` | `docs/core/chat.md`, `docs/shared/chat/nodes/llm_node.md`, `docs/shared/chat/nodes/branch_node.md` |
+| 저장 스키마/엔진 변경 | `src/chatbot/shared/chat/repositories/*.py` | `docs/shared/chat/repositories/history_repository.md`, `docs/integrations/db/overview.md`, `docs/setup/troubleshooting.md` |
+| SSE/큐/재시도 정책 변경 | `src/chatbot/shared/chat/services/service_executor.py` | `docs/shared/chat/services/service_executor.md`, `docs/shared/runtime.md` |
 | FE 렌더/연결 처리 변경 | `src/chatbot/static/js/chat/*.js` | `docs/static/ui.md`, `docs/api/chat.md` |
 
 ## 문서 동기화 확인 항목
@@ -138,3 +205,5 @@ flowchart LR
 3. SSE 식별자가 `task_id`가 아닌 `request_id`인지 확인한다.
 4. static 문서 호출 순서가 `api_transport.js`와 일치하는지 확인한다.
 5. 문서 예시 페이로드 필드명이 Pydantic 모델과 일치하는지 확인한다.
+6. `docs/shared/chat/overview.md` 링크 목록과 실제 `docs/shared/chat/**` 파일 목록이 일치하는지 확인한다.
+7. `docs/integrations/{db,llm,fs}/overview.md` 링크 목록과 실제 `docs/integrations/**` 파일 목록이 일치하는지 확인한다.
