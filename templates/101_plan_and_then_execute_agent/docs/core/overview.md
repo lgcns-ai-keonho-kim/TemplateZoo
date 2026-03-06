@@ -1,4 +1,4 @@
-# Core 모듈 가이드
+# Core 모듈 개요
 
 이 문서는 `src/plan_and_then_execute_agent/core` 계층의 책임 경계와 학습 순서를 코드 기준으로 정리한다.
 
@@ -64,15 +64,8 @@ core -> integrations
 5. `src/plan_and_then_execute_agent/shared/chat/services/chat_service.py`
 6. `src/plan_and_then_execute_agent/shared/chat/services/service_executor.py`
 
-## 6. 소스 매칭 점검 항목
-
-1. 문서의 노드 이름이 그래프 등록 이름과 일치하는가
-2. `assistant_message` 출력 키가 모든 최종 경로에서 유지되는가
-3. `rag_context`, `rag_references` 생성 노드 설명이 `response_prepare_node`와 일치하는가
-4. 문서에 적은 스크립트 경로가 실제 저장소에 존재하는가
-
 ## 7. 관련 문서
 
 - `docs/core/chat.md`
 - `docs/api/chat.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`

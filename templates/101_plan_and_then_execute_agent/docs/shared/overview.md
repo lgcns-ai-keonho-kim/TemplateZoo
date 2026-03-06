@@ -1,4 +1,4 @@
-# Shared 모듈 가이드
+# Shared 모듈 개요
 
 이 문서는 `src/plan_and_then_execute_agent/shared` 계층의 책임 경계, 구성 요소, 변경 절차를 코드 기준으로 정리한다.
 
@@ -49,29 +49,23 @@ shared -> integrations
 
 ## 5. 학습 순서
 
-1. `docs/shared/chat.md`
+1. `docs/shared/chat/overview.md`
 2. `docs/shared/runtime.md`
 3. `docs/shared/config.md`
 4. `docs/shared/exceptions.md`
 5. `docs/shared/logging.md`
 6. `docs/shared/const.md`
 
-## 6. 변경 작업 절차
+## 6. 확장 포인트
 
-1. 변경 대상이 실행 경로인지 보조 경로인지 먼저 분리한다.
-2. 포트 인터페이스 변경이 필요한지 확인한다.
-3. 구현체 변경 시 상위 호출 경로(`api/chat/services/runtime.py`)를 함께 점검한다.
-4. 문서의 용어, 스크립트 경로, 기본값을 코드와 동기화한다.
-
-## 7. 소스 매칭 점검 항목
-
-1. 문서에 기재된 `src/plan_and_then_execute_agent/shared/*` 경로가 실제로 존재하는가
-2. 문서의 책임 설명이 `__init__.py` 공개 API와 일치하는가
-3. shared 문서 간 상호 링크가 모두 유효한가
+1. 변경 대상은 실행 경로와 보조 경로로 구분해 영향 범위를 파악한다.
+2. 포트 인터페이스 변경 여부가 상위 계층 파급 범위를 결정한다.
+3. 구현체 변경 시 상위 호출 경로(`api/chat/services/runtime.py`)가 함께 점검된다.
+4. 문서의 용어, 스크립트 경로, 기본값은 코드 상태와 동일하게 유지된다.
 
 ## 8. 관련 문서
 
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`
 - `docs/shared/runtime.md`
 - `docs/shared/config.md`
 - `docs/shared/exceptions.md`

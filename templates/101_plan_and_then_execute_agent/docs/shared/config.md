@@ -1,4 +1,4 @@
-# Shared Config 가이드
+# Shared Config 문서
 
 이 문서는 `src/plan_and_then_execute_agent/shared/config`의 설정 병합과 런타임 환경 로딩 규칙을 코드 기준으로 정리한다.
 
@@ -99,25 +99,25 @@ alias:
 2. `.env` 로딩 완료 후 라우터/서비스 import
 3. import 시점 생성 객체가 환경 변수값을 읽어 조립됨
 
-## 6. 변경 작업 절차
+## 6. 확장 포인트
 
 ## 6-1. 새 설정 파일 추가
 
-1. `ConfigLoader.add_json_file` 호출 지점을 추가한다.
-2. `required` 여부를 환경별 정책으로 결정한다.
-3. 기본값과 override 우선순위를 문서화한다.
+1. 새 설정 파일은 `ConfigLoader.add_json_file` 호출 체인에 추가된다.
+2. `required` 플래그는 환경별 실패 허용 범위를 결정한다.
+3. 기본값과 override 우선순위는 설정 병합 결과를 좌우한다.
 
 ## 6-2. 환경 키 전략 변경
 
-1. `RuntimeEnvironmentLoader`의 key candidates를 조정한다.
-2. alias 맵을 함께 갱신한다.
-3. 운영 배포 스크립트의 ENV 주입 규칙을 동기화한다.
+1. 환경 키 전략은 `RuntimeEnvironmentLoader`의 key candidates 집합으로 표현된다.
+2. alias 맵 변경은 같은 시점에 반영되어야 키 해석이 일관된다.
+3. 운영 배포 스크립트의 ENV 주입 규칙은 키 전략과 동기화된다.
 
 ## 6-3. 중첩 구분자 변경
 
-1. `SharedConst.ENV_NESTED_DELIMITER` 변경 영향도를 분석한다.
-2. 기존 환경 변수 이름과의 호환 전략을 수립한다.
-3. `ConfigLoader.add_env` 호출부의 delimiter 인자를 점검한다.
+1. 중첩 구분자 기준값은 `SharedConst.ENV_NESTED_DELIMITER`가 제공한다.
+2. 구분자 변경 시 기존 환경 변수 이름과의 호환성이 주요 영향 범위다.
+3. `ConfigLoader.add_env` 호출부의 delimiter 인자가 실제 해석 동작을 결정한다.
 
 ## 7. 트러블슈팅
 
@@ -127,13 +127,6 @@ alias:
 | JSON 설정이 반영되지 않음 | 경로 오타 또는 required=False | `loader.py` | 파일 존재 여부와 로그 확인 |
 | 숫자/불린이 문자열로 남음 | 파싱 규칙 외 문자열 | `loader.py` | 입력값 형식 조정 또는 후처리 추가 |
 | 예상과 다른 설정이 최종값으로 적용 | 병합 우선순위 착오 | `ConfigLoader.build` 호출부 | 소스 등록 순서 재정렬 |
-
-## 8. 소스 매칭 점검 항목
-
-1. 문서의 load 순서가 `runtime_env_loader.py` 코드와 일치하는가
-2. 지원 환경값 목록이 `_SUPPORTED_ENVS`, `_ENV_ALIASES`와 일치하는가
-3. 중첩 구분자 설명이 `SharedConst` 값과 일치하는가
-4. 파일 경로가 실제 `src/plan_and_then_execute_agent/shared/config` 구조와 일치하는가
 
 ## 9. 관련 문서
 

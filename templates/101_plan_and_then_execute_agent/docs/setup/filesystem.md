@@ -1,4 +1,4 @@
-# 파일 시스템 연동 가이드
+# 파일 시스템 연동 문서
 
 이 문서는 `src/plan_and_then_execute_agent/integrations/fs`를 이용해 로그를 파일로 저장하는 방법과,
 원격 스토리지 엔진으로 확장할 때 필요한 구현 포인트를 정리한다.
@@ -171,5 +171,5 @@ repository = FileLogRepository(base_dir="logs", engine=engine)
 ## 9. 관련 문서
 
 - `docs/setup/env.md`
-- `docs/integrations/fs.md`
+- `docs/integrations/fs/overview.md`
 - `docs/shared/logging.md`

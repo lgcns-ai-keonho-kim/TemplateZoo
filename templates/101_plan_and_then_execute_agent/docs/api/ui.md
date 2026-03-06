@@ -1,4 +1,4 @@
-# API UI 가이드
+# API UI 문서
 
 이 문서는 `src/plan_and_then_execute_agent/api/ui` 모듈을 기준으로 UI 전용 API의 인터페이스, 동작 순서, 수정 지점을 정리한다.
 
@@ -249,41 +249,39 @@ Response:
 | Mapper | 엔티티 -> DTO 변환 | 외부 의존성 접근 |
 | Core Service | 세션/메시지 도메인 처리 | UI 렌더링 책임 처리 |
 
-## 7. 변경 작업 절차
+## 7. 확장 포인트
 
 ## 7-1. 응답 필드 추가
 
 예시: 세션 목록에 `owner_name` 추가
 
-1. `src/plan_and_then_execute_agent/api/ui/models/session.py`에 필드를 추가한다.
-2. `src/plan_and_then_execute_agent/api/ui/utils/mappers.py`의 매핑을 수정한다.
-3. 필요하면 `src/plan_and_then_execute_agent/shared/chat/repositories/history_repository.py` 조회 데이터를 확장한다.
-4. `docs/static/ui.md` 렌더링 규칙을 갱신한다.
+1. 응답 필드 확장은 `api/ui/models/session.py` 모델과 `api/ui/utils/mappers.py` 매핑에서 동시에 반영된다.
+2. 조회 원본 데이터가 부족한 경우 `shared/chat/repositories/history_repository.py` 조회 범위가 함께 확장된다.
+3. 화면 반영 규칙은 `docs/static/ui.md`의 렌더링 정의와 동일 필드를 기준으로 맞춰진다.
 
-## 7-2. 정렬 정책 변경
+## 7-2. 정렬 동작 차이
 
 예시: 생성 시각 기준 정렬
 
-1. `ChatHistoryRepository.list_sessions()` 정렬 필드를 수정한다.
-2. 응답 스키마는 유지하고 문서의 정렬 설명을 갱신한다.
-3. 정적 UI 첫 세션 자동 선택 동작을 재검증한다.
+1. 정렬 기준의 실제 적용 지점은 `ChatHistoryRepository.list_sessions()`이다.
+2. 일반적으로 응답 스키마는 유지되고 정렬 설명이 문서에 반영된다.
+3. 정적 UI의 첫 세션 자동 선택 로직은 정렬 기준 변경의 직접 영향 구간이다.
 
 ## 7-3. 기본 페이지 크기 변경
 
 예시: 기본값 50 -> 100
 
-1. `src/plan_and_then_execute_agent/core/chat/const/settings.py`의 `DEFAULT_PAGE_SIZE`를 수정한다.
-2. `docs/api/ui.md`와 `docs/static/ui.md` 예시 값을 동시에 수정한다.
-3. 대량 조회 시 렌더링 성능을 확인한다.
+1. 기본 페이지 크기는 `core/chat/const/settings.py`의 `DEFAULT_PAGE_SIZE`에서 정의된다.
+2. API/UI 문서 예시는 같은 기본값을 공유한다.
+3. 기본값 확대 시 대량 조회 렌더링 비용 검토가 필요하다.
 
-## 7-4. 삭제 정책 변경
+## 7-4. 삭제 동작 차이
 
 예시: soft delete 적용
 
-1. 저장소 `delete_session()` 정책을 변경한다.
-2. `ChatService.delete_session()`의 예외 규칙을 유지 또는 조정한다.
-3. API 응답의 `deleted` 의미를 문서에 명확히 정의한다.
-4. 정적 UI의 삭제 후 fallback 동작을 점검한다.
+1. 삭제 의미(하드/소프트)는 저장소 `delete_session()` 구현에서 정의된다.
+2. `ChatService.delete_session()`의 예외 규칙과 API 응답의 `deleted` 의미가 함께 정렬된다.
+3. 정적 UI의 삭제 후 fallback 동작은 연동 검토 지점이다.
 
 ## 8. 정적 UI 연동 순서
 
@@ -341,19 +339,10 @@ curl -X DELETE "http://localhost:8000/ui-api/chat/sessions/<SESSION_ID>"
 | 삭제 후 화면 미반영 | 프런트 fallback 누락 | `static/js/ui/grid_manager.js` | 삭제 후 활성 세션 전환 규칙 보완 |
 | 메시지 순서가 뒤섞임 | 저장소 정렬 변경 영향 | `history_repository.list_messages()` | `sequence ASC` 유지 |
 
-## 11. 소스 매칭 점검 항목
-
-1. 네 엔드포인트가 `/ui-api/chat` prefix 아래 등록되어 있는가
-2. 생성 API 상태코드가 `201`인가
-3. 목록 Query 범위가 `1..200`, `0+`인가
-4. `CHAT_SESSION_NOT_FOUND`가 `404`로 매핑되는가
-5. 문서의 기본 페이지 값이 코드 상수와 일치하는가
-6. 문서의 파일 경로가 실제 저장소에 존재하는가
-
 ## 12. 관련 문서
 
 - `docs/api/overview.md`
 - `docs/api/chat.md`
 - `docs/static/ui.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`
 - `docs/shared/exceptions.md`

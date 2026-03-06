@@ -1,4 +1,4 @@
-# Core Chat 가이드
+# Core Chat 문서
 
 이 문서는 `src/plan_and_then_execute_agent/core/chat`의 현재 실행 구조(Plan-and-then-Execute)를 코드 기준으로 정리한다.
 
@@ -125,16 +125,8 @@ flowchart LR
 1. planner payload는 `build_planner_tools_payload(registry)`로 생성한다.
 2. `available_tool_names`는 `registry.get_tools()` 결과에서 이름을 추출한다.
 
-## 5-3. Tool 테스트 정책
+## 5-3. Tool 테스트 범위
 
-1. Tool 실행 노드 단위 테스트에서는 외부 의존성 대체를 위해 Tool 응답 payload mock 사용을 허용한다.
-2. mock 사용 시 `tool_start/tool_result/tool_error` 이벤트 계약과 `step_id`, `plan_id` 식별 필드를 유지한다.
-3. Planner-Execute 통합 동작 검증은 가능한 범위에서 실제 Tool 구현 호출을 우선한다.
-
-## 6. 소스 매칭 점검 항목
-
-1. 문서의 노드 이름이 그래프 등록 이름과 일치하는가
-2. `assistant_message` 출력 키가 모든 최종 경로에서 유지되는가
-3. Tool 함수 구현 위치가 `core/chat/tools`인지 확인했는가
-4. Tool 목록 접근이 `get_tools` 기준으로 일관적인가
-5. 문서에 적은 경로가 실제 저장소에 존재하는가
+1. Tool 실행 노드 단위 테스트는 Tool 응답 payload 기반 검증 시나리오를 포함한다.
+2. 해당 시나리오는 `tool_start/tool_result/tool_error` 이벤트 계약과 `step_id`, `plan_id` 식별 필드 유지 여부를 확인한다.
+3. Planner-Execute 통합 검증은 실제 Tool 구현 호출 경로가 중심이다.

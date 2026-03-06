@@ -1,4 +1,4 @@
-# Shared Runtime 가이드
+# Shared Runtime 문서
 
 이 문서는 `src/plan_and_then_execute_agent/shared/runtime`의 Queue, EventBuffer, Worker, ThreadPool 구성요소를 코드 기준으로 정리한다.
 
@@ -124,31 +124,31 @@ InMemoryQueue + InMemoryEventBuffer + ServiceExecutor
 2. 완료된 future는 내부 목록에서 제거한다.
 3. shutdown 시 executor와 추적 목록을 정리한다.
 
-## 8. 변경 작업 절차
+## 8. 확장 포인트
 
 ## 8-1. Queue를 Redis로 전환
 
-1. `api/chat/services/runtime.py`에서 `InMemoryQueue`를 `RedisQueue`로 교체한다.
-2. Redis URL/큐 이름/timeout/max_size를 환경 변수로 주입한다.
-3. 직렬화 불가능 payload가 없는지 점검한다.
+1. Queue 백엔드 선택은 `api/chat/services/runtime.py`에서 `InMemoryQueue`/`RedisQueue` 조합으로 결정된다.
+2. Redis URL, 큐 이름, timeout, max_size 값은 환경 변수로 주입된다.
+3. payload 직렬화 가능 여부가 Queue 전환의 선행 점검 항목이다.
 
 ## 8-2. EventBuffer를 Redis로 전환
 
-1. `InMemoryEventBuffer`를 `RedisEventBuffer`로 교체한다.
-2. `redis_key_prefix`, `redis_ttl_seconds`를 운영값으로 설정한다.
-3. stream 종료 시 `cleanup` 호출이 유지되는지 확인한다.
+1. EventBuffer 구현체는 `InMemoryEventBuffer`/`RedisEventBuffer` 중 하나로 조립된다.
+2. `redis_key_prefix`, `redis_ttl_seconds`는 버퍼 키 공간과 수명 정책을 정의한다.
+3. stream 종료 시 `cleanup` 호출 유지 여부가 누적 데이터 정리 품질을 좌우한다.
 
 ## 8-3. Worker 도입
 
-1. 큐 소비 작업을 함수 단위로 분리한다.
-2. `WorkerConfig`로 재시도/정지 정책을 설정한다.
-3. 실패 시 ERROR 상태 전이와 로그 기록을 확인한다.
+1. Worker 도입 시 큐 소비 작업이 함수 단위로 분리된다.
+2. 재시도/정지 동작은 `WorkerConfig`로 정의된다.
+3. 실패 경로는 ERROR 상태 전이와 로그 기록으로 관찰된다.
 
 ## 8-4. ThreadPool 도입
 
-1. 병렬화 대상 작업을 `submit` 단위로 분리한다.
-2. 작업 완료 콜백과 예외 처리 전략을 정의한다.
-3. 종료 시 `shutdown`이 누락되지 않도록 수명주기를 고정한다.
+1. ThreadPool 도입 시 병렬화 대상 작업이 `submit` 단위로 분할된다.
+2. 작업 완료 콜백과 예외 처리 전략이 함께 정의된다.
+3. 종료 단계의 `shutdown` 호출은 수명주기 관리 핵심 지점이다.
 
 ## 9. 트러블슈팅
 
@@ -160,15 +160,8 @@ InMemoryQueue + InMemoryEventBuffer + ServiceExecutor
 | Worker가 바로 ERROR로 전이 | handler 예외 + 재시도 초과 | `worker/worker.py` | handler 예외 처리 보강 |
 | ThreadPool 작업이 누락됨 | shutdown 타이밍 문제 | `thread_pool/thread_pool.py` | 수명주기 관리 방식 점검 |
 
-## 10. 소스 매칭 점검 항목
-
-1. Queue/Buffer/Worker/ThreadPool 메서드 설명이 코드 시그니처와 일치하는가
-2. 상태값/기본값이 모델 정의와 일치하는가
-3. 키 형식/TTL 설명이 Redis/InMemory 구현과 일치하는가
-4. 문서 경로가 실제 `src/plan_and_then_execute_agent/shared/runtime` 구조와 일치하는가
-
 ## 11. 관련 문서
 
 - `docs/shared/overview.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/overview.md`
 - `docs/api/chat.md`

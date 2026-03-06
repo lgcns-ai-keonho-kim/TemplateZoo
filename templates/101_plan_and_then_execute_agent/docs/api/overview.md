@@ -1,4 +1,4 @@
-# API 모듈 가이드
+# API 모듈 개요
 
 이 문서는 `src/plan_and_then_execute_agent/api` 계층의 실행 구조와 수정 절차를 코드 기준으로 정리한다.
 
@@ -73,35 +73,26 @@
 1. Chat API: `src/plan_and_then_execute_agent/api/chat/routers/common.py`
 2. UI API: `src/plan_and_then_execute_agent/api/ui/routers/common.py`
 
-## 6. 변경 작업 절차
+## 6. 확장 포인트
 
 ### 6-1. Chat 엔드포인트 추가
 
-1. `src/plan_and_then_execute_agent/api/chat/models`에 DTO를 추가한다.
-2. `src/plan_and_then_execute_agent/api/chat/routers`에 라우터 파일을 추가한다.
-3. `src/plan_and_then_execute_agent/api/chat/routers/router.py`에 `include_router`를 등록한다.
-4. 비즈니스 로직은 `src/plan_and_then_execute_agent/shared/chat/services`로 위임한다.
-5. `docs/api/chat.md`와 `docs/static/ui.md`의 호출 순서를 함께 갱신한다.
+1. Chat 엔드포인트 확장은 `api/chat/models`의 DTO와 `api/chat/routers`의 라우터 등록 경로를 함께 변경한다.
+2. 라우터 집계 파일(`api/chat/routers/router.py`)에는 신규 라우터 `include_router` 등록이 반영된다.
+3. 비즈니스 로직은 기존과 동일하게 `shared/chat/services` 계층으로 위임된다.
+4. 호출 흐름 문서는 `docs/api/chat.md`와 `docs/static/ui.md`가 동시에 갱신된다.
 
-### 6-2. UI 조회 정책 변경
+### 6-2. UI 조회 동작 변경
 
-1. `src/plan_and_then_execute_agent/api/ui/services/chat_service.py`에서 조회/변환 정책을 수정한다.
-2. `src/plan_and_then_execute_agent/api/ui/models`와 `src/plan_and_then_execute_agent/api/ui/utils/mappers.py`를 동기화한다.
-3. `docs/api/ui.md`의 응답 예시와 기본 페이지 규칙을 갱신한다.
+1. UI 조회 동작 변경은 `api/ui/services/chat_service.py`의 조회/변환 경로에서 발생한다.
+2. 해당 변경은 `api/ui/models`와 `api/ui/utils/mappers.py`의 매핑 구조에 직접 반영된다.
+3. 응답 예시와 페이지 기본값 설명은 `docs/api/ui.md`에서 같은 기준으로 유지된다.
 
 ### 6-3. 런타임 조립 변경
 
-1. 큐/버퍼/타임아웃 정책은 `src/plan_and_then_execute_agent/api/chat/services/runtime.py`에서 변경한다.
-2. 라우터에서 런타임 구현체를 직접 생성하지 않는다.
-3. 종료 훅은 `src/plan_and_then_execute_agent/api/main.py`의 lifespan 경계를 유지한다.
-
-## 7. 소스 매칭 점검 항목
-
-1. 문서의 엔드포인트 경로가 `src/plan_and_then_execute_agent/api/const/chat.py` 상수 조합과 일치하는가
-2. 문서의 상태코드가 라우터 데코레이터 설정과 일치하는가
-3. 예외 매핑 표가 `common.py`의 실제 코드와 일치하는가
-4. 페이지네이션 기본값 설명이 `src/plan_and_then_execute_agent/core/chat/const/settings.py`와 일치하는가
-5. 문서에 기재한 파일 경로가 실제 저장소에 존재하는가
+1. 큐/버퍼/타임아웃 조립 변경 지점은 `api/chat/services/runtime.py`다.
+2. 라우터 계층은 런타임 구현체 직접 생성 없이 주입 경계를 유지한다.
+3. 종료 정리는 `api/main.py`의 lifespan 경계에서 동일하게 수행된다.
 
 ## 8. 관련 문서
 
