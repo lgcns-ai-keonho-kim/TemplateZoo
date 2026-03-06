@@ -99,7 +99,7 @@ alias:
 2. `.env` 로딩 완료 후 라우터/서비스 import
 3. import 시점 생성 객체가 환경 변수값을 읽어 조립됨
 
-## 6. 변경 작업 절차
+## 6. 적용 시나리오
 
 ## 6-1. 새 설정 파일 추가
 
@@ -128,14 +128,7 @@ alias:
 | 숫자/불린이 문자열로 남음 | 파싱 규칙 외 문자열 | `loader.py` | 입력값 형식 조정 또는 후처리 추가 |
 | 예상과 다른 설정이 최종값으로 적용 | 병합 우선순위 착오 | `ConfigLoader.build` 호출부 | 소스 등록 순서 재정렬 |
 
-## 8. 소스 매칭 점검 항목
-
-1. 문서의 load 순서가 `runtime_env_loader.py` 코드와 일치하는가
-2. 지원 환경값 목록이 `_SUPPORTED_ENVS`, `_ENV_ALIASES`와 일치하는가
-3. 중첩 구분자 설명이 `SharedConst` 값과 일치하는가
-4. 파일 경로가 실제 `src/rag_chatbot/shared/config` 구조와 일치하는가
-
-## 9. 관련 문서
+## 8. 관련 문서
 
 - `docs/shared/overview.md`
 - `docs/shared/const.md`

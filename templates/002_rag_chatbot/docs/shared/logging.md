@@ -96,7 +96,7 @@ stdout JSON 출력 필드:
 2. 저장소 예외가 나도 핵심 비즈니스 흐름을 과도하게 중단하지 않도록 설계한다.
 3. 컨텍스트는 `request_id`, `trace_id` 중심으로 일관되게 전달한다.
 
-## 7. 변경 작업 절차
+## 7. 적용 시나리오
 
 ## 7-1. 로그 필드 추가
 
@@ -124,14 +124,7 @@ stdout JSON 출력 필드:
 | LLM 비용 필드가 비어 있음 | usage_metadata 누락 | `llm_repository.py` | metadata 수집 경로 점검 |
 | 조회 시 일부 로그가 사라짐 | 손상 레코드 스킵 | `db_repository.py`/`llm_repository.py` | 저장 포맷/파싱 오류 점검 |
 
-## 9. 소스 매칭 점검 항목
-
-1. 문서 레벨/필드 정의가 `models.py`와 일치하는가
-2. stdout 조건 설명이 `logger.py`와 일치하는가
-3. DB 컬럼 설명이 저장소 코드와 일치하는가
-4. 문서 경로가 실제 `shared/logging` 구조와 일치하는가
-
-## 10. 관련 문서
+## 9. 관련 문서
 
 - `docs/shared/overview.md`
 - `docs/shared/exceptions.md`

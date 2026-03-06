@@ -124,7 +124,7 @@ InMemoryQueue + InMemoryEventBuffer + ServiceExecutor
 2. 완료된 future는 내부 목록에서 제거한다.
 3. shutdown 시 executor와 추적 목록을 정리한다.
 
-## 8. 변경 작업 절차
+## 8. 적용 시나리오
 
 ## 8-1. Queue를 Redis로 전환
 
@@ -160,15 +160,8 @@ InMemoryQueue + InMemoryEventBuffer + ServiceExecutor
 | Worker가 바로 ERROR로 전이 | handler 예외 + 재시도 초과 | `worker/worker.py` | handler 예외 처리 보강 |
 | ThreadPool 작업이 누락됨 | shutdown 타이밍 문제 | `thread_pool/thread_pool.py` | 수명주기 관리 방식 점검 |
 
-## 10. 소스 매칭 점검 항목
-
-1. Queue/Buffer/Worker/ThreadPool 메서드 설명이 코드 시그니처와 일치하는가
-2. 상태값/기본값이 모델 정의와 일치하는가
-3. 키 형식/TTL 설명이 Redis/InMemory 구현과 일치하는가
-4. 문서 경로가 실제 `src/rag_chatbot/shared/runtime` 구조와 일치하는가
-
-## 11. 관련 문서
+## 10. 관련 문서
 
 - `docs/shared/overview.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/README.md`
 - `docs/api/chat.md`

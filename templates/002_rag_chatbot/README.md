@@ -198,7 +198,7 @@ flowchart TD
 참고:
 
 - `.env.sample`의 `CHAT_TASK_*`, `CHAT_BUFFER_BACKEND` 키는 현재 Chat 런타임(`runtime.py`)에서 직접 사용하지 않습니다.
-- ingestion/벡터 저장소 실행 절차는 `docs/setup/ingestion.md`를 참고하세요.
+- ingestion/벡터 저장소 실행 방법은 `docs/setup/ingestion.md`를 참고하세요.
 
 ## 6. 채팅 이력 초기화
 
@@ -252,7 +252,7 @@ docs/                   # 개발 문서
 | API UI | [docs/api/ui.md](docs/api/ui.md) | `/ui-api/chat` 인터페이스 |
 | API Health | [docs/api/health.md](docs/api/health.md) | `/health` 엔드포인트 |
 | Core Chat | [docs/core/chat.md](docs/core/chat.md) | 그래프/노드 동작 |
-| Shared Chat | [docs/shared/chat.md](docs/shared/chat.md) | 실행기/저장/멱등 규칙 |
+| Shared Chat | [docs/shared/chat/README.md](docs/shared/chat/README.md) | 실행기/저장/멱등 규칙 |
 | Static UI | [docs/static/ui.md](docs/static/ui.md) | 정적 UI 구조/이벤트 처리 |
 | Integrations 개요 | [docs/integrations/overview.md](docs/integrations/overview.md) | 외부 연동 문서 맵 |
 

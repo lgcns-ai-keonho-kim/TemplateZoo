@@ -47,31 +47,25 @@ shared -> integrations
 4. 설정 누락 이슈: `shared/config/runtime_env_loader.py`
 5. 로그 누락 이슈: `shared/logging/logger.py`, `shared/logging/*_repository.py`
 
-## 5. 학습 순서
+## 5. 읽기 순서
 
-1. `docs/shared/chat.md`
+1. `docs/shared/chat/README.md`
 2. `docs/shared/runtime.md`
 3. `docs/shared/config.md`
 4. `docs/shared/exceptions.md`
 5. `docs/shared/logging.md`
 6. `docs/shared/const.md`
 
-## 6. 변경 작업 절차
+## 6. 적용 시나리오
 
 1. 변경 대상이 실행 경로인지 보조 경로인지 먼저 분리한다.
 2. 포트 인터페이스 변경이 필요한지 확인한다.
 3. 구현체 변경 시 상위 호출 경로(`api/chat/services/runtime.py`)를 함께 점검한다.
 4. 문서의 용어, 스크립트 경로, 기본값을 코드와 동기화한다.
 
-## 7. 소스 매칭 점검 항목
+## 7. 관련 문서
 
-1. 문서에 기재된 `src/rag_chatbot/shared/*` 경로가 실제로 존재하는가
-2. 문서의 책임 설명이 `__init__.py` 공개 API와 일치하는가
-3. shared 문서 간 상호 링크가 모두 유효한가
-
-## 8. 관련 문서
-
-- `docs/shared/chat.md`
+- `docs/shared/chat/README.md`
 - `docs/shared/runtime.md`
 - `docs/shared/config.md`
 - `docs/shared/exceptions.md`

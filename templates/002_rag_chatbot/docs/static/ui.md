@@ -381,7 +381,7 @@ interface StreamState {
 3. 삭제된 세션의 pending request 무효화
 4. stale event(`request_id` 불일치) 무시
 
-## 10. 구현 체크리스트
+## 10. 구현 검증 항목
 
 1. UI API와 Chat API를 분리된 모듈에서 호출하는가
 2. `request_id` 검증 로직이 있는가
@@ -425,10 +425,10 @@ interface StreamState {
 
 - `docs/api/chat.md`
 - `docs/api/ui.md`
-- `docs/shared/chat.md`
+- `docs/shared/chat/README.md`
 - `docs/shared/runtime.md`
 
-## 13. 빠른 구현 절차(신규 프런트엔드 기준)
+## 13. 빠른 구현 흐름(신규 프런트엔드 기준)
 
 이 절차를 그대로 따르면, 신규 화면에서도 현재 static 동작과 동일한 동작을 구현할 수 있다.
 
@@ -718,7 +718,7 @@ export function useChatStream() {
 1. `ref` 상태와 로컬 변수(handle)의 생명주기를 명확히 분리한다.
 2. 라우트 변경으로 컴포넌트가 교체될 때 `onBeforeUnmount` 정리가 필수다.
 
-## 17. 변경 요구사항별 수정 지점
+## 17. 변경 포인트 예시
 
 ## 17-1. 세션 목록을 100개로 늘리고 싶을 때
 
@@ -748,7 +748,7 @@ export function useChatStream() {
 | 스크롤이 계속 바닥으로 튐 | 사용자 스크롤 판정 누락 | 스크롤 이벤트에서 `scrollMode` 변화를 로그 확인 | `PAUSED_BY_USER` 전이와 guard 적용 |
 | 삭제 후 빈 화면이 남음 | fallback 생성 누락 | 삭제 후 activeSessionId 값 확인 | next session 없으면 `createNewSession()` 호출 |
 
-## 19. 구현 완료 판정 기준
+## 19. 동작 검증 기준
 
 아래 9개가 모두 만족되면 “정적 UI 동등 동작”으로 판정한다.
 
