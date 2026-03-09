@@ -1,0 +1,18 @@
+"""
+목적: Chat 유틸 모듈 공개 API를 제공한다.
+설명: Chat 도메인 전용 매퍼, allowlist 로더, 스키마 introspection 유틸을 외부에 노출한다.
+디자인 패턴: 퍼사드
+참조: src/text_to_sql/core/chat/utils/mapper.py, src/text_to_sql/core/chat/utils/table_allowlist_loader.py, src/text_to_sql/core/chat/utils/schema_introspection.py
+"""
+
+from text_to_sql.core.chat.utils.mapper import ChatHistoryMapper
+from text_to_sql.core.chat.utils.schema_introspection import introspect_allowlist_schema
+from text_to_sql.core.chat.utils.table_allowlist_loader import (
+    load_table_allowlist_config,
+)
+
+__all__ = [
+    "ChatHistoryMapper",
+    "load_table_allowlist_config",
+    "introspect_allowlist_schema",
+]
