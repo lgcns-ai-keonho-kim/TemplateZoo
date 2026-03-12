@@ -1,83 +1,53 @@
 # Shared 모듈 레퍼런스
 
-이 문서는 `src/chatbot/shared` 계층의 책임 경계, 구성 요소, 변경 절차를 코드 기준으로 정리한다.
+`src/chatbot/shared`는 API 계층이 직접 다루기 어려운 실행 공통 로직을 모아 둔 계층이다. 현재 코드에서는 채팅 실행 오케스트레이션, 런타임 유틸리티, 설정 로딩, 공통 예외, 로깅을 담당한다.
 
-## 1. 용어 정리
+## 1. 코드 설명
 
-| 용어 | 의미 | 관련 스크립트 |
+| 경로 | 역할 | 대표 파일 |
 | --- | --- | --- |
-| 공통 계층 | API/Core/Integrations 사이에서 재사용되는 실행/저장/보조 로직 계층 | `src/chatbot/shared/*` |
-| 포트 | 구현체와 상위 계층 사이의 동작 인터페이스 | `src/chatbot/shared/chat/interface/ports.py` |
-| 실행 오케스트레이터 | 큐 소비, 이벤트 중계, 상태 전이를 관리하는 컴포넌트 | `src/chatbot/shared/chat/services/service_executor.py` |
-| 런타임 컴포넌트 | Queue, EventBuffer, Worker, ThreadPool 같은 실행 인프라 | `src/chatbot/shared/runtime/*` |
-| 공통 예외 | 계층 전체에서 통일해 사용하는 오류 모델 | `src/chatbot/shared/exceptions/*` |
-| 공통 로깅 | 로거 인터페이스와 저장소 구현 | `src/chatbot/shared/logging/*` |
-
-## 2. 모듈 구성과 스크립트 맵
-
-| 경로 | 핵심 책임 | 주요 스크립트 |
-| --- | --- | --- |
-| `src/chatbot/shared/chat` | Chat 실행, 저장, 멱등 처리, 그래프 포트 | `services/chat_service.py`, `services/service_executor.py`, `repositories/history_repository.py` |
-| `src/chatbot/shared/runtime` | 큐/이벤트 버퍼/워커/스레드풀 제공 | `queue/*.py`, `buffer/*.py`, `worker/*.py`, `thread_pool/*.py` |
-| `src/chatbot/shared/config` | 환경 변수/JSON/dict 설정 병합과 런타임 `.env` 로딩 | `loader.py`, `runtime_env_loader.py` |
+| `src/chatbot/shared/chat` | 채팅 실행 서비스, 포트, 저장소, 메모리, 공용 노드 | `services/chat_service.py`, `services/service_executor.py` |
+| `src/chatbot/shared/runtime` | 큐, 이벤트 버퍼, 워커, 스레드풀 | `queue/*.py`, `buffer/*.py` |
+| `src/chatbot/shared/config` | 설정 병합과 런타임 환경 해석 | `loader.py`, `runtime_env_loader.py` |
 | `src/chatbot/shared/exceptions` | 공통 예외 모델과 베이스 예외 | `models.py`, `base.py` |
-| `src/chatbot/shared/logging` | 로거 인터페이스, 인메모리/DB 로그 저장소 | `logger.py`, `db_repository.py`, `llm_repository.py` |
-| `src/chatbot/shared/const` | 전역 상수 | `__init__.py` |
+| `src/chatbot/shared/logging` | 인메모리/DB 로깅 인터페이스와 저장소 | `logger.py`, `db_repository.py`, `llm_repository.py` |
+| `src/chatbot/shared/const` | 공통 상수 | `__init__.py` |
 
-## 3. 책임 경계
-
-핵심 동작:
-
-1. `api` 계층은 HTTP 경계 처리에 집중하고 실행 로직은 `shared/chat`으로 위임한다.
-2. `core` 계층은 도메인 모델/그래프 정의에 집중하고 저장/오케스트레이션은 `shared`에서 처리한다.
-3. `integrations` 구현체를 바꿔도 상위 계층이 영향받지 않도록 `shared` 포트 인터페이스를 유지한다.
-
-의존 흐름:
+현재 의존 방향은 다음과 같다.
 
 ```text
-api -> shared -> core
+api -> shared
+shared -> core
 shared -> integrations
 ```
 
-## 4. 운영 관점 점검 지점
+`shared`는 `core`의 그래프와 도메인 모델을 실행 서비스로 묶고, 외부 시스템 접근은 `integrations`에 위임한다.
 
-1. SSE 지연/타임아웃 이슈: `shared/chat/services/service_executor.py`, `shared/runtime/buffer/*`
-2. 문맥 누락 이슈: `shared/chat/memory/session_store.py`, `shared/chat/services/chat_service.py`
-3. 중복 저장 이슈: `shared/chat/repositories/history_repository.py`의 request_id 커밋 로직
-4. 설정 누락 이슈: `shared/config/runtime_env_loader.py`
-5. 로그 누락 이슈: `shared/logging/logger.py`, `shared/logging/*_repository.py`
+## 2. 공개 API
 
-## 5. 학습 순서
+`src/chatbot/shared/__init__.py`가 외부에 노출하는 주요 항목은 다음과 같다.
 
-1. `docs/shared/chat/overview.md`
-2. `docs/shared/chat/services/service_executor.md`
-3. `docs/shared/chat/services/chat_service.md`
-4. `docs/shared/chat/repositories/history_repository.md`
-5. `docs/shared/runtime.md`
-6. `docs/shared/config.md`
-7. `docs/shared/exceptions.md`
-8. `docs/shared/logging.md`
-9. `docs/shared/const.md`
+1. 예외: `BaseAppException`, `ExceptionDetail`
+2. 로깅: `Logger`, `LogRepository`, `InMemoryLogger`, `DBLogRepository`, `LLMLogRepository`
+3. Chat: `BaseChatGraph`, `ChatService`, `ServiceExecutor`, `ChatSessionMemoryStore`, `ChatHistoryRepository`
+4. Runtime: `QueueConfig`, `InMemoryQueue`, `RedisQueue`, `EventBufferConfig`, `InMemoryEventBuffer`, `RedisEventBuffer`, `Worker`, `ThreadPool`
 
-## 6. 변경 작업 절차
+## 3. 유지보수 포인트
 
-1. 변경 대상이 실행 경로인지 보조 경로인지 먼저 분리한다.
-2. 포트 인터페이스 변경이 필요한지 확인한다.
-3. 구현체 변경 시 상위 호출 경로(`api/chat/services/runtime.py`)를 함께 점검한다.
-4. 문서의 용어, 스크립트 경로, 기본값을 코드와 동기화한다.
+1. `shared/chat/services`는 현재 채팅 실행의 핵심 경로다. 여기서 이벤트 스키마를 바꾸면 API와 정적 UI가 함께 영향을 받는다.
+2. `shared/runtime`는 재사용 가능한 유틸 계층이지만, 현재 기본 조립은 `InMemoryQueue`와 `InMemoryEventBuffer`를 사용한다.
+3. 환경 변수는 `shared/config/runtime_env_loader.py`에서 앱 import 이전에 로드되므로, 로더 순서를 바꾸면 전체 초기화 방식이 달라진다.
+4. 예외 코드는 라우터 계층에서 HTTP 상태 매핑 기준으로 사용되므로, `detail.code`를 임의로 바꾸면 API 응답 의미가 깨질 수 있다.
 
-## 7. 소스 매칭 점검 항목
+## 4. 추가 개발/확장 가이드
 
-1. 문서에 기재된 `src/chatbot/shared/*` 경로가 실제로 존재하는가
-2. 문서의 책임 설명이 `__init__.py` 공개 API와 일치하는가
-3. shared 문서 간 상호 링크가 모두 유효한가
+1. 새로운 공통 서비스가 필요하면 먼저 `shared`에 둘 책임인지 확인해야 한다. HTTP 경계면 `api`, 도메인 규칙이면 `core`, 외부 제품 세부 구현이면 `integrations`가 맞다.
+2. 다른 채팅 그래프를 추가해도 `ChatServicePort`, `ServiceExecutorPort`, `GraphPort`를 유지하면 상위 계층 영향도를 줄일 수 있다.
+3. 런타임 백엔드를 Redis로 바꾸더라도 조립 지점은 `src/chatbot/api/chat/services/runtime.py` 하나로 유지하는 것이 안전하다.
 
-## 8. 관련 문서
+## 5. 문서 진입점
 
 - `docs/shared/chat/overview.md`
-- `docs/shared/chat/services/service_executor.md`
-- `docs/shared/chat/services/chat_service.md`
-- `docs/shared/chat/repositories/history_repository.md`
 - `docs/shared/runtime.md`
 - `docs/shared/config.md`
 - `docs/shared/exceptions.md`

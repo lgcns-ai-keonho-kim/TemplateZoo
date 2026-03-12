@@ -1,108 +1,56 @@
 # Shared Exceptions 레퍼런스
 
-이 문서는 `src/chatbot/shared/exceptions`의 공통 예외 모델과 사용 기준을 코드 기준으로 정리한다.
+`src/chatbot/shared/exceptions`은 애플리케이션 전역에서 공통으로 쓰는 예외 모델을 제공한다.
 
-## 1. 용어 정리
+## 1. 코드 설명
 
-| 용어 | 의미 | 관련 스크립트 |
-| --- | --- | --- |
-| BaseAppException | 계층 공통 베이스 예외 | `base.py` |
-| ExceptionDetail | 오류 코드/원인/힌트를 담는 상세 모델 | `models.py` |
-| detail.code | 오류 분류 코드 | 라우터 HTTP 매핑 기준 |
-| original | 원본 예외 객체 | 디버깅용 선택 필드 |
+핵심 타입:
 
-## 2. 관련 스크립트
+1. `ExceptionDetail`
+2. `BaseAppException`
 
-| 파일 | 역할 |
-| --- | --- |
-| `src/chatbot/shared/exceptions/base.py` | 공통 예외 클래스 정의 |
-| `src/chatbot/shared/exceptions/models.py` | 상세 모델 정의 |
-| `src/chatbot/shared/exceptions/__init__.py` | 공개 API 제공 |
-| `src/chatbot/api/chat/routers/common.py` | Chat API 예외를 HTTP 상태로 매핑 |
-| `src/chatbot/api/ui/routers/common.py` | UI API 예외를 HTTP 상태로 매핑 |
+### 1-1. `ExceptionDetail`
 
-## 3. 인터페이스 정의
+필드:
 
-## 3-1. ExceptionDetail
+1. `code`
+2. `cause`
+3. `hint`
+4. `metadata`
 
-| 필드 | 타입 | 설명 |
-| --- | --- | --- |
-| `code` | `str` | 시스템 공통 오류 코드 |
-| `cause` | `str \| None` | 직접 원인 설명 |
-| `hint` | `str \| None` | 해결 힌트 |
-| `metadata` | `dict[str, Any]` | 구조화 메타데이터 |
+### 1-2. `BaseAppException`
 
-## 3-2. BaseAppException
+보관 정보:
 
-| 필드 | 타입 | 설명 |
-| --- | --- | --- |
-| `message` | `str` | 사용자/시스템 공통 메시지 |
-| `detail` | `ExceptionDetail` | 상세 오류 정보 |
-| `original` | `Exception \| None` | 원본 예외 |
+1. 사용자/시스템 메시지
+2. `ExceptionDetail`
+3. 원본 예외 객체(`original`)
 
-`to_dict()` 반환 구조:
+`to_dict()`는 다음 구조를 반환한다.
 
 ```json
 {
-  "message": "...",
+  "message": "요청한 세션을 찾을 수 없습니다.",
   "detail": {
-    "code": "...",
-    "cause": "...",
-    "hint": null,
-    "metadata": {}
+    "code": "CHAT_SESSION_NOT_FOUND",
+    "cause": "session_id=..."
   },
   "original": null
 }
 ```
 
-## 4. 사용 기준
+## 2. 유지보수 포인트
 
-1. 모듈별 커스텀 예외 대신 `BaseAppException`으로 통일한다.
-2. `detail.code`는 API 상태코드 매핑 기준으로 사용한다.
-3. 민감 정보는 `message`, `metadata`에 직접 넣지 않는다.
-4. `original`은 내부 디버깅 목적으로만 사용한다.
+1. `detail.code`는 라우터 계층에서 HTTP 상태 매핑 기준으로 사용된다.
+2. `cause`에는 디버깅에 필요한 최소 정보만 넣고, 민감한 값은 그대로 노출하지 않는 편이 좋다.
+3. 원본 예외는 `repr()`로 직렬화되므로, API 응답에 그대로 노출하는 경로가 있는지 항상 확인해야 한다.
 
-## 5. 구현 패턴
+## 3. 추가 개발/확장 가이드
 
-권장 패턴:
+1. 새 오류 코드가 필요하면 먼저 기존 코드 체계(`CHAT_*`, `FUNCTION_NODE_*` 등)와 같은 수준으로 맞추는 것이 좋다.
+2. 계층별 개별 예외 클래스를 많이 늘리기보다 현재처럼 공통 예외 + 상세 코드 구조를 유지하는 편이 API 매핑이 단순하다.
 
-1. 비즈니스 조건 검증 실패 시 `ExceptionDetail(code=...)` 생성
-2. `BaseAppException(message, detail)` 발생
-3. 라우터 계층에서 `to_http_exception`으로 변환
+## 4. 관련 코드
 
-예시:
-
-```python
-from chatbot.shared.exceptions import BaseAppException, ExceptionDetail
-
-if not session_id:
-    detail = ExceptionDetail(code="CHAT_SESSION_NOT_FOUND", cause="session_id is empty")
-    raise BaseAppException("요청한 세션을 찾을 수 없습니다.", detail)
-```
-
-## 6. 변경 작업 절차
-
-1. 신규 오류 코드가 필요하면 먼저 코드 네이밍 기준을 정의한다.
-2. 발생 지점에서 `detail.code`, `cause`를 채운다.
-3. API 라우터 예외 매핑 표를 함께 갱신한다.
-4. 문서의 오류 응답 예시를 동기화한다.
-
-## 7. 트러블슈팅
-
-| 증상 | 원인 후보 | 확인 스크립트 | 조치 |
-| --- | --- | --- | --- |
-| 같은 오류가 500으로만 반환 | 라우터 매핑 누락 | `api/*/routers/common.py` | `detail.code` 매핑 추가 |
-| 응답 detail 필드가 비어 있음 | `to_dict()` 미사용 | 라우터 예외 변환 구간 | `error.to_dict()` 사용 |
-| 원인 추적이 어려움 | `cause` 미기록 | 예외 생성 지점 | `ExceptionDetail.cause` 채우기 |
-
-## 8. 소스 매칭 점검 항목
-
-1. 필드 정의가 `base.py`, `models.py`와 일치하는가
-2. 예외 변환 경로가 Chat/UI 라우터 공통 유틸과 일치하는가
-3. 문서 경로가 실제 파일 구조와 일치하는가
-
-## 9. 관련 문서
-
-- `docs/shared/overview.md`
-- `docs/api/chat.md`
-- `docs/api/ui.md`
+- `src/chatbot/api/chat/routers/common.py`
+- `src/chatbot/api/ui/routers/common.py`

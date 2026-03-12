@@ -1,22 +1,20 @@
-# LanceDB 벡터 검색 구성 레퍼런스
+# LanceDB 구성 레퍼런스
 
-이 문서는 LanceDB를 벡터 검색 엔진으로 준비하고 검증하는 절차를 정리한다.
-현재 프로젝트에서 SQLite는 벡터 검색을 지원하지 않으므로, 로컬 벡터 검색 기본 경로는 LanceDB를 권장한다.
+이 문서는 `src/chatbot/integrations/db/engines/lancedb`를 사용할 때의 코드 구조와 확장 포인트를 정리한다.
+현재 채팅 기본 런타임은 LanceDB를 자동으로 조립하지 않는다.
 
-## 1. 적용 범위
+## 1. 현재 코드 위치
 
-1. 로컬 벡터 검색 실험/검증
-2. 임베딩 생성 후 벡터 upsert/search 흐름 점검
-3. LanceDB 저장 경로/권한 관리
+- `src/chatbot/integrations/db/engines/lancedb/engine.py`
+- `src/chatbot/integrations/db/engines/lancedb/document_mapper.py`
+- `src/chatbot/integrations/db/engines/lancedb/filter_engine.py`
+- `src/chatbot/integrations/db/engines/lancedb/schema_adapter.py`
 
-## 2. 관련 스크립트
+## 2. 사용 목적
 
-| 경로 | 역할 |
-| --- | --- |
-| `src/chatbot/integrations/db/engines/lancedb/engine.py` | LanceDB 엔진 구현 |
-| `src/chatbot/integrations/db/engines/lancedb/schema_adapter.py` | 스키마/테이블 변환 |
-| `src/chatbot/integrations/db/engines/lancedb/filter_engine.py` | 필터 처리 |
-| `tests/integrations/db/Vector/test_lancedb_engine_vector.py` | 벡터 검색 검증 테스트 |
+1. 로컬 벡터 저장소가 필요할 때 선택할 수 있다.
+2. `CollectionSchema` 기반 정의와 벡터 필드 차원 정보를 이용해 검색을 수행한다.
+3. 기본 채팅 이력 저장소 대체보다는 벡터 검색용 보조 엔진으로 보는 편이 맞다.
 
 ## 3. 환경 변수
 
@@ -24,53 +22,19 @@
 LANCEDB_URI=data/db/vector
 ```
 
-설명:
+## 4. 유지보수 포인트
 
-1. `LANCEDB_URI`는 LanceDB 데이터 저장 위치다.
-2. 운영/CI에서는 절대경로를 권장한다.
+1. 차원 수, vector 필드명, payload 매핑 규칙은 스키마와 문서를 함께 유지해야 한다.
+2. 필터 후처리 순서를 바꾸면 검색 정확도와 비용이 동시에 바뀔 수 있다.
+3. 기본 런타임 비활성 기능이므로, 실제 서비스에 도입할 때는 조립 코드와 장애 대응 문서를 같이 추가해야 한다.
 
-## 4. 준비 절차
+## 5. 추가 개발과 확장 시 주의점
 
-1. 디렉터리 준비:
+1. 검색 결과를 채팅 런타임에 연결하려면 별도 저장소/서비스 조립이 필요하다.
+2. 임베딩 차원이나 거리 기준을 바꾸면 기존 저장 데이터 재적재 여부를 먼저 검토해야 한다.
 
-```bash
-mkdir -p "$LANCEDB_URI"
-ls -ld "$LANCEDB_URI"
-```
+## 6. 관련 문서
 
-2. 임베딩 의존 확인(예: Ollama 사용 시):
-
-```bash
-curl -sS http://127.0.0.1:11434/api/tags | head
-```
-
-기대 결과:
-
-1. LanceDB 경로가 쓰기 가능해야 한다.
-2. 임베딩 공급자가 정상 응답해야 벡터 테스트가 동작한다.
-
-## 5. 벡터 검색 동작 요약
-
-1. 컬렉션 생성 시 `vector_field`, `vector_dimension`을 정의한다.
-2. 문서 upsert 시 벡터를 함께 저장한다.
-3. `VectorSearchRequest`로 `top_k` 검색을 수행한다.
-
-## 6. 실무 점검 포인트
-
-1. 임베딩 차원(`dimension`)과 스키마 차원이 일치해야 한다.
-2. 테스트 데이터는 최소 2건 이상으로 유사도 순서가 검증 가능해야 한다.
-3. 검색 정확도 검증 시 질의 벡터 생성 모델과 저장 벡터 생성 모델을 동일하게 유지한다.
-
-## 7. 장애 대응
-
-| 증상 | 원인 후보 | 확인 경로 | 조치 |
-| --- | --- | --- | --- |
-| 벡터 검색 결과가 비어 있음 | 임베딩 생성 실패 또는 upsert 누락 | 테스트 로그, upsert 코드 | 임베딩 응답/저장 문서 재확인 |
-| 차원 불일치 오류 | 스키마 차원과 임베딩 차원 불일치 | `vector_dimension`, 임베딩 길이 | 스키마/모델 차원 통일 |
-| 파일 접근 오류 | LanceDB 경로 권한 부족 | `LANCEDB_URI`, OS 권한 | 디렉터리 권한 수정 |
-
-## 8. 관련 문서
-
-- `docs/setup/env.md`
-- `docs/setup/sqlite.md`
+- `docs/integrations/db/engines/lancedb/engine.md`
 - `docs/integrations/db/overview.md`
+- `docs/setup/env.md`

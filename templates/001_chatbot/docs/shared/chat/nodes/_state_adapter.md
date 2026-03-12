@@ -1,37 +1,30 @@
 # `nodes/_state_adapter.py` 레퍼런스
 
-## 1. 모듈 목적
+이 모듈은 LangGraph 노드 입력 `state`를 `Mapping[str, Any]`로 정규화한다. 공용 노드가 다양한 입력 타입을 동일하게 처리하도록 만드는 얇은 어댑터다.
 
-LangGraph 노드 입력 `state`를 `Mapping[str, Any]`로 정규화한다.
+## 1. 코드 설명
 
-## 2. 핵심 함수
+지원 입력:
 
-1. `coerce_state_mapping(state)`
-- 지원 입력:
-  - `Mapping`
-  - dataclass 인스턴스 (`asdict`)
-  - Pydantic 객체 (`model_dump`)
-  - 레거시 객체 (`dict` 메서드)
-- 반환: 키-값 접근 가능한 `Mapping`
+1. `Mapping`
+2. dataclass 인스턴스
+3. `model_dump()`를 가진 객체
+4. 레거시 `dict()` 메서드를 가진 객체
 
-## 3. 입력/출력
+지원하지 않는 타입이면 `CHAT_NODE_INPUT_INVALID`를 담은 `BaseAppException`을 발생시킨다.
 
-1. 입력: `state: object`
-2. 출력: `Mapping[str, Any]`
+## 2. 유지보수 포인트
 
-## 4. 실패 경로
+1. 이 함수는 `LLMNode`, `BranchNode`, `MessageNode`, `FunctionNode`, `FanoutBranchNode`의 공통 타입 경계다.
+2. 허용 타입을 넓히면 편해 보일 수 있지만, 잘못된 객체를 조용히 받아들이면 노드 디버깅이 어려워진다.
 
-1. `CHAT_NODE_INPUT_INVALID`
-- 조건: 지원하지 않는 `state` 타입
+## 3. 추가 개발/확장 가이드
 
-## 5. 연계 모듈
+1. 새 공용 노드를 만들 때 입력 정규화가 필요하면 이 함수를 먼저 재사용하는 것이 좋다.
+2. 지원 타입을 늘릴 때는 항상 명시적인 실패 코드와 원인 문자열을 유지해야 상위 계층 로그 추적이 쉽다.
 
-1. `nodes/llm_node.py`
-2. `nodes/branch_node.py`
-3. `nodes/message_node.py`
-4. `nodes/function_node.py`
-5. `nodes/fanout_branch_node.py`
+## 4. 관련 코드
 
-## 6. 변경 시 영향 범위
-
-정규화 규칙이 바뀌면 공용 노드의 입력 타입 경계가 함께 바뀌므로 모든 노드 테스트 케이스를 재검토해야 한다.
+- `src/chatbot/shared/chat/nodes/llm_node.py`
+- `src/chatbot/shared/chat/nodes/branch_node.py`
+- `src/chatbot/shared/chat/nodes/message_node.py`

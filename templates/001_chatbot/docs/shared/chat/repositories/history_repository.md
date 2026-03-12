@@ -1,60 +1,49 @@
 # `repositories/history_repository.py` 레퍼런스
 
-## 1. 모듈 목적
+`ChatHistoryRepository`는 세션, 메시지, request commit 이력을 저장하는 저장소 구현체다. 기본값은 SQLite지만, `DBClient`를 주입하면 다른 엔진으로도 동작한다.
 
-`ChatHistoryRepository`는 세션/메시지/요청 커밋을 DB에 저장하는 저장소 구현체다.
+## 1. 코드 설명
 
-- 기본 동작: SQLite (`db_client` 미주입)
-- 주입 동작: 외부 `DBClient` 사용 (PostgreSQL/MongoDB 등)
+핵심 메서드:
 
-## 2. 핵심 클래스
+1. 세션: `create_session`, `ensure_session`, `get_session`, `list_sessions`, `delete_session`
+2. 메시지: `append_message`, `list_messages`, `get_recent_messages`
+3. 멱등성: `is_request_committed`, `mark_request_committed`
 
-1. `ChatHistoryRepository`
-- 세션: `create_session`, `ensure_session`, `get_session`, `list_sessions`, `delete_session`
-- 메시지: `append_message`, `list_messages`, `get_recent_messages`
-- 멱등성: `is_request_committed`, `mark_request_committed`
+기본 초기화:
 
-## 3. 입력/출력
+1. `db_client` 미주입 시 `SQLiteEngine(database_path)` 생성
+2. `create_collection()`으로 세션/메시지/request commit 스키마 보장
+3. 메시지 저장 시 세션의 `message_count`, `updated_at`, `last_message_preview`를 함께 갱신
 
-1. 생성자
-- `db_client`가 없으면 `SQLiteEngine(database_path)`를 생성
-- 시작 시 `_initialize()`로 컬렉션 스키마를 보장
-
-2. `append_message`
-- 입력: `session_id`, `role`, `content`, `metadata`
-- 처리: 메시지 upsert + 세션 카운트/미리보기 갱신
-- 출력: `ChatMessage`
-
-3. `delete_session`
-- 출력: `(deleted: bool, deleted_message_count: int)`
-
-## 4. 실패 경로
+주요 오류 코드:
 
 1. `CHAT_MESSAGE_EMPTY`
-- 조건: `append_message`에 빈 본문
-
 2. `CHAT_REQUEST_ID_EMPTY`
-- 조건: `is_request_committed`, `mark_request_committed`의 `request_id` 공백
+3. `CHAT_SESSION_CREATE_ERROR`
+4. `CHAT_SESSION_GET_ERROR`
+5. `CHAT_SESSION_LIST_ERROR`
+6. `CHAT_SESSION_DELETE_ERROR`
+7. `CHAT_MESSAGE_APPEND_ERROR`
+8. `CHAT_MESSAGE_LIST_ERROR`
+9. `CHAT_MESSAGE_RECENT_ERROR`
+10. `CHAT_REQUEST_COMMIT_GET_ERROR`
+11. `CHAT_REQUEST_COMMIT_UPSERT_ERROR`
 
-3. 저장소 래핑 오류
-- `CHAT_SESSION_CREATE_ERROR`
-- `CHAT_SESSION_GET_ERROR`
-- `CHAT_SESSION_LIST_ERROR`
-- `CHAT_SESSION_DELETE_ERROR`
-- `CHAT_MESSAGE_APPEND_ERROR`
-- `CHAT_MESSAGE_LIST_ERROR`
-- `CHAT_MESSAGE_RECENT_ERROR`
-- `CHAT_REQUEST_COMMIT_GET_ERROR`
-- `CHAT_REQUEST_COMMIT_UPSERT_ERROR`
+## 2. 유지보수 포인트
 
-## 5. 연계 모듈
+1. `append_message()`는 세션 요약 필드까지 같이 갱신한다. 메시지 저장 경로를 분리하면 세션 목록 정렬과 미리보기가 틀어질 수 있다.
+2. request commit 컬렉션은 `persist_assistant_message()`의 멱등성 보장 핵심이므로, 저장 시점을 바꾸면 중복 응답 저장 가능성이 생긴다.
+3. `get_recent_messages()`는 DESC 조회 후 reverse 한다. 최근 메시지 조회 정렬을 바꾸면 문맥 구성 순서가 바뀐다.
 
-1. `src/chatbot/shared/chat/services/chat_service.py`
-2. `src/chatbot/shared/chat/repositories/schemas/*.py`
-3. `src/chatbot/integrations/db/*`
+## 3. 추가 개발/확장 가이드
 
-## 6. 변경 시 영향 범위
+1. 다른 DB 엔진으로 전환할 때는 `DBClient` 계약과 스키마 생성 흐름만 유지하면 저장소 코드는 그대로 둘 수 있다.
+2. 세션 삭제 시 request commit까지 같이 지울지 여부는 현재 구현에 없다. 운영 요구가 생기면 삭제 정책을 명시적으로 추가해야 한다.
 
-1. 세션/메시지 스키마 필드 변경 시 API DTO와 UI 응답 필드에 영향
-2. request commit 저장 방식 변경 시 멱등 저장 보장이 깨질 수 있음
-3. 정렬/페이지네이션 변경 시 세션 목록 및 히스토리 표시 순서가 바뀜
+## 4. 관련 코드
+
+- `src/chatbot/shared/chat/services/chat_service.py`
+- `src/chatbot/shared/chat/repositories/schemas/session_schema.py`
+- `src/chatbot/shared/chat/repositories/schemas/message_schema.py`
+- `src/chatbot/shared/chat/repositories/schemas/request_commit_schema.py`

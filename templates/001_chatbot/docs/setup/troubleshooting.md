@@ -1,261 +1,79 @@
 # Setup 트러블슈팅 허브
 
-이 문서는 최근 운영/테스트에서 반복된 장애를 빠르게 복구하기 위한 중앙 레퍼런스다.
-각 섹션은 `증상 -> 원인 -> 즉시 실행 명령 -> 기대 출력 -> 조치 -> 재발 방지` 순서로 구성한다.
+이 문서는 현재 코드 기준으로 자주 발생할 수 있는 설정/연동 문제를 빠르게 분류하기 위한 레퍼런스다.
 
-## 1. Elasticsearch TLS 오류 분기
+## 1. `ENV=dev/stg/prod`인데 서버가 시작되지 않을 때
 
-### 1-1. 증상 A: `CERTIFICATE_VERIFY_FAILED`
+증상:
 
-원인 후보:
+1. `FileNotFoundError: 환경 파일을 찾을 수 없습니다: .../src/chatbot/resources/<env>/.env`
 
-1. `ELASTICSEARCH_CA_CERTS` 경로 누락 또는 오경로
-2. 잘못된 CA 파일 사용
-3. `ELASTICSEARCH_SCHEME=https`인데 인증서 검증 정보 미설정
+확인 포인트:
 
-즉시 실행 명령:
-
-```bash
-ls -l "$ELASTICSEARCH_CA_CERTS"
-curl --cacert "$ELASTICSEARCH_CA_CERTS" -u "$ELASTICSEARCH_USER:$ELASTICSEARCH_PW" "https://$ELASTICSEARCH_HOST:$ELASTICSEARCH_PORT"
-```
-
-기대 출력:
-
-1. `ls`에서 CA 파일이 존재
-2. `curl` 결과에 Elasticsearch JSON(`cluster_name`, `version`)이 출력
-
-조치:
-
-1. `ELASTICSEARCH_CA_CERTS`를 절대경로로 고정
-2. 서버 인증서 체인과 일치하는 CA 파일로 교체
-3. 테스트/서버 프로세스 재시작
-
-재발 방지 확인 항목:
-
-1. `.env`에 상대경로 대신 절대경로 사용
-2. 배포 전 `curl --cacert` 헬스체크를 자동화
-
-### 1-2. 증상 B: `SSLError([Errno 13] Permission denied)`
-
-원인 후보:
-
-1. CA 파일 소유자/권한 문제로 실행 계정이 읽지 못함
-2. 상위 디렉터리 execute 권한 누락
-
-즉시 실행 명령:
-
-```bash
-whoami
-namei -l "$ELASTICSEARCH_CA_CERTS"
-ls -l "$ELASTICSEARCH_CA_CERTS"
-head -n 1 "$ELASTICSEARCH_CA_CERTS"
-```
-
-기대 출력:
-
-1. `head`가 인증서 시작 줄(`-----BEGIN CERTIFICATE-----`)을 출력
-2. `Permission denied`가 발생하지 않음
+1. `RuntimeEnvironmentLoader`는 샘플 파일이 아니라 실제 `.env` 파일을 찾는다.
+2. `src/chatbot/resources/<env>/.env.sample`만 있고 `.env`가 없으면 실패한다.
 
 조치:
 
 ```bash
-# 예시: 현재 실행 사용자에게 읽기 권한 부여
-chown "$(whoami):$(id -gn)" "$ELASTICSEARCH_CA_CERTS"
-chmod 644 "$ELASTICSEARCH_CA_CERTS"
+cp src/chatbot/resources/dev/.env.sample src/chatbot/resources/dev/.env
 ```
 
-재발 방지 확인 항목:
+## 2. LLM 호출이 실패할 때
 
-1. 인증서 파일 생성 스크립트에서 소유자/권한을 즉시 고정
-2. CI/사전 점검에 `head "$ELASTICSEARCH_CA_CERTS"`를 포함
+확인 포인트:
 
-## 2. MongoDB 인증 실패 (`AuthenticationFailed`)
+1. 현재 기본 노드는 `GEMINI_MODEL`, `GEMINI_PROJECT`를 직접 읽는다.
+2. `.env.sample`의 `OPENAI_*`는 현재 기본 런타임을 자동으로 바꾸지 않는다.
 
-### 2-1. 증상
-
-`pymongo.errors.OperationFailure: Authentication failed. code=18`
-
-원인 후보:
-
-1. `MONGODB_AUTH_DB`와 실제 사용자 생성 DB 불일치
-2. 사용자/비밀번호 오타
-3. URI 직접 지정 시 `authSource` 누락
-
-핵심 동작:
-
-1. `MONGODB_AUTH_DB`가 비어 있고 사용자/비밀번호가 있으면 엔진이 `MONGODB_DB`를 인증 DB로 사용한다.
-2. 실제 계정이 `admin` DB에 생성되어 있으면 `MONGODB_AUTH_DB=admin`이 필요하다.
-
-즉시 실행 명령:
-
-```bash
-# 현재 env 확인
-printf 'MONGODB_DB=%s\nMONGODB_AUTH_DB=%s\nMONGODB_USER=%s\n' "$MONGODB_DB" "$MONGODB_AUTH_DB" "$MONGODB_USER"
-
-# admin 인증 기준 연결 확인
-mongosh "mongodb://$MONGODB_USER:$MONGODB_PW@$MONGODB_HOST:$MONGODB_PORT/admin?authSource=admin" --eval 'db.runCommand({connectionStatus:1})'
-```
-
-기대 출력:
-
-1. `ok: 1` 포함
-2. `authenticatedUsers`에 현재 사용자가 표시
-
-조치:
-
-1. `.env`에 `MONGODB_AUTH_DB=admin` 명시(계정이 admin DB 기준일 때)
-2. 또는 계정을 `MONGODB_DB` 기준으로 재생성해 일치시킴
-
-재발 방지 확인 항목:
-
-1. 사용자 생성 스크립트와 `.env`의 인증 DB를 같은 값으로 표준화
-2. `MONGODB_URI` 직접 사용 시 `authSource` 명시
-
-## 3. E2E 서버 기동 실패 (`Connection refused`)
-
-### 3-1. 증상
-
-`RuntimeError: E2E 서버 기동 대기 타임아웃: [Errno 111] Connection refused`
-
-원인 후보:
-
-1. 서버 부팅 시간이 헬스체크 제한 시간보다 길다
-2. 서버가 초기화 중 예외로 즉시 종료된다
-3. 포트 충돌 또는 환경 변수 누락으로 앱이 뜨지 못함
-
-즉시 실행 명령:
-
-```bash
-# 서버 단독 기동 확인
-uv run uvicorn chatbot.api.main:app --host 127.0.0.1 --port 8001
-
-# 별도 터미널 헬스체크
-curl -i http://127.0.0.1:8001/health
-```
-
-기대 출력:
-
-1. `/health`가 `200 OK`
-2. 서버 로그에 import/runtime 초기화 에러 없음
-
-조치:
-
-1. E2E 서버 기동 대기 시간을 실환경에 맞게 상향
-2. `GEMINI_MODEL`, `GEMINI_PROJECT`, `CHAT_DB_PATH` 등 필수 env 재확인
-3. 서버 stdout/stderr를 확인해 초기화 예외를 먼저 제거
-
-재발 방지 확인 항목:
-
-1. E2E 시작 전 `/health` 선확인 루틴 유지
-2. 로컬/CI 환경별 서버 부팅 시간 프로파일 기록
-
-## 4. SSE `ReadTimeout` 및 `done/error` 종료 동작
-
-### 4-1. 증상 A: `httpx.ReadTimeout`
-
-원인 후보:
-
-1. 클라이언트 read timeout이 모델 응답 시간보다 짧음
-2. 스트림 도중 LLM 호출 지연 또는 외부 API 대기
-
-즉시 실행 명령:
-
-```bash
-# timeout 관련 env 확인
-printf 'CHAT_STREAM_TIMEOUT_SECONDS=%s\n' "$CHAT_STREAM_TIMEOUT_SECONDS"
-
-# SSE 요청은 충분한 read timeout으로 실행
-curl -N "http://127.0.0.1:8001/chat/<session_id>/events?request_id=<request_id>"
-```
-
-기대 출력:
-
-1. 스트림 이벤트(`data: ...`)가 순차 수신
-2. 최종 이벤트가 `type=done` 또는 `type=error`
-
-조치:
-
-1. 서버 `CHAT_STREAM_TIMEOUT_SECONDS`와 테스트 클라이언트 read timeout을 함께 상향
-2. 모델 응답 시간 분포에 맞춰 timeout 기준을 통일
-
-재발 방지 확인 항목:
-
-1. E2E timeout 값을 단일 상수로 관리
-2. 느린 외부 LLM 환경을 고려한 안전 마진 확보
-
-### 4-2. 증상 B: `done` 미수신
-
-원인 후보:
-
-1. 실제 종료 이벤트가 `error`인 경우
-2. 테스트가 `done`만 성공으로 간주하는 경우
-
-핵심 동작:
-
-1. SSE 정상 종료 이벤트는 `done` 또는 `error` 둘 다 가능하다.
-2. `error` 종료는 실패 원인 파악을 위한 정상적인 종료 시그널이다.
-
-즉시 실행 명령:
-
-```bash
-# 이벤트 타입 분포 확인용 예시
-rg -n '"type": "(start|token|done|error)"' /tmp/chat_events.log
-```
-
-기대 출력:
-
-1. 요청별로 `start` 이후 `done` 또는 `error` 중 하나가 존재
-
-조치:
-
-1. 테스트 단언을 `done` 강제에서 `done/error` 종료 확인으로 개선
-2. `error`일 때 `error_message`, `metadata.error_code`를 함께 검증
-
-재발 방지 확인 항목:
-
-1. 테스트 케이스 설계에서 성공/실패 종료 시나리오를 분리
-2. `error` 이벤트 본문을 진단 정보로 보존
-
-## 5. Gemini 환경 변수/모델 설정 오류
-
-### 5-1. 증상
-
-1. `RuntimeError: 테스트를 위해 GEMINI_MODEL 환경 변수가 필요합니다.`
-2. `RuntimeError: 테스트를 위해 GEMINI_PROJECT 환경 변수가 필요합니다.`
-3. LLM 호출 실패(모델명 오타/프로젝트 오설정)
-
-원인 후보:
-
-1. `.env` 누락 또는 키 오타
-2. 잘못된 프로젝트/모델 조합
-
-즉시 실행 명령:
+점검 명령:
 
 ```bash
 printf 'GEMINI_MODEL=%s\nGEMINI_PROJECT=%s\n' "$GEMINI_MODEL" "$GEMINI_PROJECT"
 ```
 
-기대 출력:
+## 3. SQLite 파일 생성 또는 잠금 오류가 날 때
 
-1. 두 값 모두 비어 있지 않음
+확인 포인트:
 
-조치:
+1. `CHAT_DB_PATH` 상위 디렉터리에 쓰기 권한이 있는지 확인한다.
+2. `SQLITE_BUSY_TIMEOUT_MS`가 너무 작지 않은지 확인한다.
+3. 다중 프로세스 쓰기 부하가 높다면 SQLite 자체 한계일 수 있다.
 
-1. `.env`에 `GEMINI_MODEL`, `GEMINI_PROJECT` 명시
-2. 테스트/서버 재시작으로 env 재로딩
+## 4. MongoDB 인증이 실패할 때
 
-재발 방지 확인 항목:
+확인 포인트:
 
-1. 필수 env 누락 시 fixture 단계에서 즉시 실패하도록 유지
-2. 팀 공용 `.env` 템플릿과 실제 배포 변수 이름을 동일하게 관리
+1. `MONGODB_AUTH_DB`와 실제 사용자 생성 DB가 일치하는지 확인한다.
+2. `MONGODB_URI`를 직접 넣었으면 `authSource`가 들어 있는지 확인한다.
 
-## 6. 관련 문서
+## 5. Elasticsearch TLS 오류가 날 때
+
+확인 포인트:
+
+1. `ELASTICSEARCH_CA_CERTS` 경로가 올바른지 확인한다.
+2. 현재 실행 사용자가 인증서 파일을 읽을 수 있는지 확인한다.
+3. self-signed 환경이면 `ELASTICSEARCH_VERIFY_CERTS`와 CA 파일이 같이 맞아야 한다.
+
+## 6. SSE가 `done` 없이 끝나거나 timeout 날 때
+
+확인 포인트:
+
+1. `CHAT_STREAM_TIMEOUT_SECONDS`가 너무 작지 않은지 확인한다.
+2. `error` 이벤트도 정상적인 종료 경로라는 점을 먼저 확인한다.
+3. 이벤트 버퍼는 현재 기본 런타임에서 InMemory 구현을 사용한다.
+
+## 7. 유지보수 포인트
+
+1. 트러블슈팅 문서는 실제 코드가 읽는 환경 변수만 기준으로 써야 한다.
+2. 기본 런타임 문제와 선택 확장 문제를 섞지 않는 편이 장애 대응 속도를 높인다.
+3. 오류 메시지 예시는 실제 코드나 라이브러리에서 자주 보이는 형태만 남겨야 한다.
+
+## 8. 관련 문서
 
 - `docs/setup/env.md`
-- `docs/setup/mongodb.md`
 - `docs/setup/sqlite.md`
-- `docs/setup/lancedb.md`
-- `docs/api/chat.md`
-- `docs/shared/chat/overview.md`
+- `docs/setup/postgresql_pgvector.md`
+- `docs/setup/mongodb.md`
+- `docs/setup/filesystem.md`
 - `docs/integrations/db/overview.md`

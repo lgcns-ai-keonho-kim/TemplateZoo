@@ -1,49 +1,32 @@
 # Shared Const 레퍼런스
 
-이 문서는 `src/chatbot/shared/const` 전역 상수의 의미와 사용 기준을 정리한다.
+`src/chatbot/shared/const/__init__.py`는 공통 상수 집합 `SharedConst`를 제공한다.
 
-## 1. 용어 정리
+## 1. 코드 설명
 
-| 용어 | 의미 | 관련 스크립트 |
-| --- | --- | --- |
-| SharedConst | 전역 공통 상수 클래스 | `src/chatbot/shared/const/__init__.py` |
-| 기본 인코딩 | 파일 입출력 기본 문자셋 | `DEFAULT_ENCODING` |
-| 기본 타임존 | 시간 처리 기본 타임존 이름 | `DEFAULT_TIMEZONE` |
-| ENV 중첩 구분자 | 환경 변수 키를 계층 구조로 해석하는 구분자 | `ENV_NESTED_DELIMITER` |
+현재 정의된 값:
 
-## 2. 관련 스크립트
-
-| 파일 | 역할 |
-| --- | --- |
-| `src/chatbot/shared/const/__init__.py` | 공통 상수 정의 |
-| `src/chatbot/shared/config/loader.py` | 중첩 구분자와 기본 인코딩 사용 |
-
-## 3. 상수 인터페이스
-
-| 상수 | 값 | 설명 |
+| 상수 | 값 | 의미 |
 | --- | --- | --- |
 | `DEFAULT_ENCODING` | `"utf-8"` | 파일 입출력 기본 인코딩 |
 | `DEFAULT_TIMEZONE` | `"UTC"` | 시간 처리 기본 타임존 |
-| `ENV_NESTED_DELIMITER` | `"__"` | 환경 변수 중첩 키 파싱 구분자 |
+| `ENV_NESTED_DELIMITER` | `"__"` | 환경 변수 중첩 키 구분자 |
 
-## 4. 사용 기준
+현재 직접 사용하는 대표 경로:
 
-1. 여러 모듈에서 반복되는 리터럴만 SharedConst로 관리한다.
-2. 도메인 전용 상수는 `core/*/const`에 둔다.
-3. 문자열 리터럴 하드코딩보다 SharedConst 참조를 우선한다.
+1. `ConfigLoader`가 `DEFAULT_ENCODING`, `ENV_NESTED_DELIMITER` 사용
 
-## 5. 변경 작업 절차
+## 2. 유지보수 포인트
 
-1. 상수값 변경 전 참조 스크립트를 검색한다.
-2. 파싱 기준에 영향을 주는 값은 호환성 검토를 먼저 수행한다.
-3. 변경 후 관련 문서를 함께 갱신한다.
+1. 도메인 전용 상수와 공통 상수를 섞지 않는 것이 중요하다. 채팅 전용 기본값은 `core/chat/const`에 두는 현재 경계를 유지하는 편이 좋다.
+2. `ENV_NESTED_DELIMITER`를 바꾸면 환경 변수 설계 규칙이 달라지므로 영향 범위가 넓다.
 
-## 6. 소스 매칭 점검 항목
+## 3. 추가 개발/확장 가이드
 
-1. 상수값 설명이 `shared/const/__init__.py`와 일치하는가
-2. 참조 스크립트 경로가 실제로 존재하는가
+1. 정말 여러 계층에서 반복되는 값만 여기에 추가하는 것이 적절하다.
+2. 새 상수를 추가할 때는 실제 참조 경로가 두 곳 이상 있는지 먼저 확인하는 편이 좋다.
 
-## 7. 관련 문서
+## 4. 관련 코드
 
-- `docs/shared/config.md`
-- `docs/shared/overview.md`
+- `src/chatbot/shared/config/loader.py`
+- `src/chatbot/shared/config/runtime_env_loader.py`

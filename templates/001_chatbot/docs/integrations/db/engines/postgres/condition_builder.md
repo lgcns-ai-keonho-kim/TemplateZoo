@@ -1,30 +1,38 @@
 # `db/engines/postgres/condition_builder.py` 레퍼런스
 
-## 1. 모듈 목적
+이 문서는 `src/chatbot/integrations/db/engines/postgres/condition_builder.py`의 현재 코드 기준 책임과 유지보수 포인트를 정리한다.
 
-- 목적: PostgreSQL 조건 빌더 모듈을 제공한다.
-- 설명: 필터 모델을 PostgreSQL WHERE 절로 변환한다.
-- 디자인 패턴: 빌더 패턴
+## 1. 역할
 
-## 2. 핵심 심볼
+| 항목 | 내용 |
+| --- | --- |
+| 목적 | PostgreSQL 조건 빌더 모듈을 제공한다. |
+| 설명 | 필터 모델을 PostgreSQL WHERE 절로 변환한다. |
+| 디자인 패턴 | 빌더 패턴 |
 
-- `class PostgresConditionBuilder`
+## 2. 코드 구성
 
-## 3. 입력/출력 관점
+| 심볼 | 종류 |
+| --- | --- |
+| `PostgresConditionBuilder` | 클래스 |
 
-- Query 조건을 엔진 전용 필터/WHERE 조건으로 변환한다.
-- 소스 경로: `src/chatbot/integrations/db/engines/postgres/condition_builder.py`
-- 문서 경로: `docs/integrations/db/engines/postgres/condition_builder.md`
+## 3. 현재 코드 설명
 
-## 4. 실패 경로
+1. 이 모듈의 직접 책임은 `db/engines/postgres/condition_builder.py` 파일 내부에 한정된다.
+2. 상위 계층은 이 파일의 공개 클래스/함수와 반환 형식을 그대로 신뢰하므로, 문서화된 역할과 실제 구현이 어긋나지 않아야 한다.
+3. 현재 코드에서 이 모듈은 `필터 모델을 PostgreSQL WHERE 절로 변환한다.`라는 역할로 사용된다.
 
-- 이 파일에서 명시적으로 선언한 `ExceptionDetail.code` 문자열은 없다.
+## 4. 유지보수 포인트
 
-## 5. 연계 모듈
+1. SQL 조건 문자열 조합 규칙이 바뀌면 SQLite/PostgreSQL 전체 조회 경로에 영향을 주므로 파라미터 순서를 안정적으로 유지해야 한다.
+2. 컬럼명 인용 규칙을 손대면 예약어 충돌이나 SQL 오류가 발생할 수 있으므로 엔진별 문법 차이를 함께 확인해야 한다.
 
+## 5. 추가 개발과 확장 시 주의점
+
+1. 새 연동 구현을 추가할 때는 현재 기본 런타임에서 실제로 사용하는지, 예시 수준인지 문서에서 분리해 설명해야 한다.
+2. 공개 API에 노출하는 경우 `__init__.py` export와 overview 문서를 함께 갱신해야 한다.
+
+## 6. 관련 코드
+
+- 소스: `src/chatbot/integrations/db/engines/postgres/condition_builder.py`
 - `src/chatbot/integrations/db/base/models.py`
-
-## 6. 변경 영향 범위
-
-- 조건 변환 로직 변경 시 검색 정확도와 결과 집합이 달라질 수 있다.
-- 변경 후에는 `docs/integrations/overview.md` 및 해당 하위 `overview.md`와 동기화한다.

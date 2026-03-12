@@ -1,85 +1,38 @@
 # 파일 시스템 연동 레퍼런스
 
-이 문서는 `src/chatbot/integrations/fs`를 이용해 로그를 파일로 저장하는 방법과,
-원격 스토리지 엔진으로 확장할 때 필요한 구현 포인트를 정리한다.
+이 문서는 파일 시스템 기반 로그 저장소를 현재 코드에 연결하는 방법과 유지보수 포인트를 정리한다.
+현재 기본 채팅 런타임은 파일 로그 저장소를 자동으로 주입하지 않는다.
 
-## 1. 적용 범위
+## 1. 현재 코드 기준 구조
 
-1. 로컬 디스크 로그 영속 저장
-2. 파일 기반 로그 파이프라인(수집/백업/분석)
-3. `BaseFSEngine` 기반 커스텀 스토리지 연동
+1. `BaseFSEngine`이 파일 엔진 최소 계약을 정의한다.
+2. `LocalFSEngine`이 로컬 디스크 구현체를 제공한다.
+3. `FileLogRepository`가 `LogRepository` 계약을 구현해 로그를 파일로 저장한다.
 
-## 2. 관련 스크립트
-
-| 경로 | 역할 |
-| --- | --- |
-| `src/chatbot/integrations/fs/base/engine.py` | 파일 엔진 인터페이스 |
-| `src/chatbot/integrations/fs/engines/local.py` | 로컬 파일 시스템 구현 |
-| `src/chatbot/integrations/fs/file_repository.py` | 로그 파일 저장소 |
-| `src/chatbot/integrations/llm/client.py` | LLM 로그 저장소 주입 가능 |
-
-## 3. 기본 동작 구조
-
-`FileLogRepository` 저장 동작:
-
-1. 경로: `<base_dir>/<YYYYMMDD>/<uuid>.log`
-2. 내용: `LogRecord` JSON 문자열
-3. 인코딩: `utf-8`
-
-조회 동작:
-
-1. `.log` 파일 재귀 탐색
-2. JSON 파싱/모델 검증 성공 레코드 수집
-3. timestamp 오름차순 정렬
-4. 손상 파일은 WARNING fallback 레코드로 대체
-
-## 4. 로컬 연동 예시
+## 2. 예시 연결 방식
 
 ```python
 from chatbot.integrations.fs import FileLogRepository
 from chatbot.shared.logging import InMemoryLogger
 
-file_repository = FileLogRepository(base_dir="data/logs")
-logger = InMemoryLogger(name="app-logger", repository=file_repository)
-
+repository = FileLogRepository(base_dir="data/logs")
+logger = InMemoryLogger(name="chatbot", repository=repository)
 logger.info("서비스 시작")
 ```
 
-## 5. LLM 로그 저장 예시(Gemini)
+## 3. 유지보수 포인트
 
-```python
-from langchain_google_genai import ChatGoogleGenerativeAI
+1. 저장 포맷은 JSON 문자열 단건 파일이며, 손상 파일 fallback 정책이 조회 실패를 막는다.
+2. 파일명 규칙(`<base_dir>/<YYYYMMDD>/<uuid>.log`)을 바꾸면 운영 수집 도구와 조사 절차가 함께 영향을 받는다.
+3. 기본 런타임 비활성 기능이므로 실제 사용 여부를 문서에서 분리해 적어야 한다.
 
-from chatbot.integrations.fs import FileLogRepository
-from chatbot.integrations.llm import LLMClient
+## 4. 추가 개발과 확장 시 주의점
 
-repo = FileLogRepository(base_dir="data/logs/llm")
-model = ChatGoogleGenerativeAI(
-    model="gemini-3-flash-preview",
-    project="your-project",
-    thinking_level="minimal",  # 정책 기준
-)
+1. 원격 스토리지로 확장할 때는 `BaseFSEngine` 구현체 추가와 export 갱신으로 끝내고, `FileLogRepository` 책임은 그대로 두는 편이 안전하다.
+2. 압축/보관 정책이 필요하면 저장 시점이 아니라 후처리 파이프라인으로 분리하는 편이 유지보수에 유리하다.
 
-client = LLMClient(
-    model=model,
-    name="chat-response-llm",
-    log_repository=repo,
-    log_payload=True,
-    log_response=True,
-)
-```
-
-## 6. 장애 대응
-
-| 증상 | 원인 후보 | 확인 경로 | 조치 |
-| --- | --- | --- | --- |
-| 로그 파일 미생성 | 디렉터리 권한/경로 오류 | `base_dir`, OS 권한 | 디렉터리 생성/권한 수정 |
-| 조회 시 WARNING 다수 | 파일 손상/중간 쓰기 실패 | `_fallback_record` | 생성 경로/쓰기 실패 원인 점검 |
-| 로그 목록 누락 | suffix/recursive 조건 오류 | `list_files` 구현 | 조건값 점검 |
-
-## 7. 관련 문서
+## 5. 관련 문서
 
 - `docs/integrations/fs/overview.md`
-- `docs/integrations/llm/overview.md`
-- `docs/setup/env.md`
+- `docs/integrations/fs/file_repository.md`
 - `docs/setup/troubleshooting.md`
