@@ -1,55 +1,57 @@
 # `graph/base_chat_graph.py` 레퍼런스
 
-## 1. 모듈 목적
+`BaseChatGraph`는 LangGraph builder를 직접 노출하지 않고, 공통 실행 인터페이스로 감싸는 구현체다.
 
-`BaseChatGraph`는 Builder 주입 방식으로 LangGraph 컴파일/실행을 공통화한다.
+## 1. 코드 설명
 
-- 입력 모델 검증
-- 동기/비동기 실행 (`invoke`, `ainvoke`)
-- 스트림 이벤트 표준화 (`stream_events`, `astream_events`)
-- `stream_node` 정책 기반 이벤트 필터링
-
-## 2. 핵심 타입
+핵심 구성:
 
 1. `DefaultChatGraphInput`
-- 기본 입력 모델
-- 필드: `session_id`, `user_message`, `history`, `assistant_message`
-
 2. `BaseChatGraph`
-- `builder.compile()`로 그래프 객체를 만들고 내부에 보관
-- 실행 시 `configurable.thread_id`를 `session_id`로 강제 보정
 
-## 3. 입력/출력
+주요 책임:
 
-1. `invoke/ainvoke`
-- 입력: `session_id`, `user_message`, `history`, `config`
-- 출력: 최종 `assistant_message` 문자열
+1. 입력 모델 검증
+2. 그래프 컴파일과 캐싱
+3. 동기/비동기 실행
+4. `custom`, `updates` 스트림 이벤트를 공통 이벤트 형식으로 변환
+5. `stream_node` 정책에 맞는 이벤트만 외부로 노출
 
-2. `stream_events/astream_events`
-- 입력: 위와 동일
-- 출력: `{"node", "event", "data"}` 형태 이벤트 반복자
-- `mode=custom`, `mode=updates`를 하나의 표준 이벤트로 병합
+이벤트 표준 형식:
 
-3. `set_stream_node`
-- 입력 타입: `StreamNodeConfig = Mapping[str, str | Sequence[str]]`
-- 내부 표현: `dict[str, set[str]]`
+```json
+{
+  "node": "response",
+  "event": "token",
+  "data": "안"
+}
+```
 
-## 4. 실패 경로
+## 2. 실제 동작 포인트
 
-1. `CHAT_STREAM_EMPTY`
-- 조건: `invoke/ainvoke` 결과에 `assistant_message`가 비어 있음
+1. `compile()`은 builder를 컴파일해 내부 `_compiled_graph`에 보관한다.
+2. `invoke()`와 `ainvoke()`는 최종 결과에서 `assistant_message`만 추출한다.
+3. `stream_events()`와 `astream_events()`는 `stream_mode=["custom", "updates"]`를 사용한다.
+4. `configurable.thread_id`가 비어 있으면 `session_id`로 자동 보정한다.
 
-2. `CHAT_STREAM_NODE_INVALID`
-- 조건: `stream_node` 값이 문자열/시퀀스가 아닌 타입
+실패 조건:
 
-## 5. 연계 모듈
+1. `assistant_message`가 비어 있으면 `CHAT_STREAM_EMPTY`
+2. `stream_node` 설정값이 문자열/시퀀스가 아니면 `CHAT_STREAM_NODE_INVALID`
 
-1. 상위 조립: `src/chatbot/core/chat/graphs/chat_graph.py`
-2. 포트 타입: `src/chatbot/shared/chat/interface/ports.py`
-3. 예외 모델: `src/chatbot/shared/exceptions/*`
+## 3. 유지보수 포인트
 
-## 6. 변경 시 영향 범위
+1. 이 클래스는 `assistant_message`를 최종 출력 키로 가정한다. 출력 키를 바꾸는 그래프를 도입하면 `_extract_assistant_message()` 또는 입력 모델을 함께 조정해야 한다.
+2. 이벤트 스키마는 `ServiceExecutor._normalize_graph_event()`와 쌍으로 맞아야 한다.
+3. `stream_node`에 없는 이벤트는 무조건 버려지므로, 디버그 목적 이벤트를 추가해도 바로 외부에 노출되지는 않는다.
 
-1. 이벤트 포맷 변경 시 `ServiceExecutor._normalize_graph_event()`와 함께 확인
-2. 입력 모델 필드 변경 시 core graph 상태 키와 일치 여부 확인
-3. `stream_node` 정책 변경 시 SSE 노출 이벤트가 줄거나 사라질 수 있음
+## 4. 추가 개발/확장 가이드
+
+1. 새 그래프를 추가할 때는 `input_model`만 교체해도 공통 실행기를 재사용할 수 있다.
+2. 노드별 이벤트 공개 범위를 세밀하게 나누려면 `stream_node`만 조정하고 상위 계층을 건드리지 않는 방향이 안전하다.
+
+## 5. 관련 코드
+
+- `src/chatbot/core/chat/graphs/chat_graph.py`
+- `src/chatbot/shared/chat/interface/ports.py`
+- `src/chatbot/shared/chat/services/chat_service.py`

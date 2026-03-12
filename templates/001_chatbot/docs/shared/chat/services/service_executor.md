@@ -1,68 +1,65 @@
 # `services/service_executor.py` 레퍼런스
 
-## 1. 모듈 목적
+`ServiceExecutor`는 채팅 작업을 비동기로 실행하고, 그래프 이벤트를 SSE 공개 이벤트로 변환하는 오케스트레이터다.
 
-`ServiceExecutor`는 작업 큐 소비, 이벤트 버퍼 중계, 비동기 저장 후처리를 담당한다.
+## 1. 코드 설명
 
-## 2. 핵심 클래스
+주요 공개 메서드:
 
-1. `ServiceExecutor`
-- 외부 API: `submit_job`, `stream_events`, `get_session_status`, `shutdown`
-- 내부 루프: `_worker_loop`, `_persist_loop`
-- 상태값: `IDLE`, `QUEUED`, `RUNNING`, `COMPLETED`, `FAILED`
+1. `submit_job()`
+2. `stream_events()`
+3. `get_session_status()`
+4. `shutdown()`
 
-## 3. 입력/출력
+내부 구조:
 
-1. `submit_job(session_id, user_query, context_window)`
-- 큐 payload를 적재하고 `session_id`, `request_id`, `QUEUED` 반환
-- `session_id`가 없으면 새 세션 생성
+1. 작업 처리용 워커 스레드
+2. assistant 저장용 후처리 스레드
+3. 세션별 상태 맵
+4. 세션별 락
 
-2. `_handle_job`
-- 시작 시 `start` 이벤트 emit
-- `ChatService.stream` 이벤트를 SSE 표준 이벤트로 정규화
-- `done` 발생 시 토큰 수 metadata 병합
-- 완료 후 비동기 persist task enqueue
+공개 이벤트 타입:
 
-3. `stream_events(session_id, request_id)`
-- `EventBuffer.pop` 결과를 SSE 문자열(`event: message`)로 반환
-- `done/error` 수신 시 종료
-- idle timeout 초과 시 `error` 이벤트 반환
+1. `start`
+2. `token`
+3. `done`
+4. `error`
 
-4. persist 후처리
-- `_process_persist_task`에서 `persist_assistant_message` 호출
-- 실패 시 `persist_retry_limit`, `persist_retry_delay_seconds` 기준 재시도
+세션 상태:
 
-## 4. 실패 경로
+1. `IDLE`
+2. `QUEUED`
+3. `RUNNING`
+4. `COMPLETED`
+5. `FAILED`
+
+핵심 규칙:
+
+1. `submit_job()`에서 `session_id`가 없으면 새 세션 생성
+2. `blocked` 노드의 `assistant_message`는 `token` 이벤트로 변환
+3. `done` 이벤트 수신 후 비동기 저장 태스크 enqueue
+4. 저장 실패는 `persist_retry_limit`, `persist_retry_delay_seconds` 기준 재시도
+
+주요 오류 코드:
 
 1. `CHAT_JOB_QUEUE_FAILED`
-- 조건: submit 시 큐 적재 실패
-
 2. `CHAT_SESSION_NOT_FOUND`
-- 조건: 지정된 세션이 없는데 session_id를 강제 지정한 경우
-
 3. `CHAT_STREAM_TIMEOUT`
-- 조건: `_raise_timeout_if_needed` 시간 초과
 
-4. 프로토콜 오류 응답
-- 조건: 이벤트 타입/필수 필드 불일치
-- 결과: SSE `type=error`, `status=FAILED`
+## 2. 유지보수 포인트
 
-5. 런타임 예외 처리
-- worker/persist 루프는 예외를 로그로 남기고 다음 작업으로 진행
+1. `stream_events()`의 공개 페이로드는 정적 UI가 그대로 소비한다. 필드명(`type`, `content`, `status`, `error_message`)을 바꾸면 프런트가 깨진다.
+2. `_set_session_status()`는 완료/실패 상태 회귀를 막는다. 상태 전이 규칙을 바꾸면 늦게 도착한 `QUEUED` 이벤트 같은 경쟁 조건이 다시 생길 수 있다.
+3. `blocked` 경로를 `token`으로 바꾸는 현재 정책은 UI 단순화를 위한 것이다. 이 동작을 바꾸면 UI 렌더러도 같이 수정해야 한다.
 
-## 5. 연계 모듈
+## 3. 추가 개발/확장 가이드
 
-1. 서비스 포트: `interface/ports.py`
-2. 비즈니스 서비스: `services/chat_service.py`
-3. 런타임 인프라: `src/chatbot/shared/runtime/queue`, `src/chatbot/shared/runtime/buffer`
+1. 큐/버퍼 백엔드를 Redis로 바꾸는 작업은 이 클래스가 아니라 조립 지점(`runtime.py`)에서 처리하는 것이 현재 구조와 맞다.
+2. 요청 취소 기능을 추가하려면 세션 락, 상태 맵, 버퍼 정리 규칙을 함께 설계해야 한다.
+3. 이벤트 타입을 늘릴 때는 허용 타입 집합, 공개 페이로드 빌더, UI 소비 로직을 동시에 수정해야 한다.
 
-## 6. 운영 포인트
+## 4. 관련 코드
 
-1. 세션 상태는 terminal(`COMPLETED`/`FAILED`) 이후 회귀를 막는다.
-2. `token_count`는 `done.metadata`에 병합되어 관측 지표로 활용된다.
-3. timeout/poll 설정 불일치 시 빈번한 `FAILED` 종료가 발생한다.
-
-## 7. 변경 시 영향 범위
-
-1. 공개 이벤트 필드 변경 시 `/chat/{session_id}/events` 소비자(UI/E2E) 동시 수정 필요
-2. 상태 전이 정책 변경 시 모니터링 및 장애 대응 문서도 함께 갱신 필요
+- `src/chatbot/shared/chat/services/chat_service.py`
+- `src/chatbot/shared/runtime/queue/*`
+- `src/chatbot/shared/runtime/buffer/*`

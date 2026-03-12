@@ -1,30 +1,38 @@
 # `db/engines/elasticsearch/connection.py` 레퍼런스
 
-## 1. 모듈 목적
+이 문서는 `src/chatbot/integrations/db/engines/elasticsearch/connection.py`의 현재 코드 기준 책임과 유지보수 포인트를 정리한다.
 
-- 목적: Elasticsearch 연결 관리 모듈을 제공한다.
-- 설명: 클라이언트 생성/종료와 옵션 클라이언트 반환을 담당한다.
-- 디자인 패턴: 매니저 패턴
+## 1. 역할
 
-## 2. 핵심 심볼
+| 항목 | 내용 |
+| --- | --- |
+| 목적 | Elasticsearch 연결 관리 모듈을 제공한다. |
+| 설명 | 클라이언트 생성/종료와 옵션 클라이언트 반환을 담당한다. |
+| 디자인 패턴 | 매니저 패턴 |
 
-- `class ElasticConnectionManager`
+## 2. 코드 구성
 
-## 3. 입력/출력 관점
+| 심볼 | 종류 |
+| --- | --- |
+| `ElasticConnectionManager` | 클래스 |
 
-- 연결 관리자 모듈로서 환경값/옵션을 입력받아 백엔드 연결을 생성·관리한다.
-- 소스 경로: `src/chatbot/integrations/db/engines/elasticsearch/connection.py`
-- 문서 경로: `docs/integrations/db/engines/elasticsearch/connection.md`
+## 3. 현재 코드 설명
 
-## 4. 실패 경로
+1. 이 모듈의 직접 책임은 `db/engines/elasticsearch/connection.py` 파일 내부에 한정된다.
+2. 상위 계층은 이 파일의 공개 클래스/함수와 반환 형식을 그대로 신뢰하므로, 문서화된 역할과 실제 구현이 어긋나지 않아야 한다.
+3. 현재 코드에서 이 모듈은 `클라이언트 생성/종료와 옵션 클라이언트 반환을 담당한다.`라는 역할로 사용된다.
 
-- 이 파일에서 명시적으로 선언한 `ExceptionDetail.code` 문자열은 없다.
+## 4. 유지보수 포인트
 
-## 5. 연계 모듈
+1. 연결 생성과 종료 정책은 상위 서비스의 수명주기와 연결되므로 connect/close 호출 비용과 재진입 안전성을 같이 점검해야 한다.
+2. 환경 변수 이름과 기본값을 바꾸면 setup 문서와 실제 조립 코드가 함께 수정돼야 한다.
 
+## 5. 추가 개발과 확장 시 주의점
+
+1. 새 연동 구현을 추가할 때는 현재 기본 런타임에서 실제로 사용하는지, 예시 수준인지 문서에서 분리해 설명해야 한다.
+2. 공개 API에 노출하는 경우 `__init__.py` export와 overview 문서를 함께 갱신해야 한다.
+
+## 6. 관련 코드
+
+- 소스: `src/chatbot/integrations/db/engines/elasticsearch/connection.py`
 - `src/chatbot/integrations/db/engines/elasticsearch/engine.py`
-
-## 6. 변경 영향 범위
-
-- 연결 옵션/초기화 변경 시 배포 환경 변수 및 장애 대응 절차가 영향을 받는다.
-- 변경 후에는 `docs/integrations/overview.md` 및 해당 하위 `overview.md`와 동기화한다.

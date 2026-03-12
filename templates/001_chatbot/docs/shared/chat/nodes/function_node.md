@@ -1,50 +1,32 @@
 # `nodes/function_node.py` 레퍼런스
 
-## 1. 모듈 목적
+`FunctionNode`는 상태를 입력받아 주입된 함수를 실행하고, 그 결과 `Mapping`을 LangGraph 상태 업데이트 payload로 반환하는 범용 노드다.
 
-`FunctionNode`는 주입 함수(`fn`)를 실행해 상태 업데이트 payload를 반환한다.
+## 1. 코드 설명
 
-## 2. 핵심 구성
+핵심 구성:
 
 1. `FunctionNode`
-- `run`: 동기 진입점
-- `arun`: 비동기 진입점
+2. `function_node()` 팩토리 함수
 
-2. `function_node(...)`
-- 팩토리 함수
-- `FunctionNode` 생성 래퍼
+실행 규칙:
 
-## 3. 입력/출력
+1. `run()`은 동기 함수만 허용한다.
+2. 동기 실행에서 awaitable이 반환되면 `FUNCTION_NODE_ASYNC_IN_SYNC_RUN`
+3. 반환값이 `Mapping`이 아니면 `FUNCTION_NODE_OUTPUT_INVALID`
+4. 실행 중 예외는 `FUNCTION_NODE_EXECUTION_ERROR`로 래핑한다.
 
-1. 입력 함수 시그니처
-- `fn(state: Mapping[str, Any]) -> Mapping[str, Any] | Awaitable[Mapping[str, Any]]`
+## 2. 유지보수 포인트
 
-2. 출력
-- 항상 `dict[str, Any]`
-- 키는 문자열로 강제 변환
+1. 이 노드는 함수 결과의 키를 문자열로 강제 변환한다. 숫자 키나 Enum 키를 반환하면 문자열화된다는 점을 염두에 둬야 한다.
+2. 실행 예외는 모두 도메인 예외로 감싸기 때문에, 원본 예외 메시지가 필요하면 `detail.metadata["error"]`를 확인해야 한다.
 
-## 4. 실패 경로
+## 3. 추가 개발/확장 가이드
 
-1. `FUNCTION_NODE_CONFIG_INVALID`
-- 조건: `fn`이 callable 아님, `node_name` 비어 있음
+1. 간단한 상태 계산 노드는 별도 클래스를 새로 만드는 대신 `FunctionNode`로 충분한 경우가 많다.
+2. 재사용할 함수가 동기/비동기 혼합이면 `run`과 `arun` 호출 경계를 명확히 나누는 편이 안전하다.
 
-2. `FUNCTION_NODE_ASYNC_IN_SYNC_RUN`
-- 조건: `run`에서 awaitable 반환
+## 4. 관련 코드
 
-3. `FUNCTION_NODE_EXECUTION_ERROR`
-- 조건: 사용자 함수 실행 중 예외
-
-4. `FUNCTION_NODE_OUTPUT_INVALID`
-- 조건: 반환값이 `Mapping`이 아님
-
-5. 입력 정규화 실패
-- `_state_adapter`의 `CHAT_NODE_INPUT_INVALID` 전파
-
-## 5. 연계 모듈
-
-1. `src/chatbot/core/chat/nodes/*`
-2. `nodes/_state_adapter.py`
-
-## 6. 변경 시 영향 범위
-
-반환 payload 형식이 바뀌면 다음 노드가 기대하는 상태 키와 충돌할 수 있다.
+- `src/chatbot/shared/chat/nodes/_state_adapter.py`
+- `src/chatbot/core/chat/nodes/*`

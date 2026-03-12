@@ -1,33 +1,31 @@
 # `repositories/schemas/message_schema.py` 레퍼런스
 
-## 1. 모듈 목적
+이 파일은 채팅 메시지 컬렉션 스키마를 만드는 팩토리다.
 
-Chat 메시지 컬렉션 스키마(`CollectionSchema`)를 생성한다.
+## 1. 코드 설명
 
-## 2. 핵심 함수
+`build_chat_message_schema()`가 반환하는 컬럼:
 
-1. `build_chat_message_schema()`
-- 컬렉션 이름: `CHAT_MESSAGE_COLLECTION`
-- PK: `message_id`
+1. `message_id` - 기본 키
+2. `session_id`
+3. `role`
+4. `content`
+5. `sequence`
+6. `created_at`
+7. `metadata`
 
-## 3. 컬럼 정의
+`metadata`는 문자열 컬럼으로 저장되며, 실제 직렬화/역직렬화는 매퍼가 담당한다.
 
-1. `message_id` (`TEXT`, primary)
-2. `session_id` (`TEXT`)
-3. `role` (`TEXT`)
-4. `content` (`TEXT`)
-5. `sequence` (`INTEGER`)
-6. `created_at` (`TEXT`)
-7. `metadata` (`TEXT`)
+## 2. 유지보수 포인트
 
-## 4. 실패 경로
+1. 메시지 정렬은 `sequence`를 기준으로 하므로, 순번 정책을 바꾸면 목록 조회와 최근 메시지 조회가 동시에 영향을 받는다.
+2. `metadata` 저장 형식을 바꾸면 LLM 응답 부가정보와 request 관련 메타데이터 해석이 달라질 수 있다.
 
-명시적 예외를 직접 던지지 않는다.
+## 3. 추가 개발/확장 가이드
 
-## 5. 연계 모듈
+1. 메시지별 토큰 수, 응답 모델명 같은 추가 필드가 필요하면 `metadata`에 둘지 별도 컬럼으로 뺄지 먼저 결정해야 한다. 조회 성능이 중요하면 별도 컬럼이 낫다.
 
-1. `repositories/history_repository.py`
+## 4. 관련 코드
 
-## 6. 변경 시 영향 범위
-
-`metadata`/`sequence` 정책 변경 시 메시지 정렬과 진단 정보 저장 방식이 달라진다.
+- `src/chatbot/shared/chat/repositories/history_repository.py`
+- `src/chatbot/core/chat/utils/mapper.py`
