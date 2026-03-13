@@ -1,0 +1,92 @@
+/*
+  목적: 채팅 셀 컨테이너와 헤더 영역 스타일을 정의한다.
+  설명: 셀 카드, 활성 상태, 제목/액션 버튼과 닫기 버튼 톤을 관리한다.
+  디자인 패턴: 컴포넌트 캡슐화
+  참조: ../base/tokens.css, ../layout/grid.css
+*/
+.chat-cell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: 14px 16px 12px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(18, 22, 35, 0.06);
+  transition: opacity var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
+  min-height: 0;
+  animation: fadeUp 0.45s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-cell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(140% 120% at 0% 0%, rgba(165, 0, 52, 0.08), transparent 60%),
+    linear-gradient(130deg, rgba(165, 0, 52, 0.04), transparent 55%);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  pointer-events: none;
+}
+
+.chat-cell.is-active {
+  box-shadow: var(--shadow-card), 0 16px 36px rgba(165, 0, 52, 0.08);
+}
+
+.chat-cell.is-active::after {
+  opacity: 1;
+}
+
+.chat-cell.is-active .chat-cell__title {
+  color: var(--brand);
+}
+
+.chat-cell:hover {
+  border-color: var(--border-soft);
+}
+
+.chat-cell__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.chat-cell__title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.chat-cell__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-restore {
+  display: none;
+}
+
+.chat-cell.is-expanded .btn-restore {
+  display: inline-flex;
+}
+
+.chat-cell.is-expanded .btn-expand {
+  display: none;
+}
+
+.chat-cell.is-expanded .btn-close {
+  display: none;
+}
+
+.btn-close {
+  color: var(--danger);
+  border-color: rgba(224, 111, 117, 0.3);
+}
+
+.btn-close:hover {
+  background: rgba(224, 111, 117, 0.14);
+  border-color: rgba(224, 111, 117, 0.55);
+}
+

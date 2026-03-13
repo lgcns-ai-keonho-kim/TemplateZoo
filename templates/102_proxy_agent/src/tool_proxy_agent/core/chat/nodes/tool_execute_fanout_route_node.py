@@ -1,0 +1,42 @@
+"""
+목적: Tool batch fan-out 라우팅 노드를 제공한다.
+설명: batch_tool_exec_inputs를 기반으로 tool_exec fan-out 분기를 계산한다.
+디자인 패턴: 모듈 조립
+참조: src/tool_proxy_agent/shared/chat/nodes/fanout_branch_node.py
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
+from tool_proxy_agent.shared.chat.nodes import (
+    FanoutBranchNode,
+    function_node,
+)
+from tool_proxy_agent.shared.logging import Logger, create_default_logger
+
+_tool_execute_fanout_logger: Logger = create_default_logger(
+    "ToolExecuteFanoutRouteNode"
+)
+
+
+def _run_tool_execute_fanout_route_step(state: Mapping[str, Any]) -> dict[str, Any]:
+    del state
+    return {}
+
+
+tool_execute_fanout_route_node = function_node(
+    fn=_run_tool_execute_fanout_route_step,
+    node_name="tool_execute_fanout_route",
+    logger=_tool_execute_fanout_logger,
+)
+
+tool_execute_fanout_branch_node = FanoutBranchNode(
+    items_key="batch_tool_exec_inputs",
+    target_node="tool_exec",
+    default_branch="tool_execute_collect",
+    logger=_tool_execute_fanout_logger,
+)
+
+__all__ = ["tool_execute_fanout_route_node", "tool_execute_fanout_branch_node"]

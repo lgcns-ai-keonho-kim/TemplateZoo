@@ -1,0 +1,21 @@
+/*
+  목적: 정적 채팅 UI 스타일 엔트리 포인트를 제공한다.
+  설명: 역할별 분리된 CSS 모듈을 순서대로 로드한다.
+  디자인 패턴: CSS 모듈 집합(엔트리 파일)
+  참조: css/base/*, css/layout/*, css/components/*, css/utils/*
+*/
+@import url("./base/tokens.css");
+@import url("./base/reset.css");
+@import url("./layout/shell.css");
+@import url("./layout/sidebar.css");
+@import url("./layout/grid.css");
+@import url("./components/chat-cell.css");
+@import url("./components/messages.css");
+@import url("./components/status.css");
+@import url("./components/composer.css");
+@import url("./components/buttons-icons.css");
+@import url("./components/markdown.css");
+@import url("./components/references.css");
+@import url("./components/tool-trace.css");
+@import url("./utils/animations.css");
+@import url("./utils/responsive.css");
