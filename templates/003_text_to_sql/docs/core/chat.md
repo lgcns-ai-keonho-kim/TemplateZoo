@@ -1,6 +1,6 @@
-# Core Chat 가이드
+# Core Chat
 
-이 문서는 `src/text_to_sql/core/chat`의 현재 그래프, 상태 계약, 노드 책임을 Raw SQL 파이프라인 기준으로 설명합니다.
+`src/text_to_sql/core/chat`의 현재 그래프, 상태 계약, 노드 책임을 Raw SQL 파이프라인 기준으로 설명합니다.
 
 ## 1. 주요 개념
 

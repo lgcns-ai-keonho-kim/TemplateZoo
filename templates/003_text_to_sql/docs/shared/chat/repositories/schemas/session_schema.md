@@ -13,7 +13,7 @@
 - primary key: `session_id`
 - 일반 컬럼: `title`, `created_at`, `updated_at`, `message_count`, `last_message_preview`
 
-## 3. 연관 모듈
+## 3. 관련 코드
 
 - `repositories/history_repository.py`
 - `src/text_to_sql/core/chat/models/entities.py`

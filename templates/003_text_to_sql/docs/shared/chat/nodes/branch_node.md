@@ -20,7 +20,7 @@
 - 기본 출력: `{output_key: branch}`
 - 옵션 `write_normalized_to` 사용 시 정규화 selector를 함께 기록한다.
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/core/chat/nodes/safeguard_route_node.py`
 - `nodes/_state_adapter.py`

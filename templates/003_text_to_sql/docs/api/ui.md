@@ -1,6 +1,6 @@
-# API UI 가이드
+# API UI
 
-이 문서는 `src/text_to_sql/api/ui` 모듈을 기준으로 UI 전용 API의 인터페이스와 동작 순서를 정리한다.
+`src/text_to_sql/api/ui` 모듈을 기준으로 UI 전용 API의 인터페이스와 동작 순서를 정리한다.
 
 ## 1. 용어 정리
 

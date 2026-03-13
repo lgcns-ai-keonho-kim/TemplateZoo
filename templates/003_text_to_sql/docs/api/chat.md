@@ -1,6 +1,6 @@
-# API Chat 가이드
+# API Chat
 
-이 문서는 `/chat` 계열 API와 SSE 이벤트 계약을 현재 코드 기준으로 설명합니다.
+`/chat` 계열 API와 SSE 이벤트 계약을 정리한다.
 
 ## 1. startup 전제
 
@@ -75,7 +75,7 @@
 | `done` | 정상 종료 |
 | `error` | 실행기 수준 오류 종료 |
 
-## 5. 현재 주요 node 값
+## 5. 주요 node 값
 
 | node | 의미 |
 | --- | --- |
@@ -121,7 +121,7 @@ sequenceDiagram
 | `RAW_SQL_INVALID_FORMAT` | 실행 금지 SQL 또는 잘못된 형식 |
 | `RAW_SQL_EXECUTION_FAILED` | DB 실행 실패 |
 
-## 8. 현재 기준 운영 포인트
+## 8. 운영 포인트
 
 - `done` 이후 assistant 메시지와 `answer_source_meta`가 저장됩니다.
 - `sql_result_collect`에서 생성한 `answer_source_meta`는 후속 설명 질의에 재사용됩니다.

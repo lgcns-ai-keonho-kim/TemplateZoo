@@ -4,9 +4,9 @@
 
 ## 1. 역할
 
-- 목적: Redis 필터 평가기를 제공한다.
-- 설명: 쿼리 필터 조건을 문서에 적용해 일치 여부를 반환한다.
-- 디자인 패턴: 전략 패턴
+- Redis 필터 평가기를 제공한다.
+- 쿼리 필터 조건을 문서에 적용해 일치 여부를 반환한다.
+- 내부 구조는 전략 패턴 기반이다.
 
 ## 2. 주요 구성
 
@@ -24,7 +24,7 @@
 
 - 모듈 내부에서 명시적으로 정의한 오류 코드가 없다.
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/integrations/db/engines/redis/engine.py`
 - `src/text_to_sql/integrations/db/base/models.py`

@@ -1,6 +1,6 @@
-# Integrations 모듈 가이드
+# Integrations 모듈
 
-이 문서는 `src/text_to_sql/integrations` 계층을 폴더형 문서 구조로 탐색하기 위한 허브다.
+`src/text_to_sql/integrations` 계층의 구성 요소와 하위 문서를 정리한다.
 
 ## 1. 용어 정리
 
@@ -12,7 +12,7 @@
 | 파일 저장소 | 파일 시스템 엔진 위에서 로그 저장/조회 책임을 수행하는 저장소 | `src/text_to_sql/integrations/fs/file_repository.py` |
 | 임베딩 클라이언트 | 임베딩 모델 호출을 담당하는 연동 모듈 | `src/text_to_sql/integrations/embedding/client.py` |
 
-## 2. 문서 진입점
+## 2. 하위 문서
 
 | 영역 | 문서 진입점 | 설명 |
 | --- | --- | --- |

@@ -1,16 +1,16 @@
-# Setup 가이드 개요
+# Setup 개요
 
-이 문서는 `docs/setup` 하위의 인프라/환경 설정 문서 구성을 빠르게 파악할 수 있도록 정리한 개요다.
+`docs/setup` 하위 문서의 구성과 적용 대상을 정리한 개요다.
 
 ## 1. 문서 구성
 
-| 문서 | 목적 | 열어야 하는 시점 |
+| 문서 | 주요 내용 | 사용 상황 |
 | --- | --- | --- |
 | `docs/setup/env.md` | `.env` 키 설명과 실제 반영 위치 확인 | 프로젝트 초기 부트스트랩, 배포 전 변수 점검 |
 | `docs/setup/mongodb.md` | MongoDB 설치, 인증, 엔진 연동 절차 | MongoDB 엔진 검증/전환 시 |
 | `docs/setup/filesystem.md` | 파일 시스템 기반 로그 저장소 연동 방식 | 로그 영속화/파일 백엔드 확장 시 |
 
-## 2. 권장 읽기 순서
+## 2. 대표 문서
 
 1. `docs/setup/env.md`
 2. `README.md`
@@ -22,7 +22,7 @@
 2. `table_allowlist.yaml`에서 PostgreSQL target alias, `database`, `schema`, 테이블/컬럼 설명을 정의한다.
 3. 서버를 실행하고 `/health`, `/docs`, `/ui`를 순서대로 점검한다.
 
-startup 동작:
+startup 흐름:
 
 1. allowlist 로드 + allowlist 대상 introspection이 선행된다.
 2. introspection 실패 시 서버는 fail-fast로 시작에 실패한다.
@@ -36,7 +36,7 @@ uv run uvicorn text_to_sql.api.main:app --host 0.0.0.0 --port 8000 --reload
 
 ## 4. 확장 실행 경로
 
-### 4-1. PostgreSQL(현재 기준)
+### 4-1. PostgreSQL
 
 1. PostgreSQL 서버와 계정/권한을 준비한다.
 2. `table_allowlist` target에 `engine: postgres`와 `connection`을 정의한다.

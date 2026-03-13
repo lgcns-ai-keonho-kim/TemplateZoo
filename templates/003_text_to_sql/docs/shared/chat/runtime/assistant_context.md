@@ -28,7 +28,7 @@
 - Redis host/port/db 설정 오류: `RuntimeError`
 - Redis ping 비정상: `RuntimeError`
 
-## 5. 연관 모듈
+## 5. 관련 코드
 
 - `runtime/assistant_context_runtime_store.py`
 - `services/service_executor.py`

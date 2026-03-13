@@ -35,7 +35,7 @@
 | `CHAT_SESSION_NOT_FOUND` | 요청 세션 식별 실패 |
 | `CHAT_STREAM_TIMEOUT` | 실행 시간이 timeout 초과 |
 
-## 5. 연관 모듈
+## 5. 관련 코드
 
 - `services/chat_service.py`
 - `runtime/assistant_context.py`

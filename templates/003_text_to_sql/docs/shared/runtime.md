@@ -1,6 +1,6 @@
-# Shared Runtime 가이드
+# Shared Runtime
 
-이 문서는 `src/text_to_sql/shared/runtime`의 Queue, EventBuffer, Worker, ThreadPool 구성요소를 코드 기준으로 정리한다.
+`src/text_to_sql/shared/runtime`의 Queue, EventBuffer, Worker, ThreadPool 구성요소를 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 

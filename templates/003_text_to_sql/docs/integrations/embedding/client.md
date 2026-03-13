@@ -4,9 +4,9 @@
 
 ## 1. 역할
 
-- 목적: LangChain Embeddings 기반 임베딩 클라이언트를 제공한다.
-- 설명: 임베딩 호출을 래핑해 로깅과 예외 처리를 통합한다.
-- 디자인 패턴: 프록시, 데코레이터
+- LangChain Embeddings 기반 임베딩 클라이언트를 제공한다.
+- 임베딩 호출을 래핑해 로깅과 예외 처리를 통합한다.
+- 내부 구조는 프록시, 데코레이터 기반이다.
 
 ## 2. 주요 구성
 
@@ -27,7 +27,7 @@
 - `EMBEDDING_VECTOR_EMPTY`
 - `EMBEDDING_VECTOR_INVALID`
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/shared/logging`
 - `src/text_to_sql/shared/exceptions`

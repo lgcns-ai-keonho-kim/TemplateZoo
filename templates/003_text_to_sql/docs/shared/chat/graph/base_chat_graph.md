@@ -25,7 +25,7 @@ Builder 주입형 그래프 실행 공통체로, invoke/stream 이벤트 처리 
 | `CHAT_STREAM_EMPTY` | invoke/ainvoke 결과에 `assistant_message`가 비어 있음 |
 | `CHAT_STREAM_NODE_INVALID` | `stream_node` 설정값이 문자열/시퀀스 규칙을 만족하지 않음 |
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/core/chat/graphs/chat_graph.py`
 - `src/text_to_sql/shared/chat/interface/ports.py`

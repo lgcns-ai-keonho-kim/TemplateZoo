@@ -4,9 +4,9 @@
 
 ## 1. 역할
 
-- 목적: Elasticsearch 기반 DB 엔진을 제공한다.
-- 설명: 스키마 기반 필드 매핑과 벡터 검색을 지원한다.
-- 디자인 패턴: 어댑터 패턴
+- Elasticsearch 기반 DB 엔진을 제공한다.
+- 스키마 기반 필드 매핑과 벡터 검색을 지원한다.
+- 내부 구조는 어댑터 패턴 기반이다.
 
 ## 2. 주요 구성
 
@@ -24,7 +24,7 @@
 
 - 모듈 내부에서 명시적으로 정의한 오류 코드가 없다.
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/integrations/db/base/engine.py`
 - `src/text_to_sql/shared/logging/__init__.py`

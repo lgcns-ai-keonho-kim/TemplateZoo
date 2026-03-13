@@ -4,9 +4,9 @@
 
 ## 1. 역할
 
-- 목적: PostgreSQL 벡터 관리 모듈을 제공한다.
-- 설명: PGVector 확장/인덱스 생성과 벡터 컬럼 유효성 판단을 담당한다.
-- 디자인 패턴: 매니저 패턴
+- PostgreSQL 벡터 관리 모듈을 제공한다.
+- PGVector 확장/인덱스 생성과 벡터 컬럼 유효성 판단을 담당한다.
+- 내부 구조는 매니저 패턴 기반이다.
 
 ## 2. 주요 구성
 
@@ -24,7 +24,7 @@
 
 - 모듈 내부에서 명시적으로 정의한 오류 코드가 없다.
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/integrations/db/engines/postgres/vector_adapter.py`
 - `src/text_to_sql/integrations/db/base/models.py`

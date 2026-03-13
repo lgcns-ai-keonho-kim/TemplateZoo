@@ -23,7 +23,7 @@
 - 외부로 반환되는 `ChatMessage`는 깊은 복사로 전달된다.
 - thread-safe를 위해 `RLock`을 사용한다.
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/shared/chat/services/chat_service.py`
 - `src/text_to_sql/core/chat/models/entities.py`

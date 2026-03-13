@@ -1,6 +1,6 @@
-# Shared Logging 가이드
+# Shared Logging
 
-이 문서는 `src/text_to_sql/shared/logging`의 로깅 인터페이스와 저장소 구현을 코드 기준으로 정리한다.
+`src/text_to_sql/shared/logging`의 로깅 인터페이스와 저장소 구현을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 

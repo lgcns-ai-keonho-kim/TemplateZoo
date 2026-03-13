@@ -19,7 +19,7 @@
 | --- | --- |
 | `CHAT_NODE_INPUT_INVALID` | 지원하지 않는 state 타입 입력 |
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `nodes/llm_node.py`
 - `nodes/branch_node.py`
