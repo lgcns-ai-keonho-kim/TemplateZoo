@@ -1,34 +1,27 @@
-# Fanout Branch Node
+# FanoutBranchNode 가이드
 
-이 문서는 `src/rag_chatbot/shared/chat/nodes/fanout_branch_node.py`를 설명한다.
+이 문서는 `src/rag_chatbot/shared/chat/nodes/fanout_branch_node.py`의 현재 구현을 기준으로 역할과 유지보수 포인트를 정리한다.
 
-## 1. 목적
+## 1. 역할
 
-- 리스트 입력을 `Send` 목록으로 변환해 fan-out 분기 라우팅을 수행한다.
+여러 그래프에서 재사용할 수 있는 범용 노드 또는 노드 보조 함수다.
 
-## 2. 핵심 입력
+## 2. 공개 구성
 
-| 입력 | 설명 |
-| --- | --- |
-| `items_key` | fan-out 대상 목록 키 |
-| `target_node` | 각 항목을 전달할 노드 |
-| `default_branch` | 목록 비정상/비어있을 때 이동할 분기 |
+- 클래스 `FanoutBranchNode`
+  공개 메서드: `route`, `run`
 
-## 3. 주요 메서드
+## 3. 코드 설명
 
-1. `route(state, config=None) -> str | list[Send]`
-2. `run(state, config=None) -> str | list[Send]`
+- LangGraph state 입력은 보통 `Mapping[str, Any]` 형태로 정규화한 뒤 처리한다.
+- 노드 출력은 state delta로 병합할 수 있는 dict 형식을 유지해야 한다.
 
-동작:
+## 4. 유지보수/추가개발 포인트
 
-- `items_key` 값이 `list[Mapping]`이면 `Send(target_node, item)` 목록 반환
-- 유효 항목이 없으면 `default_branch` 문자열 반환
-
-## 4. 실패/예외 포인트
-
-- 생성자 입력(`items_key`, `target_node`, `default_branch`)이 비어 있으면 `FANOUT_BRANCH_NODE_CONFIG_INVALID` 예외
+- 범용 노드는 특정 도메인 상태 키에 종속되지 않도록 유지하는 편이 다른 그래프에서 재사용하기 쉽다.
+- 예외는 `BaseAppException` 코드로 정규화해 상위 계층에서 같은 방식으로 처리되게 한다.
 
 ## 5. 관련 문서
 
-- `docs/shared/chat/nodes/_state_adapter.md`
-- `docs/core/chat.md`
+- `docs/shared/overview.md`
+- `docs/shared/chat/README.md`

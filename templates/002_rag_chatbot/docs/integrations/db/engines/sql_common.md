@@ -1,23 +1,15 @@
-# sql_common 모듈
+# SQLIdentifierHelper 가이드
 
-이 문서는 `src/rag_chatbot/integrations/db/engines/sql_common.py`의 역할과 주요 구성을 설명한다.
+이 문서는 `src/rag_chatbot/integrations/db/engines/sql_common.py`의 현재 구현을 기준으로 역할과 유지보수 포인트를 정리한다.
 
-## 1. 목적
+## 1. 역할
 
-SQL 계열 엔진에서 공통으로 사용하는 유틸리티를 제공한다.
+여러 SQL 계열 엔진이 함께 쓰는 식별자, 스키마, 벡터 필드 헬퍼를 제공한다.
 
-## 2. 설명
-
-스키마 보정, 필드 출처 결정, 컬럼 선택, 식별자 인용 로직을 통합한다.
-
-## 3. 디자인 패턴
-
-유틸리티 모듈
-
-## 4. 주요 구성
+## 2. 공개 구성
 
 - 클래스 `SQLIdentifierHelper`
-  주요 메서드: `quote_identifier`, `quote_table`, `plain_identifier`
+  공개 메서드: `quote_identifier`, `quote_table`, `plain_identifier`
 - 함수 `ensure_schema`
 - 함수 `resolve_source`
 - 함수 `select_columns`
@@ -26,11 +18,15 @@ SQL 계열 엔진에서 공통으로 사용하는 유틸리티를 제공한다.
 - 함수 `vector_field`
 - 함수 `vector_dimension`
 
-## 5. 연동 포인트
+## 3. 코드 설명
 
-- `src/rag_chatbot/integrations/db/base/models.py`
+- SQL 엔진 공통 유틸리티를 재사용하면 식별자 quoting과 벡터 필드 선택 규칙을 일관되게 유지할 수 있다.
 
-## 6. 관련 문서
+## 4. 유지보수/추가개발 포인트
 
-- `docs/integrations/db/README.md`
+- 이 모듈을 확장할 때는 같은 계층의 이웃 모듈과 계약이 어디에서 맞물리는지 먼저 확인하는 편이 안전하다.
+
+## 5. 관련 문서
+
 - `docs/integrations/overview.md`
+- `docs/integrations/db/README.md`

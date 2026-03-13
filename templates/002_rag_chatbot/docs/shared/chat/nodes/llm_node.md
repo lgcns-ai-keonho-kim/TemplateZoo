@@ -1,43 +1,27 @@
-# LLM Node
+# LLMNode 가이드
 
-이 문서는 `src/rag_chatbot/shared/chat/nodes/llm_node.py`를 설명한다.
+이 문서는 `src/rag_chatbot/shared/chat/nodes/llm_node.py`의 현재 구현을 기준으로 역할과 유지보수 포인트를 정리한다.
 
-## 1. 목적
+## 1. 역할
 
-- 프롬프트/LLM/출력 키를 주입받아 공통 LLM 노드 실행을 제공한다.
-- 토큰 스트리밍과 최종 출력 생성을 공통화한다.
+여러 그래프에서 재사용할 수 있는 범용 노드 또는 노드 보조 함수다.
 
-## 2. 핵심 입력
+## 2. 공개 구성
 
-| 입력 | 설명 |
-| --- | --- |
-| `llm_client` | 모델 호출 클라이언트 |
-| `node_name` | 노드 식별자(이벤트 node 값) |
-| `prompt` | 시스템 프롬프트 템플릿 |
-| `output_key` | 결과 기록 키(기본 `assistant_message`) |
-| `user_message_key` | 사용자 메시지 키 |
-| `history_key` | 대화 이력 키 |
-| `stream_tokens` | 토큰 스트리밍 사용 여부 |
+- 클래스 `LLMNode`
+  공개 메서드: `run`, `arun`, `stream`, `astream`
 
-## 3. 주요 메서드
+## 3. 코드 설명
 
-1. `run`, `arun`: 노드 실행 후 `{output_key: text}` 반환
-2. `stream`, `astream`: 토큰 iterator/async iterator 반환
+- LangGraph state 입력은 보통 `Mapping[str, Any]` 형태로 정규화한 뒤 처리한다.
+- 노드 출력은 state delta로 병합할 수 있는 dict 형식을 유지해야 한다.
 
-## 4. 스트리밍 동작
+## 4. 유지보수/추가개발 포인트
 
-- `stream_tokens=True`이면 `llm_client.stream/astream` 경로를 사용한다.
-- 토큰마다 LangGraph custom stream writer로 `{node, event="token", data}` 이벤트를 전송한다.
-- 최종 출력 텍스트가 비어 있으면 예외를 발생시킨다.
+- 범용 노드는 특정 도메인 상태 키에 종속되지 않도록 유지하는 편이 다른 그래프에서 재사용하기 쉽다.
+- 예외는 `BaseAppException` 코드로 정규화해 상위 계층에서 같은 방식으로 처리되게 한다.
 
-## 5. 실패/예외 포인트
+## 5. 관련 문서
 
-- 빈 `node_name`: `CHAT_NODE_CONFIG_ERROR`
-- 프롬프트 입력 변수 없음: `CHAT_NODE_CONFIG_ERROR`
-- 입력 state 타입 부적합: `CHAT_NODE_INPUT_INVALID`
-
-## 6. 관련 문서
-
-- `docs/shared/chat/nodes/_state_adapter.md`
-- `docs/shared/chat/graph/base_chat_graph.md`
-- `docs/core/chat.md`
+- `docs/shared/overview.md`
+- `docs/shared/chat/README.md`

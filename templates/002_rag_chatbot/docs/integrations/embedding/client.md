@@ -1,30 +1,24 @@
-# client 모듈
+# EmbeddingClient 가이드
 
-이 문서는 `src/rag_chatbot/integrations/embedding/client.py`의 역할과 주요 구성을 설명한다.
+이 문서는 `src/rag_chatbot/integrations/embedding/client.py`의 현재 구현을 기준으로 역할과 유지보수 포인트를 정리한다.
 
-## 1. 목적
+## 1. 역할
 
-LangChain Embeddings 기반 임베딩 클라이언트를 제공한다.
+EmbeddingClient는 동기/비동기 임베딩 호출을 얇게 감싸 상위 계층이 구현체를 직접 알지 않도록 만든다.
 
-## 2. 설명
-
-임베딩 호출을 래핑해 로깅과 예외 처리를 통합한다.
-
-## 3. 디자인 패턴
-
-프록시, 데코레이터
-
-## 4. 주요 구성
+## 2. 공개 구성
 
 - 클래스 `EmbeddingClient`
-  주요 메서드: `embed_query`, `embed_documents`, `aembed_query`, `aembed_documents`
+  공개 메서드: `embed_query`, `embed_documents`, `aembed_query`, `aembed_documents`
 
-## 5. 연동 포인트
+## 3. 코드 설명
 
-- `src/rag_chatbot/shared/logging`
-- `src/rag_chatbot/shared/exceptions`
+- 동기와 비동기 임베딩 메서드를 모두 노출해 ingestion와 online retrieval가 같은 래퍼를 사용한다.
 
-## 6. 관련 문서
+## 4. 유지보수/추가개발 포인트
 
-- `docs/integrations/embedding/README.md`
+- 차원 변경은 ingestion 저장소와 online retrieval 모두에 영향을 주므로 재적재 전략을 같이 점검해야 한다.
+
+## 5. 관련 문서
+
 - `docs/integrations/overview.md`

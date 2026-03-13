@@ -1,20 +1,8 @@
 # Setup 가이드 개요
 
-이 문서는 `docs/setup` 하위의 인프라/환경 설정 문서를 빠르게 탐색하기 위한 인덱스다.
-애플리케이션 코드 구조(`src/rag_chatbot/*`)와 1:1로 대응되는 문서와 달리, 이 폴더는 실행 환경 구성과 외부 시스템 준비 절차를 다룬다.
+이 문서는 로컬 실행부터 backend 전환까지 어떤 setup 문서를 어떤 순서로 읽어야 하는지 정리한다.
 
-## 1. 문서 구성
-
-| 문서 | 목적 | 열어야 하는 시점 |
-| --- | --- | --- |
-| `docs/setup/env.md` | `.env` 키 설명과 실제 반영 위치 확인 | 프로젝트 초기 부트스트랩, 배포 전 변수 점검 |
-| `docs/setup/ingestion.md` | 통합 ingestion 실행 방법과 내부 시퀀스 | RAG 데이터 적재/재적재, 파싱 이슈 점검 |
-| `docs/setup/lancedb.md` | LanceDB 구성과 파일 기반 벡터 저장 경로 정리 | 로컬 단독 실행, 파일 기반 벡터 검색 실험 |
-| `docs/setup/postgresql_pgvector.md` | PostgreSQL + pgvector 설치/초기화/연동 절차 | 운영형 DB 또는 pgvector 벡터 저장 전환 시 |
-| `docs/setup/mongodb.md` | MongoDB 설치, 인증, 엔진 연동 절차 | MongoDB 엔진 검증/전환 시 |
-| `docs/setup/filesystem.md` | 파일 시스템 기반 로그 저장소 연동 방식 | 로그 영속화/파일 백엔드 확장 시 |
-
-## 2. 읽기 순서
+## 1. 권장 읽기 순서
 
 1. `docs/setup/env.md`
 2. `docs/setup/ingestion.md`
@@ -23,51 +11,21 @@
 5. `docs/setup/mongodb.md`
 6. `docs/setup/filesystem.md`
 
-## 3. 최소 실행 경로 (로컬 단일 노드)
+## 2. 최소 로컬 실행 경로
 
-1. `.env`를 생성하고 `GEMINI_MODEL`, `GEMINI_EMBEDDING_MODEL`, `GEMINI_PROJECT`, `CHAT_DB_PATH`를 설정한다.
-2. ingestion으로 RAG 데이터를 적재한다.
-3. 서버를 실행하고 `/health`, `/docs`, `/ui`를 순서대로 점검한다.
+1. 루트 `.env`를 만든다.
+2. `GEMINI_MODEL`, `GEMINI_EMBEDDING_MODEL`, `GEMINI_PROJECT`, `LANCEDB_URI`, `CHAT_DB_PATH`를 설정한다.
+3. `uv run python ingestion/ingest.py --backend lancedb --input-root data/ingestion-doc`를 실행한다.
+4. `uv run uvicorn rag_chatbot.api.main:app --host 0.0.0.0 --port 8000 --reload`로 서버를 띄운다.
+5. `/health`, `/docs`, `/ui`를 순서대로 확인한다.
 
-예시:
+## 3. 유지보수/추가개발 포인트
 
-```bash
-uv run python ingestion/ingest.py --backend lancedb --input-root data/ingestion-doc
-uv run uvicorn rag_chatbot.api.main:app --host 0.0.0.0 --port 8000 --reload
-```
+- setup 문서는 실제 코드 기본값과 예시값을 구분해 적는 편이 운영 혼선을 줄인다.
+- backend 전환은 엔진 구현만이 아니라 runtime 조립, ingestion CLI, 환경 변수까지 함께 확인해야 한다.
 
-## 4. 확장 실행 경로
+## 4. 관련 문서
 
-### 4-1. PostgreSQL + pgvector
-
-1. PostgreSQL 서버와 pgvector 확장을 설치한다.
-2. DB/계정/권한을 준비하고 `.env`에 `POSTGRES_*` 값을 넣는다.
-3. RAG 벡터 저장을 PostgreSQL로 전환할 때는 ingestion를 `--backend postgres`로 실행한다.
-4. Chat 이력 저장까지 PostgreSQL로 옮기려면 `src/rag_chatbot/api/chat/services/runtime.py`의 저장소 조립을 변경한다.
-
-### 4-2. MongoDB
-
-1. MongoDB 서버와 계정/인증 DB를 준비한다.
-2. `.env`에 `MONGODB_*` 값을 설정한다.
-3. `runtime.py`에서 MongoDB 엔진을 주입해 Chat 저장소를 교체한다.
-
-### 4-3. 파일 시스템 로그 저장
-
-1. 로그 기준 디렉터리(`data/logs` 등)를 설계한다.
-2. `FileLogRepository(base_dir=...)`를 주입해 로그 저장소를 활성화한다.
-3. 운영 정책(보관 기간, 아카이빙 경로, 접근 권한)을 확정한다.
-
-## 5. 코드 매핑
-
-| 설정 영역 | 관련 코드 |
-| --- | --- |
-| 런타임 환경 로딩 | `src/rag_chatbot/shared/config/runtime_env_loader.py`, `src/rag_chatbot/api/main.py` |
-| Chat 런타임 변수 소비 | `src/rag_chatbot/api/chat/services/runtime.py`, `src/rag_chatbot/shared/chat/services/chat_service.py` |
-| 통합 ingestion 엔트리 | `ingestion/ingest.py`, `ingestion/core/runner.py` |
-| ingestion 파싱/주석/임베딩 | `ingestion/core/file_parser.py`, `ingestion/core/table_annotation.py`, `ingestion/core/image_annotation.py`, `ingestion/core/enrichment.py` |
-| 기본 SQLite 저장소 | `src/rag_chatbot/shared/chat/repositories/history_repository.py`, `src/rag_chatbot/core/chat/const/settings.py` |
-| LanceDB 벡터 저장소 | `src/rag_chatbot/integrations/db/engines/lancedb/*.py`, `src/rag_chatbot/core/chat/nodes/rag_retrieve_node.py` |
-| PostgreSQL/pgvector | `src/rag_chatbot/integrations/db/engines/postgres/*.py` |
-| MongoDB | `src/rag_chatbot/integrations/db/engines/mongodb/*.py` |
-| 파일 시스템 연동 | `src/rag_chatbot/integrations/fs/*.py`, `src/rag_chatbot/shared/logging/logger.py` |
-
+- `docs/setup/env.md`
+- `docs/setup/ingestion.md`
+- `docs/integrations/overview.md`

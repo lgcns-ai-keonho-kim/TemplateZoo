@@ -1,29 +1,24 @@
-# engine 모듈
+# BaseFSEngine 가이드
 
-이 문서는 `src/rag_chatbot/integrations/fs/base/engine.py`의 역할과 주요 구성을 설명한다.
+이 문서는 `src/rag_chatbot/integrations/fs/base/engine.py`의 현재 구현을 기준으로 역할과 유지보수 포인트를 정리한다.
 
-## 1. 목적
+## 1. 역할
 
-파일 시스템 엔진 인터페이스를 제공한다.
+파일 시스템 엔진 포트를 정의한다.
 
-## 2. 설명
-
-파일 쓰기/읽기/목록/이동/복사를 위한 표준 메서드를 정의한다.
-
-## 3. 디자인 패턴
-
-전략 패턴
-
-## 4. 주요 구성
+## 2. 공개 구성
 
 - 클래스 `BaseFSEngine`
-  주요 메서드: `name`, `write_text`, `read_text`, `list_files`, `exists`, `mkdir`, `move`, `copy`
+  공개 메서드: `name`, `write_text`, `read_text`, `list_files`, `exists`, `mkdir`, `move`, `copy`
 
-## 5. 연동 포인트
+## 3. 코드 설명
 
-- `src/rag_chatbot/integrations/fs/engines/local.py`
+- 저장소 구현은 로컬 파일 시스템 외의 백엔드를 붙일 때도 이 포트만 만족하면 된다.
 
-## 6. 관련 문서
+## 4. 유지보수/추가개발 포인트
 
-- `docs/integrations/fs/README.md`
+- 이 모듈을 확장할 때는 같은 계층의 이웃 모듈과 계약이 어디에서 맞물리는지 먼저 확인하는 편이 안전하다.
+
+## 5. 관련 문서
+
 - `docs/integrations/overview.md`

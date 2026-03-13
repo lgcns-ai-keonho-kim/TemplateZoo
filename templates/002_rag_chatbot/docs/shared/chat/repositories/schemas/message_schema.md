@@ -1,27 +1,24 @@
-# Chat Message Schema
+# build_chat_message_schema 가이드
 
-이 문서는 `src/rag_chatbot/shared/chat/repositories/schemas/message_schema.py`를 설명한다.
+이 문서는 `src/rag_chatbot/shared/chat/repositories/schemas/message_schema.py`의 현재 구현을 기준으로 역할과 유지보수 포인트를 정리한다.
 
-## 1. 목적
+## 1. 역할
 
-- 메시지 컬렉션 스키마(`CHAT_MESSAGE_COLLECTION`)를 생성한다.
+Chat 저장소가 사용할 컬렉션 스키마를 생성하는 팩토리 함수다.
 
-## 2. 스키마 정의
+## 2. 공개 구성
 
-| 컬럼 | 타입 | 설명 |
-| --- | --- | --- |
-| `message_id` | `TEXT` | 기본키 |
-| `session_id` | `TEXT` | 세션 식별자 |
-| `role` | `TEXT` | `user`/`assistant` |
-| `content` | `TEXT` | 본문 |
-| `sequence` | `INTEGER` | 세션 내 순번 |
-| `created_at` | `TEXT` | 생성 시각 |
-| `metadata` | `TEXT` | 부가 메타데이터(JSON 문자열) |
+- 함수 `build_chat_message_schema`
 
-## 3. 노출 함수
+## 3. 코드 설명
 
-- `build_chat_message_schema() -> CollectionSchema`
+- 정의된 컬럼: `message_id`, `session_id`, `role`, `content`, `sequence`, `created_at`, `metadata`
 
-## 4. 관련 문서
+## 4. 유지보수/추가개발 포인트
 
-- `docs/shared/chat/repositories/history_repository.md`
+- 컬럼을 추가하면 mapper, 저장소 query, API DTO까지 함께 점검해야 실제 응답에 반영된다.
+
+## 5. 관련 문서
+
+- `docs/shared/overview.md`
+- `docs/shared/chat/README.md`
