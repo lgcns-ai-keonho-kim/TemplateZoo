@@ -1,0 +1,79 @@
+/*
+  목적: 스트림 상태 배지와 로딩 인디케이터를 정의한다.
+  설명: 상태 바, 런타임 텍스트, 스피너, 타이핑 커서 표시를 담당한다.
+  디자인 패턴: 상태 표현 컴포넌트
+  참조: ../base/tokens.css, ../utils/animations.css
+*/
+.chat-cell__status {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-sub);
+  margin: 10px 0 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(126, 163, 197, 0.12);
+  border: 1px solid rgba(126, 163, 197, 0.24);
+  align-self: flex-start;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.chat-cell__status::after {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 12px;
+  border-width: 6px 6px 6px 0;
+  border-style: solid;
+  border-color: transparent rgba(126, 163, 197, 0.24) transparent transparent;
+}
+
+.chat-cell__status.is-visible {
+  display: inline-flex;
+}
+
+.status-pill {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #fff;
+  background: linear-gradient(120deg, var(--accent-strong), var(--accent));
+}
+
+.status-runtime {
+  font-size: 11px;
+  color: var(--text-soft);
+  opacity: 0.92;
+  white-space: nowrap;
+}
+
+.chat-cell__status.is-active .status-pill {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: conic-gradient(from 180deg, var(--accent) 0deg, transparent 130deg, var(--brand) 260deg);
+  mask: radial-gradient(farthest-side, transparent 60%, #000 61%);
+  animation: spin 1s linear infinite;
+}
+
+.spinner.is-hidden {
+  display: none;
+}
+
+.typing-caret {
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background: var(--accent-strong);
+  margin-left: 4px;
+  animation: blink 1s steps(2, start) infinite;
+  vertical-align: text-bottom;
+}

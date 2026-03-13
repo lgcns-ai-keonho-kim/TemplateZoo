@@ -1,0 +1,301 @@
+/*
+  목적: 1회성 Agent 요청 화면의 단순한 2패널 레이아웃을 정의한다.
+  설명: 요청 입력, 실행 상태, 최종 결과 영역의 배치와 스크롤 동작을 담당한다.
+  디자인 패턴: 컴포넌트 스타일 모듈
+  참조: ../base/tokens.css, ../components/markdown.css
+*/
+html {
+  overflow-y: auto;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at top left, rgba(165, 0, 52, 0.14), transparent 28%),
+    radial-gradient(circle at top right, rgba(74, 75, 77, 0.12), transparent 24%),
+    linear-gradient(180deg, var(--bg-main) 0%, #f5f6fa 100%);
+  color: var(--text-main);
+  font-family: var(--text-family);
+}
+
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at top left, rgba(255, 0, 84, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 24%),
+    linear-gradient(180deg, #0f1118 0%, #151925 100%);
+}
+
+.agent-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1080px, calc(100vw - 32px));
+  margin: 24px auto 40px;
+}
+
+.agent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-logo {
+  width: 112px;
+  height: auto;
+}
+
+.header-copy h1 {
+  margin: 0 0 4px;
+  font-size: clamp(1.8rem, 2.6vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.header-copy p {
+  margin: 0;
+  color: var(--text-sub);
+  font-size: 0.96rem;
+  line-height: 1.5;
+}
+
+.agent-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+}
+
+.panel {
+  min-width: 0;
+  padding: 24px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(14px);
+}
+
+.result-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 560px;
+}
+
+.panel-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  margin-bottom: 14px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--brand-muted);
+  color: var(--brand);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.request-panel__title,
+.result-panel__title {
+  margin: 0 0 10px;
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+}
+
+.request-panel__desc,
+.result-panel__desc {
+  margin: 0 0 18px;
+  color: var(--text-sub);
+  line-height: 1.6;
+}
+
+.request-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.request-label {
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.request-input {
+  min-height: 320px;
+  padding: 18px 20px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font: inherit;
+  line-height: 1.7;
+  resize: vertical;
+  overflow: auto;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.request-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px rgba(165, 0, 52, 0.12);
+}
+
+.request-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.request-hint {
+  max-width: 460px;
+  color: var(--text-soft);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.run-button {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-strong) 100%);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-float);
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.run-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.run-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+}
+
+.result-meta__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.result-meta__item dt {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.result-meta__item dd {
+  margin: 0;
+}
+
+.result-meta__value {
+  max-width: 100%;
+  color: var(--text-main);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--bg-accent);
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.status-chip.is-running {
+  background: rgba(74, 75, 77, 0.12);
+}
+
+.status-chip.is-completed {
+  background: rgba(76, 175, 143, 0.16);
+  color: var(--success);
+}
+
+.status-chip.is-blocked,
+.status-chip.is-error {
+  background: rgba(224, 111, 117, 0.14);
+  color: var(--danger);
+}
+
+.result-output {
+  flex: 1;
+  min-height: 360px;
+  padding: 20px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(252, 252, 252, 0.96) 100%);
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+html[data-theme="dark"] .result-output {
+  background:
+    linear-gradient(180deg, rgba(30, 35, 46, 0.95) 0%, rgba(20, 24, 33, 0.98) 100%);
+}
+
+.result-placeholder {
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .agent-shell {
+    width: min(100vw - 20px, 1080px);
+    margin-top: 16px;
+  }
+
+  .agent-header,
+  .request-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .agent-workbench {
+    grid-template-columns: 1fr;
+  }
+
+  .result-panel {
+    min-height: 0;
+  }
+
+  .request-input,
+  .result-output {
+    min-height: 220px;
+  }
+}
