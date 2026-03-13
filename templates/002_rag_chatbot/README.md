@@ -95,7 +95,7 @@ uv run uvicorn rag_chatbot.api.main:app --host 0.0.0.0 --port 8000 --reload
 | Method | Path | 설명 |
 | --- | --- | --- |
 | `POST` | `/chat` | 채팅 작업 제출 (`session_id`, `message`, `context_window`) |
-| `GET` | `/chat/{session_id}` | 세션 스냅샷(메시지/최근 상태) 조회 |
+| `GET` | `/chat/{session_id}` | 세션 스냅샷(메시지/최근 상태, 기본 `IDLE`) 조회 |
 | `GET` | `/chat/{session_id}/events?request_id=...` | 요청 단위 SSE 이벤트 구독 |
 
 ### 2-2. UI API
@@ -126,7 +126,7 @@ uv run uvicorn rag_chatbot.api.main:app --host 0.0.0.0 --port 8000 --reload
 7. 그래프는 `safeguard -> context_strategy -> RAG -> response` 또는 `blocked` 경로로 분기한다.
 8. `rag_format` 단계가 참고 문서를 `rag_references`로 만들고, 상위 계층이 이를 `references` SSE 이벤트로 정규화한다.
 9. 완료 시 assistant 응답은 `request_id` 멱등 기준으로 1회만 저장된다.
-10. 필요하면 `GET /chat/{session_id}`로 최종 스냅샷을 조회한다.
+10. 필요하면 `GET /chat/{session_id}`로 최종 스냅샷을 조회한다. 실행 이력이 없으면 `last_status`는 `IDLE`일 수 있다.
 
 SSE `data` 예시:
 
@@ -139,9 +139,11 @@ SSE `data` 예시:
   "content": "안녕하세요",
   "status": null,
   "error_message": null,
-  "metadata": {}
+  "metadata": null
 }
 ```
+
+`metadata`는 선택 필드다.
 
 이벤트 타입:
 
