@@ -1,73 +1,30 @@
-# Integrations DB 문서 개요
+# Integrations DB 가이드
 
-이 문서는 `src/rag_chatbot/integrations/db` 하위 모듈의 책임과 문서 인덱스를 제공한다.
+이 문서는 DB 계층 전체 구조와, 어떤 엔진이 어떤 역할을 하는지 현재 코드 기준으로 설명한다.
 
-## 1. 구조
+## 1. 현재 계층 구조
 
-```text
-src/rag_chatbot/integrations/db/
-  client.py
-  base/*.py
-  query_builder/*.py
-  engines/sql_common.py
-  engines/elasticsearch/*.py
-  engines/lancedb/*.py
-  engines/mongodb/*.py
-  engines/postgres/*.py
-  engines/redis/*.py
-  engines/sqlite/*.py
-```
+- `base`: 엔진 포트, 공용 모델, query builder 포트, 세션/풀 포트
+- `client.py`: 상위 계층이 직접 사용하는 퍼사드
+- `query_builder`: 읽기/쓰기/삭제 DSL
+- `engines/sqlite`: 기본 Chat 저장소
+- `engines/lancedb`: 현재 RAG 벡터 검색 기본 경로
+- `engines/postgres`: 관계형 저장 + pgvector
+- `engines/mongodb`: 문서형 저장
+- `engines/redis`: keyspace 기반 저장과 벡터 유틸
+- `engines/elasticsearch`: 인덱스 기반 검색
 
-## 2. 핵심 흐름
+## 2. 현재 활성 사용 경로
 
-1. `client.py`가 DB 엔진 호출을 단일 인터페이스로 제공한다.
-2. `base/*.py`와 `query_builder/*.py`가 Query/Schema/DSL 공통 규약을 정의한다.
-3. `engines/*`가 저장소별 실제 CRUD/검색 구현을 담당한다.
+- Chat 이력 기본 저장소: SQLite (`ChatHistoryRepository` 기본 생성 경로)
+- online retrieval: LanceDB (`rag_retrieve_node`)
+- ingestion 백엔드 선택: LanceDB, PostgreSQL, Elasticsearch
 
-## 3. 문서 인덱스
+## 3. 유지보수/추가개발 포인트
 
-- `docs/integrations/db/base/engine.md`
-- `docs/integrations/db/base/models.md`
-- `docs/integrations/db/base/pool.md`
-- `docs/integrations/db/base/query_builder.md`
-- `docs/integrations/db/base/session.md`
-- `docs/integrations/db/client.md`
-- `docs/integrations/db/engines/elasticsearch/connection.md`
-- `docs/integrations/db/engines/elasticsearch/document_mapper.md`
-- `docs/integrations/db/engines/elasticsearch/engine.md`
-- `docs/integrations/db/engines/elasticsearch/filter_builder.md`
-- `docs/integrations/db/engines/elasticsearch/schema_manager.md`
-- `docs/integrations/db/engines/lancedb/document_mapper.md`
-- `docs/integrations/db/engines/lancedb/engine.md`
-- `docs/integrations/db/engines/lancedb/filter_engine.md`
-- `docs/integrations/db/engines/lancedb/schema_adapter.md`
-- `docs/integrations/db/engines/mongodb/connection.md`
-- `docs/integrations/db/engines/mongodb/document_mapper.md`
-- `docs/integrations/db/engines/mongodb/engine.md`
-- `docs/integrations/db/engines/mongodb/filter_builder.md`
-- `docs/integrations/db/engines/mongodb/schema_manager.md`
-- `docs/integrations/db/engines/postgres/condition_builder.md`
-- `docs/integrations/db/engines/postgres/connection.md`
-- `docs/integrations/db/engines/postgres/document_mapper.md`
-- `docs/integrations/db/engines/postgres/engine.md`
-- `docs/integrations/db/engines/postgres/schema_manager.md`
-- `docs/integrations/db/engines/postgres/vector_adapter.md`
-- `docs/integrations/db/engines/postgres/vector_store.md`
-- `docs/integrations/db/engines/redis/connection.md`
-- `docs/integrations/db/engines/redis/document_mapper.md`
-- `docs/integrations/db/engines/redis/engine.md`
-- `docs/integrations/db/engines/redis/filter_evaluator.md`
-- `docs/integrations/db/engines/redis/keyspace.md`
-- `docs/integrations/db/engines/redis/vector_scorer.md`
-- `docs/integrations/db/engines/sql_common.md`
-- `docs/integrations/db/engines/sqlite/condition_builder.md`
-- `docs/integrations/db/engines/sqlite/connection.md`
-- `docs/integrations/db/engines/sqlite/document_mapper.md`
-- `docs/integrations/db/engines/sqlite/engine.md`
-- `docs/integrations/db/engines/sqlite/schema_manager.md`
-- `docs/integrations/db/query_builder/delete_builder.md`
-- `docs/integrations/db/query_builder/read_builder.md`
-- `docs/integrations/db/query_builder/write_builder.md`
+- 새 엔진 기능을 추가하면 `BaseDBEngine`, `DBClient`, 관련 query builder, 문서까지 함께 수정해야 한다.
+- 스키마나 필터 표현을 바꾸면 mapper, condition/filter builder, 테스트가 동시에 영향을 받는다.
+- "구현이 있다"와 "현재 조립돼 있다"를 문서에서 구분해야 운영 혼선을 줄일 수 있다.
 
 ## 4. 관련 문서
 

@@ -1,60 +1,29 @@
-# Shared Chat Interface Ports
+# GraphPort 가이드
 
-이 문서는 `src/rag_chatbot/shared/chat/interface/ports.py`의 포트 인터페이스를 설명한다.
+이 문서는 `src/rag_chatbot/shared/chat/interface/ports.py`의 현재 구현을 기준으로 역할과 유지보수 포인트를 정리한다.
 
-## 1. 목적
+## 1. 역할
 
-- 상위 계층(API)과 하위 구현(graph/service/executor) 사이의 호출 계약을 고정한다.
-- 구현체 교체 시 상위 호출 코드의 변경 범위를 줄인다.
+그래프, 서비스, 실행기 사이의 포트 인터페이스를 정의한다.
 
-## 2. 타입
+## 2. 공개 구성
 
-| 타입 | 설명 |
-| --- | --- |
-| `StreamNodeConfig` | 노드별 허용 이벤트 목록 매핑 타입 (`Mapping[str, str | Sequence[str]]`) |
+- 클래스 `GraphPort`
+  공개 메서드: `compile`, `set_stream_node`, `invoke`, `ainvoke`, `stream_events`, `astream_events`
+- 클래스 `ChatServicePort`
+  공개 메서드: `close`, `create_session`, `list_sessions`, `get_session`, `list_messages`, `delete_session`, `persist_assistant_message`, `invoke`, `ainvoke`, `stream`, `astream`
+- 클래스 `ServiceExecutorPort`
+  공개 메서드: `submit_job`, `stream_events`, `get_session_status`
 
-## 3. GraphPort
+## 3. 코드 설명
 
-주요 메서드:
+- 구현체를 교체할 때는 먼저 포트 시그니처와 반환 타입을 유지해야 상위 계층이 깨지지 않는다.
 
-1. `compile(checkpointer=None)`
-2. `set_stream_node(stream_node)`
-3. `invoke(...)`, `ainvoke(...)`
-4. `stream_events(...)`, `astream_events(...)`
+## 4. 유지보수/추가개발 포인트
 
-역할:
+- 포트 변경은 구현체와 상위 호출부를 동시에 깨뜨리므로 실제 두 구현 이상이 필요할 때만 확장하는 편이 안전하다.
 
-- 그래프 컴파일과 실행을 표준 인터페이스로 제공한다.
-- 노드/이벤트 필터 정책(`stream_node`) 변경 지점을 단일화한다.
+## 5. 관련 문서
 
-## 4. ChatServicePort
-
-주요 메서드:
-
-1. 세션/메시지 API: `create_session`, `list_sessions`, `get_session`, `list_messages`, `delete_session`
-2. 실행 API: `invoke`, `ainvoke`, `stream`, `astream`
-3. 저장 API: `persist_assistant_message`
-
-역할:
-
-- 세션 이력 저장과 그래프 실행을 하나의 서비스 경계로 묶는다.
-- UI API와 Chat API가 동일 도메인 모델을 공유하도록 한다.
-
-## 5. ServiceExecutorPort
-
-주요 메서드:
-
-1. `submit_job(session_id, user_query, context_window)`
-2. `stream_events(session_id, request_id)`
-3. `get_session_status(session_id)`
-
-역할:
-
-- 비동기 작업 처리와 SSE 이벤트 전달 경계를 정의한다.
-- 라우터 계층이 큐/버퍼 구현 세부사항에 의존하지 않도록 한다.
-
-## 6. 관련 문서
-
-- `docs/shared/chat/services/chat_service.md`
-- `docs/shared/chat/services/service_executor.md`
-- `docs/shared/chat/graph/base_chat_graph.md`
+- `docs/shared/overview.md`
+- `docs/shared/chat/README.md`

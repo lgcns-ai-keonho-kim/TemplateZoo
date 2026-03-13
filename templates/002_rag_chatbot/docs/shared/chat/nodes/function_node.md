@@ -1,31 +1,28 @@
-# Function Node
+# FunctionNode 가이드
 
-이 문서는 `src/rag_chatbot/shared/chat/nodes/function_node.py`를 설명한다.
+이 문서는 `src/rag_chatbot/shared/chat/nodes/function_node.py`의 현재 구현을 기준으로 역할과 유지보수 포인트를 정리한다.
 
-## 1. 목적
+## 1. 역할
 
-- 주입된 함수를 LangGraph 노드로 실행하고 반환 Mapping을 상태 업데이트 payload로 변환한다.
+여러 그래프에서 재사용할 수 있는 범용 노드 또는 노드 보조 함수다.
 
-## 2. 핵심 입력
+## 2. 공개 구성
 
-| 입력 | 설명 |
-| --- | --- |
-| `fn` | 실행할 함수(동기/비동기) |
-| `node_name` | 노드 식별 이름 |
+- 클래스 `FunctionNode`
+  공개 메서드: `run`, `arun`
+- 함수 `function_node`
 
-## 3. 주요 메서드
+## 3. 코드 설명
 
-1. `run(state, config=None)`
-2. `arun(state, config=None)`
-3. `function_node(fn, node_name, logger=None)` 팩토리 함수
+- LangGraph state 입력은 보통 `Mapping[str, Any]` 형태로 정규화한 뒤 처리한다.
+- 노드 출력은 state delta로 병합할 수 있는 dict 형식을 유지해야 한다.
 
-## 4. 동작 규칙
+## 4. 유지보수/추가개발 포인트
 
-- 동기 `run`에서 awaitable 반환 시 `FUNCTION_NODE_ASYNC_IN_SYNC_RUN` 예외 발생
-- 출력이 Mapping이 아니면 `FUNCTION_NODE_OUTPUT_INVALID` 예외 발생
-- 함수 실행 오류는 `FUNCTION_NODE_EXECUTION_ERROR`로 래핑
+- 범용 노드는 특정 도메인 상태 키에 종속되지 않도록 유지하는 편이 다른 그래프에서 재사용하기 쉽다.
+- 예외는 `BaseAppException` 코드로 정규화해 상위 계층에서 같은 방식으로 처리되게 한다.
 
 ## 5. 관련 문서
 
-- `docs/shared/chat/nodes/_state_adapter.md`
-- `docs/core/chat.md`
+- `docs/shared/overview.md`
+- `docs/shared/chat/README.md`

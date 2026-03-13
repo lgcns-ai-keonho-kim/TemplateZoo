@@ -1,24 +1,25 @@
-# Integrations FS 문서 개요
+# Integrations FS 가이드
 
-이 문서는 `src/rag_chatbot/integrations/fs` 하위 모듈의 책임과 문서 인덱스를 제공한다.
+이 문서는 파일 시스템 기반 저장 계층의 현재 범위를 설명한다.
 
-## 1. 구조
+## 1. 현재 역할
 
-```text
-src/rag_chatbot/integrations/fs/
-  base/engine.py
-  engines/local.py
-  file_repository.py
-```
+- 파일 엔진 포트를 정의한다.
+- 로컬 파일 시스템 구현을 제공한다.
+- 파일 기반 로그 저장소(`FileLogRepository`)를 제공한다.
 
-## 2. 문서 인덱스
+## 2. 현재 사용 경로
 
-- `docs/integrations/fs/base/engine.md`
-- `docs/integrations/fs/engines/local.md`
+- 파일 시스템 저장소는 기본 런타임에 자동 조립되지는 않는다.
+- 운영 또는 개발 도구에서 파일 로그 저장이 필요할 때 별도로 주입한다.
+
+## 3. 유지보수/추가개발 포인트
+
+- 파일 포맷이나 디렉터리 규칙을 바꾸면 기존 로그를 어떻게 읽을지 마이그레이션 정책을 먼저 정해야 한다.
+- 원격 스토리지로 확장하려면 `BaseFSEngine` 계약을 먼저 유지하는 편이 안전하다.
+
+## 4. 관련 문서
+
 - `docs/integrations/fs/file_repository.md`
-
-## 3. 관련 문서
-
 - `docs/setup/filesystem.md`
 - `docs/shared/logging.md`
-- `docs/integrations/overview.md`

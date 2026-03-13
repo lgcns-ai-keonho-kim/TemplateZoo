@@ -1,29 +1,26 @@
-# schema_manager 모듈
+# MongoSchemaManager 가이드
 
-이 문서는 `src/rag_chatbot/integrations/db/engines/mongodb/schema_manager.py`의 역할과 주요 구성을 설명한다.
+이 문서는 `src/rag_chatbot/integrations/db/engines/mongodb/schema_manager.py`의 현재 구현을 기준으로 역할과 유지보수 포인트를 정리한다.
 
-## 1. 목적
+## 1. 역할
 
-MongoDB 스키마 관리 모듈을 제공한다.
+컬렉션 또는 테이블 생성, 삭제, 컬럼 추가/삭제 같은 스키마 변경 작업을 담당한다.
 
-## 2. 설명
-
-컬렉션 생성/삭제 및 필드 제거 동작을 담당한다.
-
-## 3. 디자인 패턴
-
-매니저 패턴
-
-## 4. 주요 구성
+## 2. 공개 구성
 
 - 클래스 `MongoSchemaManager`
-  주요 메서드: `create_collection`, `delete_collection`, `add_column`, `drop_column`
+  공개 메서드: `create_collection`, `delete_collection`, `add_column`, `drop_column`
 
-## 5. 연동 포인트
+## 3. 코드 설명
 
-- `src/rag_chatbot/integrations/db/engines/mongodb/engine.py`
+- 현재 구현은 소스 파일의 공개 메서드와 인접 모듈 협업을 기준으로 읽는 것이 가장 안전하다.
 
-## 6. 관련 문서
+## 4. 유지보수/추가개발 포인트
 
-- `docs/integrations/db/README.md`
+- 이 모듈은 같은 엔진 폴더의 `engine.py`와 짝을 이루므로, 내부 표현을 바꾸면 호출자와 반환 형식을 함께 점검해야 한다.
+- 스키마 변경이나 필드명 변경이 생기면 mapper, schema manager, filter 계층을 동시에 확인해야 한다.
+
+## 5. 관련 문서
+
 - `docs/integrations/overview.md`
+- `docs/integrations/db/README.md`

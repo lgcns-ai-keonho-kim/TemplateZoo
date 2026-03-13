@@ -1,66 +1,28 @@
-# Chat Service
+# ChatService 가이드
 
-이 문서는 `src/rag_chatbot/shared/chat/services/chat_service.py`의 도메인 실행 서비스를 설명한다.
+이 문서는 `src/rag_chatbot/shared/chat/services/chat_service.py`의 현재 구현을 기준으로 역할과 유지보수 포인트를 정리한다.
 
-## 1. 목적
+## 1. 역할
 
-- 세션/메시지 저장소와 그래프 실행을 결합한다.
-- 동기/비동기 실행, 스트리밍, 멱등 저장을 제공한다.
+세션 관리, 메시지 저장, 그래프 실행, assistant 응답 영속화를 조합하는 서비스 계층이다.
 
-## 2. 주요 의존성
+## 2. 공개 구성
 
-| 의존성 | 역할 |
-| --- | --- |
-| `GraphPort` | 그래프 invoke/stream 실행 |
-| `ChatHistoryRepository` | 세션/메시지/커밋 저장 |
-| `ChatSessionMemoryStore` | 문맥 메시지 캐시 |
+- 클래스 `ChatService`
+  공개 메서드: `memory_store`, `close`, `create_session`, `list_sessions`, `get_session`, `list_messages`, `delete_session`, `invoke`, `ainvoke`, `stream`, `astream`, `persist_assistant_message`, `append_assistant_message`
 
-## 3. 세션/메시지 API
+## 3. 코드 설명
 
-1. `create_session`, `list_sessions`, `get_session`, `list_messages`, `delete_session`
-2. `append_assistant_message`: assistant 메시지 저장 + 메모리 반영
-3. `_append_user_message_existing_session`: user 메시지 저장 + 메모리 반영
+- 세션 CRUD와 그래프 실행 경로가 한 서비스에 모여 있다.
+- 최근 메시지는 메모리 저장소와 영속 저장소를 함께 사용해 관리한다.
+- assistant 응답 저장은 request_id 멱등 커밋과 함께 처리한다.
 
-세션 삭제 시 `repository.delete_session`과 `memory_store.clear_session`을 함께 수행한다.
+## 4. 유지보수/추가개발 포인트
 
-## 4. 실행 API
+- 응답 저장 정책을 바꾸면 `ServiceExecutor` 후처리와 request_id 멱등 규칙을 함께 확인해야 한다.
+- 메모리 정책과 저장소 조회 정책이 엇갈리면 문맥 품질이 흔들릴 수 있으므로 함께 수정하는 편이 안전하다.
 
-1. `invoke`, `ainvoke`: 최종 텍스트를 즉시 반환
-2. `stream`, `astream`: 이벤트 스트림 반환
+## 5. 관련 문서
 
-스트림 종료 규칙:
-
-1. 그래프 `token` 이벤트를 누적한다.
-2. 토큰이 비어 있으면 `assistant_message`를 fallback으로 사용한다.
-3. 최종적으로 `references` 이벤트와 `done` 이벤트를 생성한다.
-4. 최종 본문이 비어 있으면 `CHAT_STREAM_EMPTY` 예외를 발생시킨다.
-
-## 5. 문맥 생성 규칙
-
-- `_build_context_history`는 `context_window`를 최소 1로 보정한다.
-- 현재 요청 메시지는 `exclude_message_id`로 제외한다.
-- `max_sequence`를 넘어서는 메시지는 문맥에서 제외한다.
-- 세션 캐시가 없으면 `_ensure_memory_loaded`로 저장소 최근 메시지를 로드한다.
-
-## 6. 멱등 저장 규칙
-
-`persist_assistant_message`:
-
-1. `is_request_committed`로 선조회
-2. 미커밋일 때만 assistant 저장
-3. 저장 후 `mark_request_committed` 기록
-
-중복 done 또는 재시도 상황에서도 assistant 중복 저장을 방지한다.
-
-## 7. 실패/예외 포인트
-
-- 세션 미존재: `CHAT_SESSION_NOT_FOUND`
-- 빈 메시지 입력: `CHAT_MESSAGE_EMPTY`
-- 빈 스트림 본문: `CHAT_STREAM_EMPTY`
-
-## 8. 관련 문서
-
-- `docs/shared/chat/interface/ports.md`
-- `docs/shared/chat/repositories/history_repository.md`
-- `docs/shared/chat/memory/session_store.md`
-- `docs/shared/chat/services/service_executor.md`
+- `docs/shared/overview.md`
+- `docs/shared/chat/README.md`
