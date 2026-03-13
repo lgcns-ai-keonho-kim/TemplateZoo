@@ -46,12 +46,16 @@ flowchart TD
 
     SSP --> SSL[schema_selection_llm]
     SSL --> SSPA[schema_selection_parse]
-    SSPA --> RSP[raw_sql_prepare]
-    RSP --> RSG[raw_sql_generate]
-    RSG --> RSE[raw_sql_execute]
+    SSPA -->|success| RSP[raw_sql_prepare]
+    SSPA -->|failure| SPFM[sql_pipeline_failure_message]
+    RSP -->|success| RSG[raw_sql_generate]
+    RSP -->|failure| SPFM
+    RSG -->|success| RSE[raw_sql_execute]
+    RSG -->|failure| SPFM
     RSE -->|retry| RRP[raw_sql_retry_prepare]
     RRP --> RSGR[raw_sql_generate_retry]
-    RSGR --> RSER[raw_sql_execute_retry]
+    RSGR -->|success| RSER[raw_sql_execute_retry]
+    RSGR -->|failure| SPFM
     RSE --> SRC[sql_result_collect]
     RSER --> SRC
     SRC -->|success| SAP[sql_answer_prepare]
@@ -64,9 +68,10 @@ flowchart TD
 | 분류 | 키 |
 | --- | --- |
 | 입력 | `session_id`, `user_message`, `history` |
-| 컨텍스트 전략 | `context_strategy`, `context_strategy_raw`, `last_assistant_message`, `last_answer_source_meta`, `metadata_summary` |
-| 스키마 선택 | `schema_snapshot`, `schema_selection_context`, `schema_selection_raw`, `selected_target_aliases` |
-| SQL 생성/재시도 | `raw_sql_inputs`, `sql_texts_by_alias`, `sql_retry_feedbacks`, `retry_count_by_alias` |
+| safeguard | `safeguard_result`, `safeguard_route`, `safeguard_reason` |
+| 컨텍스트 전략 | `context_strategy`, `context_strategy_raw`, `last_assistant_message`, `last_answer_source_meta`, `metadata_summary`, `metadata_route` |
+| 스키마 선택 | `schema_snapshot`, `available_target_aliases`, `schema_selection_context`, `schema_selection_raw`, `selected_target_aliases` |
+| SQL 생성/재시도 | `raw_sql_inputs`, `sql_texts_by_alias`, `sql_retry_feedbacks`, `retry_count_by_alias`, `sql_pipeline_failure_stage`, `sql_pipeline_failure_details` |
 | 실행 결과 | `execution_reports`, `success_aliases`, `failed_aliases`, `failure_codes`, `failure_details` |
 | 응답 컨텍스트 | `answer_source_meta`, `sql_answer_context`, `sql_plan`, `sql_result`, `assistant_message` |
 
@@ -86,6 +91,8 @@ flowchart TD
 | `raw_sql_generate` | alias별 raw SQL 생성 | `sql_texts_by_alias`, `sql_plan` |
 | `raw_sql_execute` | 읽기 전용 SQL 실행 | `execution_reports`, `sql_result` |
 | `raw_sql_retry_prepare` | DB 오류 기반 재시도 입력 준비 | `raw_sql_inputs` |
+| `sql_pipeline_failure_message` | SQL 파이프라인 준비/생성 실패 메시지 생성 | `assistant_message` |
+| `execution_failure_message` | 실행 결과 실패 메시지 생성 | `assistant_message` |
 | `sql_result_collect` | 실행 결과 집계 및 후속 설명 메타 생성 | `sql_result`, `answer_source_meta` |
 | `sql_answer_prepare` | 최종 응답용 문맥 생성 | `sql_answer_context` |
 | `response` | 최종 자연어 응답 생성 | `assistant_message` |

@@ -55,8 +55,8 @@
 {
   "session_id": "...",
   "request_id": "...",
-  "type": "start|token|sql_plan|sql_result|done|error",
-  "node": "executor|safeguard|schema_selection_parse|raw_sql_generate|raw_sql_execute|sql_result_collect|response|blocked",
+  "type": "start|token|references|sql_plan|sql_result|done|error",
+  "node": "executor|safeguard|schema_selection_parse|raw_sql_generate|raw_sql_execute|sql_result_collect|response|blocked|sql_pipeline_failure_message|execution_failure_message",
   "content": "...",
   "status": "COMPLETED|FAILED|null",
   "error_message": "...",
@@ -70,6 +70,7 @@
 | --- | --- |
 | `start` | 실행 시작 |
 | `token` | 응답 토큰 스트림 |
+| `references` | 참조 문서/근거 목록 |
 | `sql_plan` | 스키마 선택 또는 SQL 생성 결과 |
 | `sql_result` | SQL 실행 결과 또는 결과 집계 |
 | `done` | 정상 종료 |
@@ -89,6 +90,8 @@
 | `sql_result_collect` | 최종 성공/실패 집계, 후속 질의 메타 생성 |
 | `response` | 최종 자연어 응답 |
 | `blocked` | 안전성 차단 응답 |
+| `sql_pipeline_failure_message` | SQL 파이프라인 준비/생성 실패 메시지 |
+| `execution_failure_message` | SQL 실행 실패 메시지 |
 
 ## 6. 요청 처리 흐름
 
@@ -124,5 +127,6 @@ sequenceDiagram
 ## 8. 운영 포인트
 
 - `done` 이후 assistant 메시지와 `answer_source_meta`가 저장됩니다.
+- `references`는 공개 이벤트 타입에 포함되지만, 현재 기본 Text-to-SQL 그래프에서는 기본적으로 emit하지 않습니다.
 - `sql_result_collect`에서 생성한 `answer_source_meta`는 후속 설명 질의에 재사용됩니다.
 - 여러 alias가 선택되면 alias별 SQL을 별도로 실행하고, 응답은 하나로 종합합니다.

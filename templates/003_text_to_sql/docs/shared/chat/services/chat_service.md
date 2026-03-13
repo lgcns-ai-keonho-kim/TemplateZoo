@@ -4,7 +4,8 @@
 
 ## 1. 역할
 
-- 사용자 메시지 저장, 컨텍스트 히스토리 구성, 그래프 실행, assistant 저장을 통합한다.
+- 사용자 메시지 저장, 컨텍스트 히스토리 구성, 그래프 실행을 통합한다.
+- 단건 `invoke/ainvoke` 경로에서는 assistant 저장까지 처리하고, 스트리밍 경로에서는 `done` 이벤트 생성까지만 담당한다.
 - memory cache와 repository를 함께 사용해 조회 비용과 일관성을 동시에 관리한다.
 
 ## 2. 주요 메서드
@@ -21,7 +22,8 @@
 1. user 메시지를 repository + memory_store에 append
 2. memory_store에서 context window 히스토리 구성
 3. graph 실행 후 token 또는 assistant_message를 결합
-4. 최종 assistant 메시지를 저장하고 request commit 기록
+4. `stream/astream`은 최종 content를 조합해 `done` 이벤트를 생성한다.
+5. 실제 assistant 저장과 request commit은 `ServiceExecutor`가 `persist_assistant_message()`를 호출해 수행한다.
 
 ## 4. 실패 경로
 
