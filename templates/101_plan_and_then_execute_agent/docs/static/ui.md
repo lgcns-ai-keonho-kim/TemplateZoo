@@ -1,26 +1,17 @@
-# Static UI 구현 문서
+# Static UI
 
-이 문서는 `src/plan_and_then_execute_agent/static`의 동작을 기준으로, 프런트엔드에서 분석/구현/확장할 때 필요한 내용을 한 번에 제공한다.
+`src/plan_and_then_execute_agent/static`의 프런트엔드 동작, API 연동, 상태 전이 규칙을 정리한다.
 
 ## 1. 범위
-
-이 문서가 다루는 범위:
 
 1. 실제 코드 기준 모듈 책임
 2. 백엔드 API/SSE 인터페이스
 3. 부트스트랩/전송/삭제 시퀀스
 4. 상태 모델과 전이 규칙
 5. 실패 처리와 복구 규칙
-6. React/Vue 전환 시 구현 구조
+6. 프런트 확장 시 확인해야 하는 구조 경계
 
-이 문서가 다루지 않는 범위:
-
-1. 디자인 시스템/스타일 기준
-2. 서버 내부 아키텍처 상세
-
-## 2. 코드 읽기 순서
-
-다음 순서로 읽으면 전체 흐름을 빠르게 파악할 수 있다.
+## 2. 주요 진입 파일
 
 1. `src/plan_and_then_execute_agent/static/index.html`
 2. `src/plan_and_then_execute_agent/static/js/core/app.js`
@@ -183,7 +174,7 @@ SSE payload:
 
 ## 4-3. API 에러 파싱 규칙
 
-`api_transport.parseErrorMessage()`는 아래 순서로 메시지를 추출한다.
+HTTP transport 유틸 `window.App.apiTransportHttp.parseErrorMessage()`는 아래 순서로 메시지를 추출한다.
 
 1. payload가 문자열이면 그대로 사용
 2. `payload.message`

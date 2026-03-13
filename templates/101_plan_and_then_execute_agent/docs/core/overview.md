@@ -1,6 +1,6 @@
 # Core 모듈 개요
 
-이 문서는 `src/plan_and_then_execute_agent/core` 계층의 책임 경계와 학습 순서를 코드 기준으로 정리한다.
+`src/plan_and_then_execute_agent/core` 계층의 책임 경계와 실행 구조를 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -54,15 +54,6 @@ core -> integrations
 3. Execute 단계는 배치 단위 fan-out으로 Tool을 실행하고 실패 시 Replan으로 분기한다.
 4. 최종 응답 키는 모든 경로에서 `assistant_message`다.
 5. 스트림 노출 이벤트는 `stream_node`로 제한된다.
-
-## 5. 학습 순서
-
-1. `src/plan_and_then_execute_agent/core/chat/models/entities.py`
-2. `src/plan_and_then_execute_agent/core/chat/state/graph_state.py`
-3. `src/plan_and_then_execute_agent/core/chat/nodes/*.py`
-4. `src/plan_and_then_execute_agent/core/chat/graphs/chat_graph.py`
-5. `src/plan_and_then_execute_agent/shared/chat/services/chat_service.py`
-6. `src/plan_and_then_execute_agent/shared/chat/services/service_executor.py`
 
 ## 7. 관련 문서
 

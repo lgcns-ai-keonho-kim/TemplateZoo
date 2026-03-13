@@ -1,12 +1,12 @@
-# Client 문서
+# Client
 
-대상 코드: `src/plan_and_then_execute_agent/integrations/embedding/client.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/integrations/embedding/client.py` 구현을 기준으로 현재 동작을 정리한다.
 
-- 목적: LangChain Embeddings 기반 임베딩 클라이언트를 제공한다.
-- 설명: 임베딩 호출을 래핑해 로깅과 예외 처리를 통합한다.
-- 디자인 패턴: 프록시, 데코레이터
+- LangChain Embeddings 기반 임베딩 클라이언트를 제공한다.
+- 임베딩 호출을 래핑해 로깅과 예외 처리를 통합한다.
+- 구현 형태: 프록시, 데코레이터
 
 ## 주요 구성
 
@@ -20,7 +20,7 @@
 - `EMBEDDING_VECTOR_EMPTY`
 - `EMBEDDING_VECTOR_INVALID`
 
-## 연관 코드
+## 관련 코드
 
 - `src/plan_and_then_execute_agent/shared/logging`
 - `src/plan_and_then_execute_agent/shared/exceptions`

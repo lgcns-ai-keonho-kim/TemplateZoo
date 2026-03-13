@@ -1,8 +1,8 @@
-# Tool Exec Support 문서
+# Tool Exec Support
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/nodes/_tool_exec_support.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/nodes/_tool_exec_support.py` 구현을 기준으로 현재 동작을 정리한다.
 
 `ToolExecNode`의 공통 보조 동작을 분리한 믹스인입니다.
 이벤트 발행(`tool_start/tool_result/tool_error`), 재시도 백오프, 비정상 흐름 실패 변환을 제공합니다.
@@ -19,6 +19,6 @@
 
 - `TOOL_EXEC_FLOW_BROKEN`: 정상 분기에서 종료되지 않는 비정상 흐름 감지 시 강제 실패
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/nodes/tool_exec_node.md`

@@ -1,8 +1,8 @@
-# Service Executor 문서
+# Service Executor
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/services/service_executor.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/services/service_executor.py` 구현을 기준으로 현재 동작을 정리한다.
 
 작업 큐 소비와 SSE 이벤트 중계를 담당하는 실행 오케스트레이터입니다.
 세션별 직렬 실행, 상태 전이, 완료 후 영속 후처리를 관리합니다.
@@ -29,7 +29,7 @@
 - `CHAT_JOB_QUEUE_FAILED`: 큐 put 실패
 - timeout 시 `type=error`, `status=FAILED` payload 반환
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/services/_service_executor_support.md`
 - `docs/shared/chat/services/chat_service.md`

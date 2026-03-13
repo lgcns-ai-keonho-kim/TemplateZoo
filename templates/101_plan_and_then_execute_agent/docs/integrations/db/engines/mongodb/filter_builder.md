@@ -1,12 +1,12 @@
-# Filter Builder 문서
+# Filter Builder
 
-대상 코드: `src/plan_and_then_execute_agent/integrations/db/engines/mongodb/filter_builder.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/integrations/db/engines/mongodb/filter_builder.py` 구현을 기준으로 현재 동작을 정리한다.
 
-- 목적: MongoDB 필터 쿼리 빌더를 제공한다.
-- 설명: 필터 조건을 MongoDB 쿼리로 변환한다.
-- 디자인 패턴: 빌더 패턴
+- MongoDB 필터 쿼리 빌더를 제공한다.
+- 필터 조건을 MongoDB 쿼리로 변환한다.
+- 구현 형태: 빌더 패턴
 
 ## 주요 구성
 
@@ -17,6 +17,6 @@
 
 - 코드에서 명시적으로 정의한 `ExceptionDetail.code`가 없습니다.
 
-## 연관 코드
+## 관련 코드
 
 - `src/plan_and_then_execute_agent/integrations/db/engines/mongodb/engine.py`

@@ -1,8 +1,8 @@
-# Chat Service 문서
+# Chat Service
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/services/chat_service.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/services/chat_service.py` 구현을 기준으로 현재 동작을 정리한다.
 
 저장소(`ChatHistoryRepository`)와 그래프(`GraphPort`)를 결합해 채팅 유스케이스를 수행합니다.
 세션 관리, 문맥 빌드, 스트림 결과 정규화, request_id 멱등 저장을 담당합니다.
@@ -25,7 +25,7 @@
 - `CHAT_MESSAGE_EMPTY`
 - `CHAT_STREAM_EMPTY`
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/interface/ports.md`
 - `docs/shared/chat/graph/base_chat_graph.md`

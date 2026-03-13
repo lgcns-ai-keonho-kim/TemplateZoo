@@ -1,8 +1,8 @@
-# Request Commit Schema 문서
+# Request Commit Schema
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/repositories/schemas/request_commit_schema.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/repositories/schemas/request_commit_schema.py` 구현을 기준으로 현재 동작을 정리한다.
 
 request_id 기반 저장 멱등성 기록 스키마를 생성합니다.
 
@@ -17,6 +17,6 @@ request_id 기반 저장 멱등성 기록 스키마를 생성합니다.
 - `message_id`
 - `created_at`
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/repositories/history_repository.md`

@@ -1,6 +1,6 @@
-# API UI 문서
+# API UI
 
-이 문서는 `src/plan_and_then_execute_agent/api/ui` 모듈을 기준으로 UI 전용 API의 인터페이스, 동작 순서, 수정 지점을 정리한다.
+`src/plan_and_then_execute_agent/api/ui` 모듈의 UI 전용 API 인터페이스와 동작 순서를 정리한다.
 
 ## 1. 용어 정리
 
@@ -242,7 +242,7 @@ Response:
 
 ## 6. 계층별 책임
 
-| 계층 | 해야 하는 일 | 하면 안 되는 일 |
+| 계층 | 주요 책임 | 제외 책임 |
 | --- | --- | --- |
 | Router | HTTP 파라미터 수신, 서비스 호출, 예외 변환 | 저장소 직접 호출 |
 | UI Service | Core 서비스 호출, DTO 변환 | DB 엔진 import, HTTP 예외 생성 |

@@ -1,6 +1,6 @@
-# PostgreSQL + pgvector 구성 문서
+# PostgreSQL + pgvector
 
-이 문서는 PostgreSQL 설치부터 pgvector 확장 활성화, 그리고 프로젝트에 연동하는 단계까지 정리합니다.
+PostgreSQL 설치부터 pgvector 확장 활성화, 그리고 프로젝트에 연동하는 단계까지 정리한다.
 
 ## 1. 적용 범위
 

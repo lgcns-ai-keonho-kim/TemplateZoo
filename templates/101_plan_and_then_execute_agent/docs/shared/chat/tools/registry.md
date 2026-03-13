@@ -1,8 +1,8 @@
-# Tool Registry 문서
+# Tool Registry
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/tools/registry.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/tools/registry.py` 구현을 기준으로 현재 동작을 정리한다.
 
 Tool 스펙의 등록/조회/planner 노출을 담당하는 이름 기반 레지스트리입니다.
 
@@ -25,7 +25,7 @@ Tool 스펙의 등록/조회/planner 노출을 담당하는 이름 기반 레지
 - `TOOL_NOT_FOUND`
 - `TOOL_REGISTRY_MODULE_INVALID`
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/tools/types.md`
 - `docs/shared/chat/tools/prompt_payload.md`

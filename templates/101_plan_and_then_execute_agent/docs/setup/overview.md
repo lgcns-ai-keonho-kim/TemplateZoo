@@ -1,10 +1,10 @@
 # Setup 개요
 
-이 문서는 `docs/setup` 하위 환경/인프라 설정 문서를 빠르게 탐색하기 위한 인덱스입니다.
+`docs/setup` 하위 환경·인프라 문서의 역할과 사용 맥락을 묶어 정리한다.
 
 ## 1. 문서 구성
 
-| 문서 | 목적 | 열어야 하는 시점 |
+| 문서 | 목적 | 사용 맥락 |
 | --- | --- | --- |
 | `docs/setup/env.md` | `.env` 키 설명과 실제 반영 위치 확인 | 프로젝트 초기 부트스트랩, 배포 전 변수 점검 |
 | `docs/setup/lancedb.md` | LanceDB 구성과 파일 기반 벡터 저장 경로 정리 | 로컬 벡터 엔진 실험 시 |
@@ -14,9 +14,9 @@
 
 주의:
 
-- 현재 템플릿은 Chat 런타임과 API 서버 구성에 집중되어 있습니다.
+- 현재 템플릿은 Chat 런타임과 API 서버 구성에 집중되어 있다.
 
-## 2. 권장 읽기 순서
+## 2. 핵심 문서 흐름
 
 1. `docs/setup/env.md`
 2. `docs/setup/lancedb.md`
@@ -68,4 +68,3 @@ uv run uvicorn plan_and_then_execute_agent.api.main:app --host 0.0.0.0 --port 80
 | PostgreSQL/pgvector | `integrations/db/engines/postgres/*.py` |
 | MongoDB | `integrations/db/engines/mongodb/*.py` |
 | 파일 시스템 연동 | `integrations/fs/*.py`, `shared/logging/logger.py`, `shared/logging/_log_repository_interface.py` |
-

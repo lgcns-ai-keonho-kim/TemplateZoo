@@ -1,6 +1,6 @@
 # Shared 모듈 개요
 
-이 문서는 `src/plan_and_then_execute_agent/shared` 계층의 책임 경계, 구성 요소, 변경 절차를 코드 기준으로 정리한다.
+`src/plan_and_then_execute_agent/shared` 계층의 책임 경계와 구성 요소를 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
@@ -46,15 +46,6 @@ shared -> integrations
 3. 중복 저장 이슈: `shared/chat/repositories/history_repository.py`의 request_id 커밋 로직
 4. 설정 누락 이슈: `shared/config/runtime_env_loader.py`
 5. 로그 누락 이슈: `shared/logging/logger.py`, `shared/logging/_create_default_logger.py`, `shared/logging/*_repository.py`
-
-## 5. 학습 순서
-
-1. `docs/shared/chat/overview.md`
-2. `docs/shared/runtime.md`
-3. `docs/shared/config.md`
-4. `docs/shared/exceptions.md`
-5. `docs/shared/logging.md`
-6. `docs/shared/const.md`
 
 ## 6. 확장 포인트
 

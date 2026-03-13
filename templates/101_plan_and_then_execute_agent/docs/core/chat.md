@@ -1,6 +1,6 @@
-# Core Chat 문서
+# Core Chat
 
-이 문서는 `src/plan_and_then_execute_agent/core/chat`의 현재 실행 구조(Plan-and-then-Execute)를 코드 기준으로 정리한다.
+`src/plan_and_then_execute_agent/core/chat`의 현재 실행 구조(Plan-and-then-Execute)를 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 

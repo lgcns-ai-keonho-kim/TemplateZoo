@@ -1,8 +1,8 @@
-# Session Schema 문서
+# Session Schema
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/repositories/schemas/session_schema.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/repositories/schemas/session_schema.py` 구현을 기준으로 현재 동작을 정리한다.
 
 세션 컬렉션 스키마를 생성합니다.
 
@@ -19,6 +19,6 @@
 - `message_count`
 - `last_message_preview`
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/repositories/history_repository.md`

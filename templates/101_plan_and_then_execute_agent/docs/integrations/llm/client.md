@@ -1,12 +1,12 @@
-# Client 문서
+# Client
 
-대상 코드: `src/plan_and_then_execute_agent/integrations/llm/client.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/integrations/llm/client.py` 구현을 기준으로 현재 동작을 정리한다.
 
-- 목적: LangChain BaseChatModel 기반 LLM 클라이언트를 제공한다.
-- 설명: 기존 메서드(invoke/ainvoke/stream/astream)를 유지하면서 로깅과 예외 처리를 통합한다.
-- 디자인 패턴: 프록시, 데코레이터
+- LangChain BaseChatModel 기반 LLM 클라이언트를 제공한다.
+- 기존 메서드(invoke/ainvoke/stream/astream)를 유지하면서 로깅과 예외 처리를 통합한다.
+- 구현 형태: 프록시, 데코레이터
 
 ## 주요 구성
 
@@ -23,7 +23,7 @@
 - `LLM_STREAM_ERROR`
 - `LLM_STREAM_NOT_SUPPORTED`
 
-## 연관 코드
+## 관련 코드
 
 - `src/plan_and_then_execute_agent/shared/logging`
 - `src/plan_and_then_execute_agent/shared/exceptions`
