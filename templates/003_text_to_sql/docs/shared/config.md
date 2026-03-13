@@ -90,8 +90,8 @@ alias:
 
 1. 지원하지 않는 환경값이면 `ValueError`
 2. 필수 리소스 디렉터리/파일이 없으면 `FileNotFoundError`
-3. 필수 JSON 파일이 없으면 `FileNotFoundError`
-4. JSON 파싱 실패 시 `ValueError`
+3. `RuntimeEnvironmentLoader`는 JSON 파일을 읽지 않는다.
+4. JSON 파일 누락/파싱 오류는 `ConfigLoader.add_json_file()`를 사용하는 경로에서 발생한다.
 
 ## 5. 실제 사용 경로
 

@@ -69,7 +69,7 @@ db.createUser({
 })
 ```
 
-## 5. 환경 변수 설정
+## 5. 환경 변수 예시
 
 ```env
 MONGODB_HOST=127.0.0.1
@@ -83,9 +83,10 @@ MONGODB_AUTH_DB=admin
 
 키 사용 규칙:
 
-1. `MONGODB_URI`를 지정하면 URI를 우선 사용한다.
-2. DB 이름은 `.env`가 아니라 `table_allowlist`의 `connection.database`에서 관리한다.
-3. `table_allowlist`에서 `*_env` 키를 사용하면 해당 환경 변수 값을 읽어 해석한다.
+1. allowlist의 `*_env`가 가리키는 환경 변수명을 사용한다.
+2. `MONGODB_URI`를 `.env`에 두더라도 allowlist에서 `dsn_env`로 참조하지 않으면 사용되지 않는다.
+3. DB 이름은 `.env`가 아니라 `table_allowlist`의 `connection.database`에서 관리한다.
+4. 인증 DB도 고정 키가 아니라 allowlist의 `auth_source` 또는 `auth_source_env`로 해석한다.
 
 ## 6. 프로젝트 연동 절차
 
@@ -120,6 +121,14 @@ targets:
             - name: region
 ```
 
+URI를 직접 사용할 경우 예시:
+
+```yaml
+connection:
+  dsn_env: MONGODB_URI
+  database: playground
+```
+
 startup 순서:
 
 1. `api/main.py` lifespan startup에서 allowlist를 로드한다.
@@ -138,7 +147,7 @@ startup 순서:
 | 증상 | 원인 후보 | 확인 경로 | 조치 |
 | --- | --- | --- | --- |
 | `pymongo 패키지가 설치되어 있지 않습니다.` | 의존성 누락 | `mongodb/connection.py` | `uv sync` 후 재시작 |
-| 인증 실패(`Authentication failed`) | `authSource`/계정 DB 불일치 | `.env`, Mongo 사용자 정의 | `MONGODB_AUTH_DB` 및 사용자 권한 재확인 |
+| 인증 실패(`Authentication failed`) | `authSource`/계정 DB 불일치 | `.env`, Mongo 사용자 정의, allowlist `auth_source(_env)` | allowlist와 환경 변수 참조 이름, 사용자 권한 재확인 |
 | 연결은 되지만 데이터가 보이지 않음 | 다른 DB로 연결됨 | `table_allowlist`의 `connection.database` | 타깃 DB 이름 통일 |
 | 서버 시작 시 즉시 종료 | allowlist 대상 introspection 실패(권한/접속) | `api/main.py`, `runtime.py`, `schema_introspection.py` | 대상 DB 권한 및 allowlist 연결 정보 점검 |
 

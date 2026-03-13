@@ -28,7 +28,6 @@ cp .env.sample .env
 ENV=local
 GEMINI_MODEL=gemini-3.1-flash-lite-preview
 GEMINI_PROJECT=your-gcp-project-id
-GEMINI_API_KEY=
 TABLE_ALLOWLIST_FILE=table_allowlist.yaml
 
 POSTGRES_HOST=127.0.0.1
@@ -48,7 +47,7 @@ cp src/text_to_sql/resources/dev/.env.sample src/text_to_sql/resources/dev/.env
 `RuntimeEnvironmentLoader`는 아래 순서로 환경을 로드한다.
 
 1. 프로젝트 루트 `.env`
-2. `ENV` / `APP_ENV` / `APP_STAGE` 해석
+2. `ENV` / `APP_ENV` / `APP_STAGE` 중 첫 번째 값을 런타임 환경으로 해석
 3. 필요 시 `src/text_to_sql/resources/<env>/.env`
 
 ### 1-3. `table_allowlist.yaml` 준비
@@ -86,6 +85,7 @@ targets:
 - `TABLE_ALLOWLIST_FILE`을 비우면 프로젝트 루트의 `table_allowlist.yaml` 또는 `table_allowlist.yml`을 자동 탐색한다.
 - `database`, `schema`, `tables`, `columns`는 allowlist에서 결정한다.
 - `host`, `port`, `user`, `password`, `database`, `schema`, `dsn`은 직접값 또는 `*_env`로 줄 수 있다.
+- 실제 연결 키 이름은 allowlist의 `*_env`가 가리키는 환경 변수명에 따라 결정된다.
 - 프로젝트 루트에 `table_allowlist.yaml`과 `table_allowlist.yml`이 동시에 있으면 startup 실패다.
 
 ### 1-4. 서버 실행
@@ -167,10 +167,16 @@ SSE `data` 예시:
 
 - `start`
 - `token`
+- `references`
 - `sql_plan`
 - `sql_result`
 - `done`
 - `error`
+
+참고:
+
+- `references`는 공개 SSE 타입에 포함되지만, 현재 기본 Text-to-SQL 그래프에서는 기본적으로 emit하지 않는다.
+- `done`의 `node` 값은 `response`, `blocked`, `sql_pipeline_failure_message`, `execution_failure_message` 중 하나가 될 수 있다.
 
 ## 4. 환경 변수 (`.env`)
 
@@ -192,7 +198,7 @@ SSE `data` 예시:
 | --- | --- | --- |
 | `GEMINI_MODEL` | - | 기본 채팅 노드에서 사용할 모델명 |
 | `GEMINI_PROJECT` | - | Google Cloud 프로젝트 식별자 |
-| `GEMINI_API_KEY` | - | Gemini 인증에 사용하는 API 키 |
+| `GEMINI_API_KEY` | - | SDK/런타임 환경에서 사용할 수 있는 인증용 키. 애플리케이션 코드가 직접 검증하지는 않음 |
 
 ### 4-3. Chat 실행/저장
 

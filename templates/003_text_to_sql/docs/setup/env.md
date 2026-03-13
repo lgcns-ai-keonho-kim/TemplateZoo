@@ -1,29 +1,31 @@
 # ENV 설정
 
-현재 코드에서 실제로 읽는 환경 변수와, PostgreSQL 기준 초기 기동에 필요한 최소 설정을 정리합니다.
+현재 코드가 직접 읽는 환경 변수와 allowlist가 참조할 수 있는 연결 값을 정리합니다.
 
 ## 1. `.env` 로딩 규칙
 
 런타임은 아래 순서로 환경 변수를 로드합니다.
 
 1. 프로젝트 루트의 `.env`
-2. `ENV`가 `dev/stg/prod`인 경우 `src/text_to_sql/resources/<env>/.env`
+2. `ENV`, `APP_ENV`, `APP_STAGE` 중 첫 번째로 발견한 값을 런타임 환경으로 해석
+3. 해석된 값이 `dev/stg/prod`인 경우 `src/text_to_sql/resources/<env>/.env`
 
-`ENV`가 비어 있으면 `local`로 간주합니다.
+세 후보 키가 모두 비어 있으면 `local`로 간주합니다.
 
-## 2. PostgreSQL 기준 최소 필수 변수
+## 2. PostgreSQL 기준 최소 설정
 
-현재 PostgreSQL 기반 target을 기동하려면 아래 값이 필요합니다.
+현재 PostgreSQL 기반 target을 기동하려면 LLM 설정과 allowlist 파일, 그리고 allowlist가 참조하는 연결 값이 필요합니다.
+아래 표에는 allowlist 예시에 사용한 연결 키 이름을 적었습니다. 실제 연결 키 이름은 allowlist의 `*_env` 값에 따라 달라집니다.
 
 | 키 | 설명 | 실제 사용 위치 |
 | --- | --- | --- |
 | `GEMINI_MODEL` | Gemini 모델명 | `core/chat/nodes/*_node.py` |
 | `GEMINI_PROJECT` | Gemini 프로젝트 ID | `core/chat/nodes/*_node.py` |
-| `TABLE_ALLOWLIST_FILE` | allowlist 파일명 또는 경로 | `core/chat/utils/table_allowlist_loader.py` |
-| `POSTGRES_HOST` | allowlist `host_env` 참조값 | `table_allowlist.yaml` |
-| `POSTGRES_PORT` | allowlist `port_env` 참조값 | `table_allowlist.yaml` |
-| `POSTGRES_USER` | allowlist `user_env` 참조값 | `table_allowlist.yaml` |
-| `POSTGRES_PW` | allowlist `password_env` 참조값 | `table_allowlist.yaml` |
+| `TABLE_ALLOWLIST_FILE` | allowlist 파일명 또는 경로. 비우면 루트 `table_allowlist.yaml/.yml` 자동 탐색 | `core/chat/utils/table_allowlist_loader.py` |
+| `POSTGRES_HOST` | allowlist 예시의 `host_env` 참조값 | `table_allowlist.yaml` |
+| `POSTGRES_PORT` | allowlist 예시의 `port_env` 참조값 | `table_allowlist.yaml` |
+| `POSTGRES_USER` | allowlist 예시의 `user_env` 참조값 | `table_allowlist.yaml` |
+| `POSTGRES_PW` | allowlist 예시의 `password_env` 참조값 | `table_allowlist.yaml` |
 
 예시:
 
@@ -69,6 +71,7 @@ connection:
 - `host`가 없고 `host_env`가 있으면 해당 환경 변수를 읽음
 - `dsn` 또는 `dsn_env`가 있으면 host/port/user/password 대신 DSN을 우선 사용
 - `database_env`, `schema_env`도 지원
+- `ENV` 이름은 `POSTGRES_HOST`처럼 고정되지 않고 allowlist가 가리키는 이름을 그대로 사용
 - 필수 항목의 env 값이 비어 있으면 startup 실패
 - 현재 템플릿 예제는 `database`, `schema`를 allowlist 직접값으로 두는 패턴을 기본으로 사용
 
@@ -80,7 +83,7 @@ connection:
 | --- | --- | --- |
 | `GEMINI_MODEL` | 없음 | 모델명 |
 | `GEMINI_PROJECT` | 없음 | 프로젝트 ID |
-| `GEMINI_API_KEY` | 없음 | SDK 인증용 키 |
+| `GEMINI_API_KEY` | 없음 | SDK/런타임 환경에서 사용할 수 있는 인증용 키. 애플리케이션 코드가 직접 검증하지는 않음 |
 
 ### 4-2. Chat 런타임
 
@@ -143,16 +146,17 @@ connection:
 
 ### 4-8. MongoDB
 
-현재 PostgreSQL 기준 기동에는 필요하지 않지만, MongoDB target을 선언하면 아래 키를 사용할 수 있습니다.
+현재 PostgreSQL 기준 기동에는 필요하지 않지만, MongoDB target을 선언하고 allowlist에서 `*_env`를 참조하면 아래와 같은 이름을 사용할 수 있습니다.
+아래 키 이름도 allowlist 예시에 맞춘 값이며, 실제 이름은 allowlist의 `*_env` 설정에 따라 달라집니다.
 
 | 키 | 기본값 | 설명 |
 | --- | --- | --- |
-| `MONGODB_HOST` | `127.0.0.1` | 호스트 |
-| `MONGODB_PORT` | `27017` | 포트 |
-| `MONGODB_USER` | 없음 | 사용자 |
-| `MONGODB_PW` | 없음 | 비밀번호 |
-| `MONGODB_AUTH_DB` | 없음 | 인증 DB |
-| `MONGODB_URI` | 없음 | URI 직접 지정 |
+| `MONGODB_HOST` | `127.0.0.1` | allowlist 예시의 `host_env` 참조값 |
+| `MONGODB_PORT` | `27017` | allowlist 예시의 `port_env` 참조값 |
+| `MONGODB_USER` | 없음 | allowlist 예시의 `user_env` 참조값 |
+| `MONGODB_PW` | 없음 | allowlist 예시의 `password_env` 참조값 |
+| `MONGODB_AUTH_DB` | 없음 | allowlist 예시의 `auth_source_env` 참조값 |
+| `MONGODB_URI` | 없음 | allowlist 예시의 `dsn_env` 참조값 |
 
 ## 5. startup에서 실제로 검증되는 것
 
