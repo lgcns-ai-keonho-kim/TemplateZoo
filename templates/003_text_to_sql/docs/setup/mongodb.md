@@ -1,6 +1,6 @@
-# MongoDB 구성 가이드
+# MongoDB 구성
 
-이 문서는 MongoDB를 Text-to-SQL 조회 타깃으로 연결하는 방법을 정리한다.
+MongoDB를 Text-to-SQL 조회 타깃으로 연결하는 방법을 정리한다.
 
 ## 1. 적용 범위
 

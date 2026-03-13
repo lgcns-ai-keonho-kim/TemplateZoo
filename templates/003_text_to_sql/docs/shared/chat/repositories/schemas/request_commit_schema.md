@@ -13,7 +13,7 @@ request 커밋(멱등성 기록) 컬렉션 스키마를 생성한다.
 - primary key: `request_id`
 - 일반 컬럼: `session_id`, `message_id`, `created_at`
 
-## 3. 연관 모듈
+## 3. 관련 코드
 
 - `repositories/history_repository.py`
 - `services/chat_service.py`

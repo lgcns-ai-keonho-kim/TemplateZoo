@@ -4,9 +4,9 @@
 
 ## 1. 역할
 
-- 목적: LanceDB 필터/정렬 보조 엔진을 제공한다.
-- 설명: FilterExpression의 where 절 변환, 메모리 필터 평가, 정렬/점수 변환을 담당한다.
-- 디자인 패턴: 정책 객체 패턴
+- LanceDB 필터/정렬 보조 엔진을 제공한다.
+- FilterExpression의 where 절 변환, 메모리 필터 평가, 정렬/점수 변환을 담당한다.
+- 내부 구조는 정책 객체 패턴 기반이다.
 
 ## 2. 주요 구성
 
@@ -24,7 +24,7 @@
 
 - 모듈 내부에서 명시적으로 정의한 오류 코드가 없다.
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/integrations/db/base/models.py`
 - `src/text_to_sql/integrations/db/engines/sql_common.py`

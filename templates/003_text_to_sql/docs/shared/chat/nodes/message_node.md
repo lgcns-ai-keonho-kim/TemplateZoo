@@ -29,7 +29,7 @@ selector 값을 Enum 메시지로 치환하는 노드다.
 | `MESSAGE_NODE_CONFIG_INVALID` | `messages`가 Enum 클래스 아님 / `selector_key` 비어 있음 |
 | `MESSAGE_NODE_MAPPING_NOT_FOUND` | selector를 멤버로 해석하지 못함 |
 
-## 5. 연관 모듈
+## 5. 관련 코드
 
 - `src/text_to_sql/core/chat/nodes/safeguard_node.py`
 - `nodes/_state_adapter.py`

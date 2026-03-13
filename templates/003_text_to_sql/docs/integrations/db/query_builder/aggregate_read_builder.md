@@ -4,9 +4,9 @@
 
 ## 1. 역할
 
-- 목적: 집계 조회 전용 DSL 빌더를 제공한다.
-- 설명: AggregateQueryBuilder를 감싸 체이닝 후 fetch()로 집계 조회를 수행한다.
-- 디자인 패턴: 빌더 패턴
+- 집계 조회 전용 DSL 빌더를 제공한다.
+- AggregateQueryBuilder를 감싸 체이닝 후 fetch()로 집계 조회를 수행한다.
+- 내부 구조는 빌더 패턴 기반이다.
 
 ## 2. 주요 구성
 
@@ -24,7 +24,7 @@
 
 - 모듈 내부에서 명시적으로 정의한 오류 코드가 없다.
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/integrations/db/base/query_builder.py`
 - `src/text_to_sql/integrations/db/base/engine.py`

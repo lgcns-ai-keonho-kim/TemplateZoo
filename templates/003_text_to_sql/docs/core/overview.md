@@ -1,4 +1,4 @@
-# Core 모듈 가이드
+# Core 모듈
 
 `src/text_to_sql/core`는 채팅 그래프, 노드, 프롬프트, 상태 타입을 포함하는 도메인 계층입니다.
 
@@ -14,7 +14,7 @@
 | `src/text_to_sql/core/chat/state` | 그래프 상태 타입 | `graph_state.py` |
 | `src/text_to_sql/core/chat/utils` | allowlist 로드, introspection, 매퍼 | `table_allowlist_loader.py`, `schema_introspection.py` |
 
-## 2. 현재 실행 관점 핵심 포인트
+## 2. 핵심 포인트
 
 1. 그래프 진입점은 `safeguard`입니다.
 2. startup에서 allowlist 로드와 schema introspection이 먼저 완료되어 `schema_snapshot`이 정적 입력으로 주입됩니다.
@@ -24,7 +24,7 @@
 6. SQL 성공 결과는 `answer_source_meta`로 저장되어 후속 설명 질문에 재사용됩니다.
 7. 최종 응답은 모든 경로에서 `assistant_message`로 종료됩니다.
 
-## 3. 읽기 순서
+## 3. 핵심 코드 경로
 
 1. `src/text_to_sql/core/chat/graphs/chat_graph.py`
 2. `src/text_to_sql/core/chat/state/graph_state.py`

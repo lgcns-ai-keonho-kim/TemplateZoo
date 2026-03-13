@@ -1,8 +1,8 @@
 # Shared Chat 모듈 문서
 
-`src/text_to_sql/shared/chat`의 공용 실행 요소를 설명하는 문서 허브입니다.
+`src/text_to_sql/shared/chat`의 구성 요소와 관련 문서를 정리한다.
 
-## 1. 읽기 순서
+## 1. 대표 문서
 
 1. `services/service_executor.md`
 2. `services/chat_service.md`
@@ -12,7 +12,7 @@
 6. `graph/base_chat_graph.md`
 7. `interface/ports.md`
 
-## 2. 현재 문서 구조
+## 2. 문서 구조
 
 ```text
 docs/shared/chat/
@@ -37,7 +37,7 @@ docs/shared/chat/
   services/service_executor.md
 ```
 
-## 3. 모듈 인덱스
+## 3. 문서 구성
 
 | 영역 | 문서 | 설명 |
 | --- | --- | --- |
@@ -51,7 +51,7 @@ docs/shared/chat/
 | services | `services/chat_service.md` | 저장소+그래프 결합 서비스 |
 | services | `services/service_executor.md` | 큐 워커/SSE 오케스트레이터 |
 
-## 4. 현재 기준 역할 분담
+## 4. 역할 분담
 
 - `shared/chat/services`
   - 세션 저장, 그래프 실행, 이벤트 중계

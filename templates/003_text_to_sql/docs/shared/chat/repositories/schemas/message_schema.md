@@ -13,7 +13,7 @@
 - primary key: `message_id`
 - 일반 컬럼: `session_id`, `role`, `content`, `sequence`, `created_at`, `metadata`
 
-## 3. 연관 모듈
+## 3. 관련 코드
 
 - `repositories/history_repository.py`
 - `src/text_to_sql/integrations/db/base/models.py`

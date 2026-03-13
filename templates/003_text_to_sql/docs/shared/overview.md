@@ -1,6 +1,6 @@
-# Shared 모듈 가이드
+# Shared 모듈
 
-이 문서는 `src/text_to_sql/shared` 계층의 책임 경계와 구성 요소를 코드 기준으로 정리한다.
+`src/text_to_sql/shared` 계층의 책임 경계와 구성 요소를 정리한다.
 
 ## 1. 용어 정리
 
@@ -39,7 +39,7 @@ api -> shared -> core
 shared -> integrations
 ```
 
-## 4. 학습 순서
+## 4. 관련 문서
 
 1. `docs/shared/chat/README.md`
 2. `docs/shared/runtime.md`

@@ -1,8 +1,8 @@
 # Text-to-SQL 문서 허브
 
-이 문서는 현재 Raw SQL 기반 Text-to-SQL 구조를 기준으로 문서를 탐색하기 위한 인덱스입니다.
+현재 Raw SQL 기반 Text-to-SQL 구조를 정리한 문서 인덱스다.
 
-## 1. 먼저 읽을 문서
+## 1. 핵심 문서
 
 1. `docs/core/overview.md`
 2. `docs/core/chat.md`
@@ -76,7 +76,7 @@ docs/
 
 ## 3. 코드-문서 매핑
 
-| 코드 경로 | 우선 문서 |
+| 코드 경로 | 대표 문서 |
 | --- | --- |
 | `src/text_to_sql/core/chat` | `docs/core/chat.md` |
 | `src/text_to_sql/api/chat` | `docs/api/chat.md` |
@@ -84,7 +84,7 @@ docs/
 | `src/text_to_sql/static` | `docs/static/ui.md` |
 | `src/text_to_sql/api/chat/services/runtime.py` | `docs/setup/env.md` |
 
-## 4. 현재 기준 읽기 포인트
+## 4. 주요 참조 문서
 
 - 전체 흐름: `docs/core/chat.md`
 - SSE/요청 처리: `docs/api/chat.md`

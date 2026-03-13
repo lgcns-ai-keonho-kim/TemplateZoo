@@ -4,9 +4,9 @@
 
 ## 1. 역할
 
-- 목적: LanceDB 문서 매퍼 모듈을 제공한다.
-- 설명: Document 모델과 LanceDB 행 데이터 간 변환을 담당한다.
-- 디자인 패턴: 매퍼 패턴
+- LanceDB 문서 매퍼 모듈을 제공한다.
+- Document 모델과 LanceDB 행 데이터 간 변환을 담당한다.
+- 내부 구조는 매퍼 패턴 기반이다.
 
 ## 2. 주요 구성
 
@@ -24,7 +24,7 @@
 
 - 모듈 내부에서 명시적으로 정의한 오류 코드가 없다.
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/integrations/db/base/models.py`
 - `src/text_to_sql/integrations/db/engines/sql_common.py`

@@ -4,9 +4,9 @@
 
 ## 1. 역할
 
-- 목적: Elasticsearch 필터 쿼리 빌더를 제공한다.
-- 설명: 필터 조건을 Elasticsearch DSL로 변환한다.
-- 디자인 패턴: 빌더 패턴
+- Elasticsearch 필터 쿼리 빌더를 제공한다.
+- 필터 조건을 Elasticsearch DSL로 변환한다.
+- 내부 구조는 빌더 패턴 기반이다.
 
 ## 2. 주요 구성
 
@@ -24,7 +24,7 @@
 
 - 모듈 내부에서 명시적으로 정의한 오류 코드가 없다.
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/integrations/db/engines/elasticsearch/engine.py`
 - `src/text_to_sql/integrations/db/base/models.py`

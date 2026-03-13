@@ -31,7 +31,7 @@ LLM 호출/프롬프트 포맷/토큰 스트리밍을 공통화하는 범용 노
 - 스트리밍 시 writer로 `{node, event="token", data=<text>}` 전송
 - `_build_output`은 `{output_key: content}` 형태를 보장
 
-## 5. 연관 모듈
+## 5. 관련 코드
 
 - `src/text_to_sql/integrations/llm/client.py`
 - `src/text_to_sql/core/chat/nodes/response_node.py`

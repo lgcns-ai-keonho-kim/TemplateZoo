@@ -1,6 +1,6 @@
-# Shared Config 가이드
+# Shared Config
 
-이 문서는 `src/text_to_sql/shared/config`의 설정 병합과 런타임 환경 로딩 규칙을 코드 기준으로 정리한다.
+`src/text_to_sql/shared/config`의 설정 병합과 런타임 환경 로딩 규칙을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 

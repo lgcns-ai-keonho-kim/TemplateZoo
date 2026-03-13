@@ -33,7 +33,7 @@
 - SQL 형식 오류는 `RAW_SQL_INVALID_FORMAT`으로 반환합니다.
 - DB 실행 오류는 `RAW_SQL_EXECUTION_FAILED`로 반환합니다.
 
-## 5. 연관 모듈
+## 5. 관련 코드
 
 - `src/text_to_sql/core/chat/nodes/raw_sql_execute_node.py`
 - `src/text_to_sql/core/chat/nodes/raw_sql_retry_prepare_node.py`

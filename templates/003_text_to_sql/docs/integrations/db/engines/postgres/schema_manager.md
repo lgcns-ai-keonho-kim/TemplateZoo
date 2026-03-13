@@ -4,9 +4,9 @@
 
 ## 1. 역할
 
-- 목적: PostgreSQL 스키마 관리 모듈을 제공한다.
-- 설명: 테이블 생성/삭제와 컬럼 추가/삭제를 담당한다.
-- 디자인 패턴: 매니저 패턴
+- PostgreSQL 스키마 관리 모듈을 제공한다.
+- 테이블 생성/삭제와 컬럼 추가/삭제를 담당한다.
+- 내부 구조는 매니저 패턴 기반이다.
 
 ## 2. 주요 구성
 
@@ -24,7 +24,7 @@
 
 - 모듈 내부에서 명시적으로 정의한 오류 코드가 없다.
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/integrations/db/engines/postgres/vector_store.py`
 - `src/text_to_sql/integrations/db/base/models.py`

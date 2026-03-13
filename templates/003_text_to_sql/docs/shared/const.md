@@ -1,6 +1,6 @@
-# Shared Const 가이드
+# Shared Const
 
-이 문서는 `src/text_to_sql/shared/const` 전역 상수의 의미와 사용 원칙을 정리한다.
+`src/text_to_sql/shared/const` 전역 상수의 의미와 사용 원칙을 정리한다.
 
 ## 1. 용어 정리
 

@@ -31,7 +31,7 @@
 | `CHAT_STREAM_EMPTY` | 그래프 응답이 비어 있음 |
 | `CHAT_MESSAGE_EMPTY` | 입력 메시지가 비어 있음 |
 
-## 5. 연관 모듈
+## 5. 관련 코드
 
 - `services/service_executor.py`
 - `repositories/history_repository.py`

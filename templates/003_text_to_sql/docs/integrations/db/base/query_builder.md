@@ -4,9 +4,9 @@
 
 ## 1. 역할
 
-- 목적: 공통 DSL 기반 QueryBuilder를 제공한다.
-- 설명: 체이닝 방식으로 Filter/Sort/Pagination을 구성해 Query 모델을 생성한다.
-- 디자인 패턴: 빌더 패턴
+- 공통 DSL 기반 QueryBuilder를 제공한다.
+- 체이닝 방식으로 Filter/Sort/Pagination을 구성해 Query 모델을 생성한다.
+- 내부 구조는 빌더 패턴 기반이다.
 
 ## 2. 주요 구성
 
@@ -25,6 +25,6 @@
 
 - 모듈 내부에서 명시적으로 정의한 오류 코드가 없다.
 
-## 4. 연관 모듈
+## 4. 관련 코드
 
 - `src/text_to_sql/integrations/db/base/models.py`
