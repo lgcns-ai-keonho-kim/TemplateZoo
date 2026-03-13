@@ -4,14 +4,14 @@
 
 ## 1. `ENV=dev/stg/prod`인데 서버가 시작되지 않을 때
 
-증상:
+증상 예시:
 
 1. `FileNotFoundError: 환경 파일을 찾을 수 없습니다: .../src/chatbot/resources/<env>/.env`
 
 확인 포인트:
 
 1. `RuntimeEnvironmentLoader`는 샘플 파일이 아니라 실제 `.env` 파일을 찾는다.
-2. `src/chatbot/resources/<env>/.env.sample`만 있고 `.env`가 없으면 실패한다.
+2. `src/chatbot/resources/<env>/.env.sample`만 있으면 실패한다.
 
 조치:
 
@@ -40,40 +40,28 @@ printf 'GEMINI_MODEL=%s\nGEMINI_PROJECT=%s\n' "$GEMINI_MODEL" "$GEMINI_PROJECT"
 2. `SQLITE_BUSY_TIMEOUT_MS`가 너무 작지 않은지 확인한다.
 3. 다중 프로세스 쓰기 부하가 높다면 SQLite 자체 한계일 수 있다.
 
-## 4. MongoDB 인증이 실패할 때
-
-확인 포인트:
-
-1. `MONGODB_AUTH_DB`와 실제 사용자 생성 DB가 일치하는지 확인한다.
-2. `MONGODB_URI`를 직접 넣었으면 `authSource`가 들어 있는지 확인한다.
-
-## 5. Elasticsearch TLS 오류가 날 때
-
-확인 포인트:
-
-1. `ELASTICSEARCH_CA_CERTS` 경로가 올바른지 확인한다.
-2. 현재 실행 사용자가 인증서 파일을 읽을 수 있는지 확인한다.
-3. self-signed 환경이면 `ELASTICSEARCH_VERIFY_CERTS`와 CA 파일이 같이 맞아야 한다.
-
-## 6. SSE가 `done` 없이 끝나거나 timeout 날 때
+## 4. SSE가 `done` 없이 끝나거나 timeout처럼 보일 때
 
 확인 포인트:
 
 1. `CHAT_STREAM_TIMEOUT_SECONDS`가 너무 작지 않은지 확인한다.
-2. `error` 이벤트도 정상적인 종료 경로라는 점을 먼저 확인한다.
-3. 이벤트 버퍼는 현재 기본 런타임에서 InMemory 구현을 사용한다.
+2. `error` 이벤트도 정상적인 종료 이벤트라는 점을 먼저 확인한다.
+3. 이벤트 버퍼는 현재 기본 경로에서 `InMemoryEventBuffer`를 사용한다.
+4. 브라우저는 `POST /chat` 이후 약 1초 뒤에 SSE 연결을 시작한다.
 
-## 7. 유지보수 포인트
+## 5. MongoDB 또는 Elasticsearch 연동이 실패할 때
 
-1. 트러블슈팅 문서는 실제 코드가 읽는 환경 변수만 기준으로 써야 한다.
-2. 기본 런타임 문제와 선택 확장 문제를 섞지 않는 편이 장애 대응 속도를 높인다.
-3. 오류 메시지 예시는 실제 코드나 라이브러리에서 자주 보이는 형태만 남겨야 한다.
+MongoDB:
 
-## 8. 관련 문서
+1. `MONGODB_AUTH_DB`와 실제 사용자 생성 DB가 일치하는지 확인한다.
+2. `MONGODB_URI`를 직접 넣었으면 `authSource`가 포함됐는지 확인한다.
 
-- `docs/setup/env.md`
-- `docs/setup/sqlite.md`
-- `docs/setup/postgresql_pgvector.md`
-- `docs/setup/mongodb.md`
-- `docs/setup/filesystem.md`
-- `docs/integrations/db/overview.md`
+Elasticsearch:
+
+1. `ELASTICSEARCH_CA_CERTS` 경로가 올바른지 확인한다.
+2. self-signed 환경이면 `ELASTICSEARCH_VERIFY_CERTS`와 CA 파일이 같이 맞아야 한다.
+
+## 6. 유지보수 포인트
+
+1. 트러블슈팅 문서는 실제 코드가 읽는 환경 변수와 실제 기본 조립을 기준으로 써야 한다.
+2. 기본 런타임 문제와 선택 확장 문제를 섞지 않는 편이 대응 속도를 높인다.

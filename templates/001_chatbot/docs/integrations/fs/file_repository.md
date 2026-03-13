@@ -1,39 +1,28 @@
 # `fs/file_repository.py` 레퍼런스
 
-이 문서는 `src/chatbot/integrations/fs/file_repository.py`의 현재 코드 기준 책임과 유지보수 포인트를 정리한다.
+`FileLogRepository`는 파일 시스템 엔진을 통해 로그를 파일 단위로 저장하는 저장소다.
 
-## 1. 역할
+## 1. 현재 동작
 
-| 항목 | 내용 |
-| --- | --- |
-| 목적 | 파일 기반 로그 저장소를 제공한다. |
-| 설명 | 파일 시스템 엔진을 통해 날짜-UUID.log 파일로 로그를 저장한다. |
-| 디자인 패턴 | 저장소 패턴 |
+1. `base_dir` 아래에 날짜 디렉터리(`YYYYMMDD`)를 만든다.
+2. 각 로그는 `<uuid>.log` 파일로 저장한다.
+3. 저장 내용은 `LogRecord`의 JSON 문자열이다.
+4. 엔진을 주입하지 않으면 `LocalFSEngine`을 사용한다.
 
-## 2. 코드 구성
+## 2. 조회 동작
 
-| 심볼 | 종류 |
-| --- | --- |
-| `FileLogRepository` | 클래스 |
+1. `.log` 파일을 재귀적으로 조회한다.
+2. 파일을 읽어 `LogRecord`로 역직렬화한다.
+3. 손상 파일은 `WARNING` 레벨 fallback 레코드로 대체한다.
+4. 반환 순서는 timestamp 오름차순이다.
 
-## 3. 현재 코드 설명
+## 3. 유지보수 포인트
 
-1. 이 모듈의 직접 책임은 `fs/file_repository.py` 파일 내부에 한정된다.
-2. 상위 계층은 이 파일의 공개 클래스/함수와 반환 형식을 그대로 신뢰하므로, 문서화된 역할과 실제 구현이 어긋나지 않아야 한다.
-3. 현재 코드에서 이 모듈은 `파일 시스템 엔진을 통해 날짜-UUID.log 파일로 로그를 저장한다.`라는 역할로 사용된다.
+1. 파일명 규칙을 바꾸면 운영 수집 절차가 함께 영향을 받는다.
+2. fallback 정책을 제거하면 일부 손상 파일이 전체 조회 실패로 번질 수 있다.
+3. 기본 인코딩은 `SharedConst.DEFAULT_ENCODING`이다.
 
-## 4. 유지보수 포인트
+## 4. 관련 문서
 
-1. 로그 파일 포맷은 운영 분석 도구가 그대로 소비할 수 있으므로 JSON 구조를 쉽게 바꾸지 말아야 한다.
-2. 손상 파일 fallback 규칙을 유지해야 로그 수집 실패가 전체 조회 실패로 번지지 않는다.
-
-## 5. 추가 개발과 확장 시 주의점
-
-1. 압축, 아카이브, 보관 정책을 추가하려면 로그 저장 포맷을 바꾸기보다 별도 후처리 계층으로 분리하는 편이 안전하다.
-2. 다른 파일 엔진을 붙일 때도 `FileLogRepository`는 `LogRepository` 계약만 유지하면 상위 계층 수정 없이 재사용할 수 있다.
-
-## 6. 관련 코드
-
-- 소스: `src/chatbot/integrations/fs/file_repository.py`
-- `src/chatbot/integrations/fs/base/engine.py`
-- `src/chatbot/integrations/fs/engines/local.py`
+- `docs/integrations/fs/base/engine.md`
+- `docs/setup/filesystem.md`
