@@ -1,24 +1,26 @@
-# EmbeddingClient 가이드
+# EmbeddingClient
 
-이 문서는 `src/rag_chatbot/integrations/embedding/client.py`의 현재 구현을 기준으로 역할과 유지보수 포인트를 정리한다.
+## 역할
 
-## 1. 역할
+- LangChain `Embeddings` 래퍼다.
+- 동기/비동기 임베딩 호출에 로깅, 출력 검증, 예외 표준화를 추가한다.
+- ingestion와 online retrieval가 같은 래퍼 계층을 사용한다.
 
-EmbeddingClient는 동기/비동기 임베딩 호출을 얇게 감싸 상위 계층이 구현체를 직접 알지 않도록 만든다.
+## 공개 메서드
 
-## 2. 공개 구성
+- `embed_query`
+- `embed_documents`
+- `aembed_query`
+- `aembed_documents`
 
-- 클래스 `EmbeddingClient`
-  공개 메서드: `embed_query`, `embed_documents`, `aembed_query`, `aembed_documents`
+## 검증
 
-## 3. 코드 설명
+- 문서 개수와 결과 벡터 개수가 다르면 `EMBEDDING_DOCUMENT_COUNT_MISMATCH`
+- 벡터 차원이 비어 있거나 형식이 잘못되면 `EMBEDDING_VECTOR_EMPTY`, `EMBEDDING_VECTOR_INVALID`
+- 문서 벡터 차원이 서로 다르면 `EMBEDDING_DIMENSION_INCONSISTENT`
 
-- 동기와 비동기 임베딩 메서드를 모두 노출해 ingestion와 online retrieval가 같은 래퍼를 사용한다.
+## 로깅
 
-## 4. 유지보수/추가개발 포인트
-
-- 차원 변경은 ingestion 저장소와 online retrieval 모두에 영향을 주므로 재적재 전략을 같이 점검해야 한다.
-
-## 5. 관련 문서
-
-- `docs/integrations/overview.md`
+- `Logger`, `LogRepository`, `BaseDBEngine` 중 하나를 받아 로그 경로를 구성할 수 있다.
+- `log_payload`, `log_response`로 입력과 결과 기록 여부를 제어한다.
+- 성공 로그에는 입력 개수, 입력 문자 수, 출력 개수, 차원이 포함된다.

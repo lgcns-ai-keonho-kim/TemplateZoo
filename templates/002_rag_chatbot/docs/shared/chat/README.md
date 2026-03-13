@@ -1,34 +1,28 @@
-# Shared Chat 가이드
+# Shared Chat
 
-이 문서는 `src/rag_chatbot/shared/chat` 패키지가 채팅 실행 경로를 어떻게 조합하는지 설명한다.
+## 구성
 
-## 1. 현재 구조
-
-- `interface`: 그래프, 서비스, 실행기 포트
 - `graph`: `BaseChatGraph`
 - `memory`: `ChatSessionMemoryStore`
-- `nodes`: 재사용 가능한 범용 노드
-- `repositories`: `ChatHistoryRepository`와 스키마 팩토리
+- `repositories`: `ChatHistoryRepository`
 - `services`: `ChatService`, `ServiceExecutor`
+- `nodes`: 범용 노드 유틸
 
-## 2. 실행 흐름
+## 실행 흐름
 
-1. `ServiceExecutor.submit_job()`이 작업을 큐에 넣는다.
-2. 워커가 `ChatService.astream()`을 실행한다.
-3. `BaseChatGraph`가 LangGraph 이벤트를 표준 이벤트로 바꾼다.
-4. `ServiceExecutor`가 `start/token/references/done/error`로 정규화해 버퍼에 적재한다.
-5. done 후 assistant 응답은 request_id 멱등 규칙에 따라 한 번만 저장한다.
+1. `ServiceExecutor.submit_job()`이 작업 큐에 요청을 넣는다.
+2. 워커 스레드가 `ChatService.astream()`을 실행한다.
+3. `BaseChatGraph`가 LangGraph 이벤트를 표준 이벤트로 변환한다.
+4. `ServiceExecutor`가 `start`, `token`, `references`, `done`, `error`로 정규화해 이벤트 버퍼에 적재한다.
+5. `done` 이후 assistant 응답은 `request_id` 멱등 규칙으로 한 번만 저장한다.
 
-## 3. 유지보수/추가개발 포인트
+## 저장과 메모리
 
-- 세션 저장 정책을 바꾸면 repository와 service, executor 후처리를 함께 수정해야 한다.
-- 노드 추가나 stream 이벤트 추가는 `BaseChatGraph`와 `ServiceExecutor`까지 연쇄 영향을 준다.
-- 이 계층은 현재 프로세스 로컬 메모리와 큐를 사용하므로 멀티 인스턴스 운영을 전제로 기능을 추가하면 안 된다.
+- 기본 저장소는 `ChatHistoryRepository(db_client=None)` 경로의 SQLite다.
+- 메모리 캐시는 `CHAT_MEMORY_MAX_MESSAGES` 기준으로 최근 메시지를 유지한다.
+- 세션 삭제 시 저장소 데이터와 메모리 캐시를 함께 비운다.
 
-## 4. 관련 문서
+## 현재 범위
 
-- `docs/shared/chat/interface/ports.md`
-- `docs/shared/chat/graph/base_chat_graph.md`
-- `docs/shared/chat/services/chat_service.md`
-- `docs/shared/chat/services/service_executor.md`
-- `docs/shared/runtime.md`
+- 기본 실행 경로는 프로세스 로컬 메모리와 큐를 사용한다.
+- 멀티 인스턴스 분산 런타임은 기본 조립에 포함되지 않는다.

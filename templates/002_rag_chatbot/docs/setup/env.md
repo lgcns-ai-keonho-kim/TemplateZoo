@@ -1,40 +1,64 @@
-# 환경 변수 상세 가이드
+# 환경 변수
 
-이 문서는 `.env.sample`과 실제 코드 소비 지점을 기준으로 현재 환경 변수를 정리한다.
-
-## 1. 로딩 순서
+## 로딩 순서
 
 1. 프로젝트 루트 `.env`
-2. `ENV`, `APP_ENV`, `APP_STAGE` 해석
+2. `ENV`, `APP_ENV`, `APP_STAGE` 중 먼저 읽힌 값
 3. 빈값이면 `local`
 4. `dev/stg/prod`면 `src/rag_chatbot/resources/<env>/.env`
 
-## 2. 핵심 변수
+## 현재 직접 소비하는 핵심 키
 
-| 변수 | 코드 기본값 | 주요 사용 위치 |
+| 변수 | 기본값 | 주요 사용 위치 |
 | --- | --- | --- |
 | `ENV` | `local` | `shared/config/runtime_env_loader.py` |
 | `LOG_STDOUT` | `False` | `shared/logging/logger.py` |
-| `GEMINI_MODEL` | 빈 문자열 | core 노드, ingestion 주석 생성 |
+| `GEMINI_MODEL` | 빈 문자열 | core 노드 |
 | `GEMINI_PROJECT` | 빈 문자열 | core 노드, ingestion |
-| `GEMINI_EMBEDDING_MODEL` | 빈 문자열 | `rag_retrieve_node.py`, ingestion |
+| `GEMINI_API_KEY` | 빈 문자열 | Gemini 모델 구성 |
+| `GEMINI_EMBEDDING_MODEL` | 빈 문자열 | retrieval, ingestion |
 | `GEMINI_EMBEDDING_DIM` | `1024` | retrieval, ingestion |
 | `CHAT_DB_PATH` | `data/db/chat/chat_history.sqlite` | core const, repository |
-| `SQLITE_BUSY_TIMEOUT_MS` | `5000` | SQLite connection |
 | `CHAT_MEMORY_MAX_MESSAGES` | `200` | `ChatService` |
-| `CHAT_STREAM_TIMEOUT_SECONDS` | `180` | `runtime.py` |
-| `CHAT_PERSIST_RETRY_LIMIT` | `2` | `runtime.py` |
-| `CHAT_PERSIST_RETRY_DELAY_SECONDS` | `0.5` | `runtime.py` |
-| `CHAT_JOB_QUEUE_MAX_SIZE` | `0` | `runtime.py` |
-| `CHAT_JOB_QUEUE_POLL_TIMEOUT` | `0.2` | `runtime.py` |
-| `CHAT_EVENT_BUFFER_MAX_SIZE` | `0` | `runtime.py` |
-| `CHAT_EVENT_BUFFER_POLL_TIMEOUT` | `0.2` | `runtime.py` |
-| `CHAT_EVENT_BUFFER_TTL_SECONDS` | `600` | `runtime.py` |
-| `CHAT_EVENT_BUFFER_GC_INTERVAL_SECONDS` | `30` | `runtime.py` |
-| `CHAT_REDIS_EVENT_BUFFER_KEY_PREFIX` | `chat:stream` | `runtime.py` |
+| `SQLITE_BUSY_TIMEOUT_MS` | `5000` | SQLite connection |
+| `CHAT_STREAM_TIMEOUT_SECONDS` | `180` | `api/chat/services/runtime.py` |
+| `CHAT_PERSIST_RETRY_LIMIT` | `2` | `api/chat/services/runtime.py` |
+| `CHAT_PERSIST_RETRY_DELAY_SECONDS` | `0.5` | `api/chat/services/runtime.py` |
+| `CHAT_JOB_QUEUE_MAX_SIZE` | `0` | `api/chat/services/runtime.py` |
+| `CHAT_QUEUE_MAX_SIZE` | `0` | 기존 키 fallback |
+| `CHAT_JOB_QUEUE_POLL_TIMEOUT` | `0.2` | `api/chat/services/runtime.py` |
+| `CHAT_QUEUE_POLL_TIMEOUT` | `0.2` | 기존 키 fallback |
+| `CHAT_EVENT_BUFFER_MAX_SIZE` | `0` | `api/chat/services/runtime.py` |
+| `CHAT_EVENT_BUFFER_POLL_TIMEOUT` | `0.2` | `api/chat/services/runtime.py` |
+| `CHAT_EVENT_BUFFER_TTL_SECONDS` | `600` | `api/chat/services/runtime.py` |
+| `CHAT_EVENT_BUFFER_GC_INTERVAL_SECONDS` | `30` | `api/chat/services/runtime.py` |
+| `CHAT_REDIS_EVENT_BUFFER_KEY_PREFIX` | `chat:stream` | `api/chat/services/runtime.py` |
 | `LANCEDB_URI` | `data/db/vector` | retrieval, ingestion |
+| `POSTGRES_HOST` | `127.0.0.1` | ingestion postgres client |
+| `POSTGRES_PORT` | `5432` | ingestion postgres client |
+| `POSTGRES_USER` | `postgres` | ingestion postgres client |
+| `POSTGRES_PW` | `postgres` | ingestion postgres client |
+| `POSTGRES_DATABASE` | `playground` | ingestion postgres client |
+| `POSTGRES_DSN` | 없음 | ingestion postgres client |
+| `MONGODB_HOST` | `127.0.0.1` | MongoDB engine |
+| `MONGODB_PORT` | `27017` | MongoDB engine |
+| `MONGODB_DB` | `playground` | MongoDB engine |
+| `MONGODB_URI` | 없음 | MongoDB engine |
+| `REDIS_HOST` | `127.0.0.1` | Redis engine |
+| `REDIS_PORT` | `6379` | Redis engine |
+| `REDIS_DB` | `0` | Redis engine |
+| `REDIS_URL` | 없음 | Redis engine |
+| `ELASTICSEARCH_SCHEME` | `http` | ingestion elasticsearch client |
+| `ELASTICSEARCH_HOST` | `127.0.0.1` | ingestion elasticsearch client |
+| `ELASTICSEARCH_PORT` | `9200` | ingestion elasticsearch client |
+| `ELASTICSEARCH_USER` | 없음 | ingestion elasticsearch client |
+| `ELASTICSEARCH_PW` | 없음 | ingestion elasticsearch client |
+| `ELASTICSEARCH_CA_CERTS` | 없음 | ingestion elasticsearch client |
+| `ELASTICSEARCH_VERIFY_CERTS` | `true` | ingestion elasticsearch client |
+| `ELASTICSEARCH_SSL_FINGERPRINT` | 없음 | ingestion elasticsearch client |
+| `ELASTICSEARCH_HOSTS` | 없음 | ingestion elasticsearch client |
 
-## 3. 현재 직접 소비하지 않는 샘플 키
+## 샘플에만 남아 있는 키
 
 - `CHAT_TASK_MAX_WORKERS`
 - `CHAT_TASK_QUEUE_MAX_SIZE`
@@ -44,15 +68,8 @@
 - `CHAT_TASK_MAX_STORED`
 - `CHAT_TASK_CLEANUP_INTERVAL_SECONDS`
 
-## 4. 유지보수/추가개발 포인트
+## 주의
 
-- `.env.sample`에 키가 있다고 해서 현재 runtime이 직접 소비하는 것은 아니다. 반드시 실제 `os.getenv()` 지점을 같이 확인해야 한다.
-- 차원, backend, queue 관련 키를 바꾸면 재적재나 재시작이 필요한지 문서에 분명히 적는 편이 좋다.
-- 환경 변수 이름을 바꾸면 README, setup 문서, 배포 스크립트까지 함께 수정해야 한다.
-
-## 5. 관련 문서
-
-- `docs/shared/config.md`
-- `docs/setup/ingestion.md`
-- `docs/setup/lancedb.md`
-- `docs/setup/postgresql_pgvector.md`
+- `.env.sample`의 예시값과 코드 기본값은 다를 수 있다.
+- `ELASTICSEARCH_SCHEME`은 코드 기본값이 `http`이고, `.env.sample`은 HTTPS 예시를 담고 있다.
+- import 시점에 환경 변수를 읽는 모듈이 있으므로 값을 바꾼 뒤에는 프로세스를 재시작해야 한다.
