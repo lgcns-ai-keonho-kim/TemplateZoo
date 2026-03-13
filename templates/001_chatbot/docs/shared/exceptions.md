@@ -1,17 +1,12 @@
 # Shared Exceptions 레퍼런스
 
-`src/chatbot/shared/exceptions`은 애플리케이션 전역에서 공통으로 쓰는 예외 모델을 제공한다.
+`src/chatbot/shared/exceptions`은 애플리케이션 전역에서 쓰는 공통 예외 모델을 제공한다.
 
-## 1. 코드 설명
-
-핵심 타입:
-
-1. `ExceptionDetail`
-2. `BaseAppException`
+## 1. 핵심 타입
 
 ### 1-1. `ExceptionDetail`
 
-필드:
+주요 필드:
 
 1. `code`
 2. `cause`
@@ -24,9 +19,9 @@
 
 1. 사용자/시스템 메시지
 2. `ExceptionDetail`
-3. 원본 예외 객체(`original`)
+3. 원본 예외 객체
 
-`to_dict()`는 다음 구조를 반환한다.
+`to_dict()`는 아래 구조를 반환한다.
 
 ```json
 {
@@ -41,16 +36,12 @@
 
 ## 2. 유지보수 포인트
 
-1. `detail.code`는 라우터 계층에서 HTTP 상태 매핑 기준으로 사용된다.
-2. `cause`에는 디버깅에 필요한 최소 정보만 넣고, 민감한 값은 그대로 노출하지 않는 편이 좋다.
-3. 원본 예외는 `repr()`로 직렬화되므로, API 응답에 그대로 노출하는 경로가 있는지 항상 확인해야 한다.
+1. `detail.code`는 라우터 계층의 HTTP 상태코드 매핑 기준이다.
+2. `cause`에는 디버깅에 필요한 최소 정보만 넣는 편이 안전하다.
+3. API로 노출될 수 있으므로 민감한 원본 예외를 직접 넣는 경로를 주의해야 한다.
 
-## 3. 추가 개발/확장 가이드
+## 3. 관련 문서
 
-1. 새 오류 코드가 필요하면 먼저 기존 코드 체계(`CHAT_*`, `FUNCTION_NODE_*` 등)와 같은 수준으로 맞추는 것이 좋다.
-2. 계층별 개별 예외 클래스를 많이 늘리기보다 현재처럼 공통 예외 + 상세 코드 구조를 유지하는 편이 API 매핑이 단순하다.
-
-## 4. 관련 코드
-
-- `src/chatbot/api/chat/routers/common.py`
-- `src/chatbot/api/ui/routers/common.py`
+- `docs/api/overview.md`
+- `docs/api/chat.md`
+- `docs/api/ui.md`
