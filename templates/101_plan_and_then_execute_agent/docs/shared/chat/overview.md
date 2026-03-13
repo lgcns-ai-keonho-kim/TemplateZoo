@@ -1,7 +1,7 @@
 # Shared Chat 개요
 
-이 문서는 `src/plan_and_then_execute_agent/shared/chat` 모듈을 파일 단위로 탐색하기 위한 허브입니다.
-`__init__.py`는 제외하고 실제 동작 파일만 문서화합니다.
+`src/plan_and_then_execute_agent/shared/chat` 모듈의 파일 단위 진입점을 모아 둔 허브다.
+`__init__.py`는 제외하고 실제 동작 파일만 다룬다.
 
 ## 1. 디렉터리 구조
 
@@ -65,7 +65,7 @@ docs/shared/chat/
 | `shared/chat/tools/registry.py` | `docs/shared/chat/tools/registry.md` |
 | `shared/chat/tools/types.py` | `docs/shared/chat/tools/types.md` |
 
-## 3. 실행 흐름 기준 읽기 순서
+## 3. 핵심 파일 흐름
 
 1. `interface/ports.md`
 2. `graph/base_chat_graph.md`

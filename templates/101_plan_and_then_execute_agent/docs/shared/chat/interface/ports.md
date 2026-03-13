@@ -1,8 +1,8 @@
-# Interface Ports 문서
+# Interface Ports
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/interface/ports.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/interface/ports.py` 구현을 기준으로 현재 동작을 정리한다.
 
 `shared/chat` 계층의 포트(Protocol) 계약을 정의합니다.
 구현체(`ChatService`, `ServiceExecutor`, `BaseChatGraph`)는 이 계약을 기준으로 조립됩니다.
@@ -20,7 +20,7 @@
 - `ChatServicePort`는 `persist_assistant_message`를 통해 request_id 멱등 저장을 노출합니다.
 - `ServiceExecutorPort`는 HTTP 라우터가 직접 의존하는 최소 표면입니다.
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/graph/base_chat_graph.md`
 - `docs/shared/chat/services/chat_service.md`

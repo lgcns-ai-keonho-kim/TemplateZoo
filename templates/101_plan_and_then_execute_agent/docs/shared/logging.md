@@ -1,6 +1,6 @@
-# Shared Logging 문서
+# Shared Logging
 
-이 문서는 `src/plan_and_then_execute_agent/shared/logging`의 로깅 인터페이스와 저장소 구현을 코드 기준으로 정리한다.
+`src/plan_and_then_execute_agent/shared/logging`의 로깅 인터페이스와 저장소 구현을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 

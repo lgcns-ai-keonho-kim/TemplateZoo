@@ -1,8 +1,8 @@
-# Prompt Payload 문서
+# Prompt Payload
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/tools/prompt_payload.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/tools/prompt_payload.py` 구현을 기준으로 현재 동작을 정리한다.
 
 Planner 프롬프트에 주입할 Tool 목록 JSON payload를 생성합니다.
 
@@ -20,7 +20,7 @@ Planner 프롬프트에 주입할 Tool 목록 JSON payload를 생성합니다.
 
 - `ensure_ascii=False`, `indent=2`로 읽기 가능한 JSON 문자열을 반환합니다.
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/tools/registry.md`
 - `docs/shared/chat/tools/types.md`

@@ -1,8 +1,8 @@
-# LLM Node 문서
+# LLM Node
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/nodes/llm_node.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/nodes/llm_node.py` 구현을 기준으로 현재 동작을 정리한다.
 
 프롬프트 + LLM 클라이언트를 주입받아 노드 실행을 공통화합니다.
 상태를 메시지로 변환하고 토큰 스트리밍 이벤트를 발행합니다.
@@ -28,7 +28,7 @@
 - `CHAT_NODE_PROMPT_FORMAT_ERROR`
 - `CHAT_STREAM_EMPTY`
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/nodes/_state_adapter.md`
 - `docs/shared/chat/services/chat_service.md`

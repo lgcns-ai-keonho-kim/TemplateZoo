@@ -1,6 +1,6 @@
-# Shared Const 문서
+# Shared Const
 
-이 문서는 `src/plan_and_then_execute_agent/shared/const` 전역 상수의 의미와 사용 원칙을 정리한다.
+`src/plan_and_then_execute_agent/shared/const` 전역 상수의 의미와 사용 원칙을 정리한다.
 
 ## 1. 용어 정리
 

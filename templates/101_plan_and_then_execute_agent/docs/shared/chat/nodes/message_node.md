@@ -1,8 +1,8 @@
-# Message Node 문서
+# Message Node
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/nodes/message_node.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/nodes/message_node.py` 구현을 기준으로 현재 동작을 정리한다.
 
 분류 결과(selector)를 Enum 메시지로 변환합니다.
 상태값을 사용자 응답 문구로 안정적으로 매핑하는 용도로 사용됩니다.
@@ -27,6 +27,6 @@
 - `MESSAGE_NODE_CONFIG_INVALID`
 - `MESSAGE_NODE_MAPPING_NOT_FOUND`
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/nodes/branch_node.md`

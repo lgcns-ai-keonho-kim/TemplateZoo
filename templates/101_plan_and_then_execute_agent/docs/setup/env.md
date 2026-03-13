@@ -1,6 +1,6 @@
 # 환경 변수 상세 설명
 
-이 문서는 `.env.sample` 선언값과 코드 소비 지점을 함께 정리한 환경 변수 사전입니다.
+`.env.sample` 선언값과 코드 소비 지점을 함께 정리한 환경 변수 사전이다.
 
 ## 1. 로딩 순서
 
@@ -37,29 +37,42 @@
 
 ## 3. 벡터/엔진 확장 관련 변수
 
-현재 기본 Chat 런타임은 아래 키를 직접 사용하지 않습니다.
-아래 값은 엔진 실험, 테스트, 커스텀 조립 시에 사용합니다.
+현재 기본 Chat 런타임은 아래 키를 직접 사용하지 않는다.
+아래 값은 엔진 실험, 테스트 준비 코드, 수동 조립 경로에서 의미가 있다.
 
-| 변수 | 코드 기본값 | `.env.sample` 예시 | 사용 위치 |
+| 변수 | 코드 기본값 | `.env.sample` 예시 | 실제 반영 위치 |
 | --- | --- | --- | --- |
-| `GEMINI_EMBEDDING_MODEL` | 없음(빈 문자열) | `gemini-embedding-001` | `integrations/embedding/*` 호출부 |
-| `GEMINI_EMBEDDING_DIM` | `1024` | `1024` | `shared/config/runtime_env_loader.py` |
-| `LANCEDB_URI` | `data/db/vector` | `data/db/vector` | `integrations/db/engines/lancedb/*` |
-| `ELASTICSEARCH_SCHEME` | 엔진 기본값 참조 | `https` | `integrations/db/engines/elasticsearch/*` |
-| `ELASTICSEARCH_HOST` | 엔진 기본값 참조 | `127.0.0.1` | `integrations/db/engines/elasticsearch/*` |
-| `ELASTICSEARCH_PORT` | 엔진 기본값 참조 | `9200` | `integrations/db/engines/elasticsearch/*` |
-| `ELASTICSEARCH_VERIFY_CERTS` | 엔진 기본값 참조 | `true` | `integrations/db/engines/elasticsearch/*` |
+| `GEMINI_EMBEDDING_MODEL` | 없음 | `gemini-embedding-001` | 현재 `src/`와 `tests/` 기준 직접 소비 지점 없음 |
+| `GEMINI_EMBEDDING_DIM` | `1024` | `1024` | `shared/config/runtime_env_loader.py`의 검증 헬퍼 `resolve_gemini_embedding_dim()` |
+| `LANCEDB_URI` | `data/db/vector` | `data/db/vector` | 현재 엔진 생성자 기본값 예시이며 env 직접 소비 지점 없음 |
+| `ELASTICSEARCH_SCHEME` | 엔진 기본값 참조 | `https` | Elasticsearch 테스트 준비 코드와 테스트 케이스 |
+| `ELASTICSEARCH_HOST` | 엔진 기본값 참조 | `127.0.0.1` | Elasticsearch 테스트 준비 코드와 테스트 케이스 |
+| `ELASTICSEARCH_PORT` | 엔진 기본값 참조 | `9200` | Elasticsearch 테스트 준비 코드와 테스트 케이스 |
+| `ELASTICSEARCH_VERIFY_CERTS` | 엔진 기본값 참조 | `true` | Elasticsearch 테스트 케이스 |
+
+주의:
+
+1. `GEMINI_EMBEDDING_MODEL`은 현재 템플릿 소스와 테스트 기준으로 참조되지 않는다.
+2. `GEMINI_EMBEDDING_DIM`은 검증 헬퍼만 정의되어 있고, 기본 Chat 런타임이 직접 호출하지 않는다.
+3. `LANCEDB_URI`는 문서상 기본 경로 예시이며, 자동 env 로딩으로 LanceDB 엔진이 구성되지는 않는다.
+4. `ELASTICSEARCH_*`는 기본 Chat 런타임이 아니라 테스트 준비 코드와 테스트 케이스에서 주로 사용한다.
 
 ## 4. PostgreSQL/MongoDB/Redis 선택 변수
 
 | 변수 | `.env.sample` 예시 | 사용 맥락 |
 | --- | --- | --- |
-| `POSTGRES_*` | `127.0.0.1`, `5432`, `postgres` 등 | PostgreSQL 엔진 주입/테스트 |
+| `POSTGRES_*` | `127.0.0.1`, `5432`, `postgres` 등 | PostgreSQL 엔진 수동 주입 예시와 테스트 |
 | `POSTGRES_DSN` | 주석 처리 | DSN 직접 주입 |
-| `MONGODB_*` | `127.0.0.1`, `27017` 등 | MongoDB 엔진 주입/테스트 |
+| `MONGODB_*` | `127.0.0.1`, `27017` 등 | MongoDB 엔진 수동 주입 예시와 테스트 |
 | `MONGODB_URI` | 주석 처리 | URI 직접 주입 |
-| `REDIS_*` | `127.0.0.1`, `6379` 등 | Redis 엔진 주입/테스트 |
+| `REDIS_*` | `127.0.0.1`, `6379` 등 | Redis 엔진 테스트와 URL 조합 |
 | `REDIS_URL` | 주석 처리 | URL 직접 주입 |
+
+주의:
+
+1. 위 키들은 기본 Chat 런타임이 자동으로 외부 엔진을 활성화하는 스위치가 아니다.
+2. 현재 기본 조립은 SQLite 저장소 + InMemoryQueue + InMemoryEventBuffer다.
+3. PostgreSQL, MongoDB, Redis 전환은 `api/chat/services/runtime.py` 같은 조립 코드 변경이 필요하다.
 
 ## 5. `.env.sample`에는 있지만 현재 런타임 미반영인 키
 

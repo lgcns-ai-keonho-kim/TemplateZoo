@@ -1,8 +1,8 @@
-# Fanout Branch Node 문서
+# Fanout Branch Node
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/nodes/fanout_branch_node.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/nodes/fanout_branch_node.py` 구현을 기준으로 현재 동작을 정리한다.
 
 리스트 입력을 `Send` 목록으로 변환해 fan-out 실행을 라우팅합니다.
 입력이 비정상이면 기본 분기로 폴백합니다.
@@ -21,7 +21,7 @@
 - 유효 mapping 항목 존재: `list[Send]`
 - 비어 있거나 형식 불일치: `default_branch`
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/nodes/tool_exec_node.md`
 - `docs/shared/chat/services/service_executor.md`

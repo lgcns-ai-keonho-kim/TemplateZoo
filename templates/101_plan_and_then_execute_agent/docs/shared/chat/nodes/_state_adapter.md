@@ -1,8 +1,8 @@
-# State Adapter 문서
+# State Adapter
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/nodes/_state_adapter.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/nodes/_state_adapter.py` 구현을 기준으로 현재 동작을 정리한다.
 
 LangGraph 노드 입력을 `Mapping[str, Any]`로 정규화합니다.
 노드 구현에서 타입 분기 코드를 반복하지 않도록 공통 경계를 제공합니다.
@@ -22,7 +22,7 @@ LangGraph 노드 입력을 `Mapping[str, Any]`로 정규화합니다.
 
 - `CHAT_NODE_INPUT_INVALID`: 지원하지 않는 state 타입
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/nodes/llm_node.md`
 - `docs/shared/chat/nodes/message_node.md`

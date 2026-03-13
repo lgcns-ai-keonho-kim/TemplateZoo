@@ -1,12 +1,12 @@
-# Vector Search Request 문서
+# Vector Search Request
 
-대상 코드: `src/plan_and_then_execute_agent/integrations/db/base/_vector_search_request.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/integrations/db/base/_vector_search_request.py` 구현을 기준으로 현재 동작을 정리한다.
 
-- 목적: DB 벡터 검색 요청 모델을 제공한다.
-- 설명: 벡터 검색 입력 파라미터를 담는 DTO를 정의한다.
-- 디자인 패턴: 데이터 전송 객체(DTO)
+- DB 벡터 검색 요청 모델을 제공한다.
+- 벡터 검색 입력 파라미터를 담는 DTO를 정의한다.
+- 구현 형태: 데이터 전송 객체(DTO)
 
 ## 주요 구성
 
@@ -17,6 +17,6 @@
 
 - 코드에서 명시적으로 정의한 `ExceptionDetail.code`가 없습니다.
 
-## 연관 코드
+## 관련 코드
 
 - `src/plan_and_then_execute_agent/integrations/db/base/models.py`

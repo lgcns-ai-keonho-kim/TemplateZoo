@@ -1,8 +1,8 @@
-# Function Node 문서
+# Function Node
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/nodes/function_node.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/nodes/function_node.py` 구현을 기준으로 현재 동작을 정리한다.
 
 주입된 함수를 실행해 state 업데이트 payload를 반환하는 범용 노드입니다.
 동기/비동기 모두 지원합니다.
@@ -25,6 +25,6 @@
 - `FUNCTION_NODE_EXECUTION_ERROR`
 - `FUNCTION_NODE_OUTPUT_INVALID`
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/nodes/_state_adapter.md`

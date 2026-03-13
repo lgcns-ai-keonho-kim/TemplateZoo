@@ -1,8 +1,8 @@
-# Base Chat Graph 문서
+# Base Chat Graph
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/graph/base_chat_graph.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/graph/base_chat_graph.py` 구현을 기준으로 현재 동작을 정리한다.
 
 Builder 주입형 그래프 실행기입니다.
 그래프 입력 생성, `thread_id` 구성, 이벤트 정규화(custom/updates)와 스트림 노드 필터링을 공통 처리합니다.
@@ -20,7 +20,7 @@ Builder 주입형 그래프 실행기입니다.
 - `CHAT_STREAM_EMPTY`: invoke/ainvoke 결과가 비어 있을 때
 - `CHAT_STREAM_NODE_INVALID`: `stream_node` 설정 형식이 잘못됐을 때
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/interface/ports.md`
 - `docs/shared/chat/services/chat_service.md`

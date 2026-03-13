@@ -1,6 +1,6 @@
 # API 모듈 개요
 
-이 문서는 `src/plan_and_then_execute_agent/api` 계층의 실행 구조와 수정 절차를 코드 기준으로 정리한다.
+`src/plan_and_then_execute_agent/api` 계층의 실행 구조와 책임 경계를 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 

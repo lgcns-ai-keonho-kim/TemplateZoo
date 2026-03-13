@@ -1,8 +1,8 @@
-# Service Executor Support 문서
+# Service Executor Support
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/services/_service_executor_support.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/services/_service_executor_support.py` 구현을 기준으로 현재 동작을 정리한다.
 
 `ServiceExecutor`의 내부 보조 동작을 분리한 믹스인입니다.
 영속 후처리 큐, 이벤트 정규화, SSE payload 생성, 상태 보조 로직을 제공합니다.
@@ -20,7 +20,7 @@
 - `CHAT_SESSION_NOT_FOUND`: 제출 시 세션 검증 실패
 - `CHAT_STREAM_TIMEOUT`: 서비스 스트림 소비 타임아웃
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/services/service_executor.md`
 - `docs/shared/chat/services/chat_service.md`

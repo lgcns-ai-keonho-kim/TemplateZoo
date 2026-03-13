@@ -1,6 +1,6 @@
-# API Chat 문서
+# API Chat
 
-이 문서는 `src/plan_and_then_execute_agent/api/chat` 모듈의 HTTP 인터페이스와 SSE 이벤트 계약을 현재 코드 기준으로 정리합니다.
+`src/plan_and_then_execute_agent/api/chat` 모듈의 HTTP 인터페이스와 SSE 이벤트 계약을 현재 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 

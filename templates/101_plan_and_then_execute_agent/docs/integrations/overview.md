@@ -1,6 +1,6 @@
 # Integrations 개요
 
-이 문서는 `src/plan_and_then_execute_agent/integrations`의 파일 단위 문서 허브입니다.
+`src/plan_and_then_execute_agent/integrations`의 파일 단위 문서 허브다.
 `__init__.py`는 제외하고 실행 파일 기준으로 문서를 구성합니다.
 
 ## 통계

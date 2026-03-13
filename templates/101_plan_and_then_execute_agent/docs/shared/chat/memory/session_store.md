@@ -1,8 +1,8 @@
-# Session Store 문서
+# Session Store
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/memory/session_store.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/memory/session_store.py` 구현을 기준으로 현재 동작을 정리한다.
 
 세션별 메시지 메모리 캐시를 관리합니다.
 `rpush/lrange` 중심 API로 최근 메시지를 유지하며, 저장소 조회를 줄여 문맥 빌드 비용을 낮춥니다.
@@ -21,7 +21,7 @@
 - 내부 복사(`_copy_message`)로 외부 변경 전파를 차단합니다.
 - `threading.RLock`으로 동시 접근을 보호합니다.
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/services/chat_service.md`
 - `docs/shared/chat/repositories/history_repository.md`

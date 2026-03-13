@@ -1,8 +1,8 @@
-# History Repository 문서
+# History Repository
 
-대상 코드: `src/plan_and_then_execute_agent/shared/chat/repositories/history_repository.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/shared/chat/repositories/history_repository.py` 구현을 기준으로 현재 동작을 정리한다.
 
 채팅 세션/메시지/요청 커밋을 영속화합니다.
 `db_client` 주입이 없으면 기본 SQLite 엔진을 내부 생성합니다.
@@ -25,7 +25,7 @@
 - `CHAT_REQUEST_ID_EMPTY`
 - 저장소 예외는 `CHAT_*_ERROR` 코드로 래핑됩니다.
 
-## 연관 문서
+## 관련 문서
 
 - `docs/shared/chat/repositories/schemas/session_schema.md`
 - `docs/shared/chat/repositories/schemas/message_schema.md`

@@ -1,6 +1,6 @@
 # 개발 문서 허브
 
-이 문서는 `src/plan_and_then_execute_agent` 기준으로 문서를 읽고, 기능을 빠르게 추가/수정하기 위한 진입점입니다.
+`src/plan_and_then_execute_agent` 기준 문서의 연결 구조와 확인 경로를 정리한다.
 
 ## 문서 트리
 
@@ -175,24 +175,9 @@ flowchart LR
     Nodes --> LLM["integrations/llm/LLMClient"]
 ```
 
-## 빠른 작업 절차
+## 운영 확인 포인트
 
-### 1. 기능 추가
-
-1. API 인터페이스를 먼저 확정합니다. (`docs/api/chat.md`, `docs/api/ui.md`)
-2. 도메인 상태/그래프 변경이 필요한지 확인합니다. (`docs/core/chat.md`)
-3. 실행기/저장소 영향도를 `docs/shared/chat/overview.md`에서 분기한 뒤, 해당 파일 문서로 이동해 상세 변경 지점을 확인합니다.
-4. UI 연동 순서를 맞춥니다. (`docs/static/ui.md`)
-
-### 2. 벡터/DB 확장
-
-1. `docs/setup/lancedb.md`, `docs/setup/postgresql_pgvector.md`에서 대상 저장소 설정을 확인합니다.
-2. `runtime.py` 조립 코드에서 실제 주입 경로를 확정합니다.
-3. `docs/integrations/db/overview.md`, `docs/integrations/embedding/overview.md`와 인터페이스 일치를 점검합니다.
-
-### 3. 장애 대응
-
-1. 증상 위치를 먼저 분리합니다: UI 렌더, API 응답, SSE 스트림, 저장소.
-2. `request_id` 단위로 스트림 이벤트를 추적합니다.
-3. `ServiceExecutor` 상태(`IDLE/QUEUED/RUNNING/COMPLETED/FAILED`)를 확인합니다.
-4. 저장 실패는 `ChatHistoryRepository`와 DB 엔진 로그를 분리해 봅니다.
+1. UI 증상은 `docs/static/ui.md`, API 계약은 `docs/api/chat.md`와 `docs/api/ui.md`를 기준으로 먼저 분리한다.
+2. 그래프와 실행 흐름은 `docs/core/chat.md`, `docs/shared/chat/overview.md`, `docs/shared/runtime.md` 순서로 추적한다.
+3. `request_id` 단위 SSE 이벤트와 `ServiceExecutor` 상태(`IDLE/QUEUED/RUNNING/COMPLETED/FAILED`)를 함께 확인한다.
+4. 저장소 문제는 `docs/shared/chat/repositories/history_repository.md`와 DB 엔진 문서를 분리해 본다.

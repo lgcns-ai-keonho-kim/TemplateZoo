@@ -1,12 +1,12 @@
-# Pool 문서
+# Pool
 
-대상 코드: `src/plan_and_then_execute_agent/integrations/db/base/pool.py`
+## 개요
 
-## 역할
+`src/plan_and_then_execute_agent/integrations/db/base/pool.py` 구현을 기준으로 현재 동작을 정리한다.
 
-- 목적: DB 커넥션 풀 추상화를 제공한다.
-- 설명: 커넥션 획득/반환 및 with 문 사용을 위한 인터페이스를 정의한다.
-- 디자인 패턴: 오브젝트 풀
+- DB 커넥션 풀 추상화를 제공한다.
+- 커넥션 획득/반환 및 with 문 사용을 위한 인터페이스를 정의한다.
+- 구현 형태: 오브젝트 풀
 
 ## 주요 구성
 
@@ -17,6 +17,6 @@
 
 - 코드에서 명시적으로 정의한 `ExceptionDetail.code`가 없습니다.
 
-## 연관 코드
+## 관련 코드
 
 - `src/plan_and_then_execute_agent/integrations/db/base/session.py`

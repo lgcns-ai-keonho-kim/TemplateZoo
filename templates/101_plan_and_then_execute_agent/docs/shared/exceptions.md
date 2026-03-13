@@ -1,6 +1,6 @@
-# Shared Exceptions 문서
+# Shared Exceptions
 
-이 문서는 `src/plan_and_then_execute_agent/shared/exceptions`의 공통 예외 모델과 사용 규칙을 코드 기준으로 정리한다.
+`src/plan_and_then_execute_agent/shared/exceptions`의 공통 예외 모델과 사용 규칙을 코드 기준으로 정리한다.
 
 ## 1. 용어 정리
 
