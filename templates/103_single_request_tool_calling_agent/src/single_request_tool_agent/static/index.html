@@ -1,0 +1,85 @@
+<!doctype html>
+<!--
+  목적: 정적 1회성 Agent UI 진입점을 제공한다.
+  설명: 단일 요청 입력과 결과/Tool 결과 표시 화면을 정의한다.
+  디자인 패턴: 모듈 패턴 기반 JS 초기화
+  참조: css/main.css, js/agent/app.js
+-->
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LG CNS Single Request Tool Agent</title>
+    <link rel="icon" type="image/png" href="asset/farvicon.png" />
+    <link rel="stylesheet" href="css/main.css?v=20260313-1" />
+  </head>
+  <body>
+    <div class="agent-shell">
+      <header class="agent-header">
+        <div class="header-left">
+          <img class="header-logo" src="asset/logo.png" alt="로고" loading="eager" />
+          <div class="header-copy">
+            <h1>Single Request Tool Agent</h1>
+            <p>세션 없이 요청 1건을 실행하고, 최종 응답과 Tool 결과만 바로 확인합니다.</p>
+          </div>
+        </div>
+        <button class="btn-ghost btn-icon" id="themeToggle" type="button" aria-label="다크 모드">
+          <img class="icon" src="asset/icons/moon.svg" alt="" />
+        </button>
+      </header>
+
+      <main class="agent-layout">
+        <section class="panel request-panel" aria-labelledby="requestPanelTitle">
+          <div class="request-panel__badge">REQUEST</div>
+          <h2 class="request-panel__title" id="requestPanelTitle">요청 입력</h2>
+          <p class="request-panel__desc">
+            한 번의 요청으로 답변을 만들고, 필요한 경우 Tool을 실행한 결과를 함께 반환합니다.
+          </p>
+
+          <form class="request-form" id="requestForm">
+            <textarea
+              class="request-input"
+              id="requestInput"
+              placeholder="예: 서울 날씨 알려줘. 또는 김대리에게 일정 조율 메일 초안 작성해줘."
+            ></textarea>
+            <div class="request-actions">
+              <div class="request-hint">응답은 한국어로 표시됩니다. Tool 결과는 아래 카드로 함께 정리됩니다.</div>
+              <button class="run-button" id="runButton" type="submit">Run</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel result-panel" aria-labelledby="resultPanelTitle">
+          <div class="result-panel__badge">Result</div>
+          <h2 class="result-panel__title" id="resultPanelTitle">실행 결과</h2>
+          <p class="result-panel__desc">최종 응답과 Tool 실행 결과를 한 화면에서 확인합니다.</p>
+
+          <div class="status-chip" id="statusChip">대기 중</div>
+          <div class="result-output" id="resultOutput">
+            <div class="result-placeholder">
+              아직 실행 결과가 없습니다. 왼쪽 입력창에 요청을 작성하고 실행 버튼을 누르세요.
+            </div>
+          </div>
+
+          <div class="tool-results" id="toolResults"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="js/utils/dom.js"></script>
+    <script src="js/utils/syntax_highlighting/highlight_core.js?v=20260212"></script>
+    <script src="js/utils/syntax_highlighting/languages/java.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/python.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/cpp.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/ruby.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/sql.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/shell.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/html.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/javascript.js"></script>
+    <script src="js/utils/syntax_highlighting/languages/typescript.js"></script>
+    <script src="js/utils/syntax_highlighting/index.js"></script>
+    <script src="js/utils/markdown.js?v=20260212-2"></script>
+    <script src="js/ui/theme.js"></script>
+    <script src="js/agent/app.js?v=20260313-1"></script>
+  </body>
+</html>

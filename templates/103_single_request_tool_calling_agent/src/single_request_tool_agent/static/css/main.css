@@ -1,0 +1,11 @@
+/*
+  목적: 정적 Agent UI 스타일 엔트리 포인트를 제공한다.
+  설명: 1회성 요청 화면에 필요한 CSS 모듈만 로드한다.
+  디자인 패턴: CSS 모듈 집합(엔트리 파일)
+  참조: css/base/*, css/components/*
+*/
+@import url("./base/tokens.css");
+@import url("./base/reset.css");
+@import url("./components/buttons-icons.css");
+@import url("./components/markdown.css");
+@import url("./components/agent-screen.css");
