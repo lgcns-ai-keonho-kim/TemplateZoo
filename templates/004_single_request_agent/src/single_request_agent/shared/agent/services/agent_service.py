@@ -88,7 +88,7 @@ class AgentService:
             output_text = fallback_content.strip()
         if not output_text:
             detail = ExceptionDetail(
-                code="AGENT_STREAM_EMPTY",
+                code="AGENT_RESPONSE_EMPTY",
                 cause=f"run_id={run_id}, graph returned empty content",
             )
             raise BaseAppException("Agent 응답이 비어 있습니다.", detail)

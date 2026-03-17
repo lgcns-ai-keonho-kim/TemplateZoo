@@ -18,8 +18,7 @@
 | `src/single_request_agent/shared/exceptions/base.py` | 공통 예외 클래스 정의 |
 | `src/single_request_agent/shared/exceptions/models.py` | 상세 모델 정의 |
 | `src/single_request_agent/shared/exceptions/__init__.py` | 공개 API 제공 |
-| `src/single_request_agent/api/agent/routers/common.py` | Chat API 예외를 HTTP 상태로 매핑 |
-| `src/single_request_agent/api/ui/routers/common.py` | UI API 예외를 HTTP 상태로 매핑 |
+| `src/single_request_agent/api/agent/routers/router.py` | Agent API 예외를 HTTP 상태로 매핑 |
 
 ## 3. 인터페이스 정의
 
@@ -68,7 +67,7 @@
 
 1. 비즈니스 조건 검증 실패 시 `ExceptionDetail(code=...)` 생성
 2. `BaseAppException(message, detail)` 발생
-3. 라우터 계층에서 `to_http_exception`으로 변환
+3. 라우터 계층에서 `_to_http_exception`으로 변환
 
 예시:
 
@@ -91,7 +90,7 @@ if not session_id:
 
 | 증상 | 원인 후보 | 확인 스크립트 | 조치 |
 | --- | --- | --- | --- |
-| 같은 오류가 500으로만 반환 | 라우터 매핑 누락 | `api/*/routers/common.py` | `detail.code` 매핑 추가 |
+| 같은 오류가 500으로만 반환 | 라우터 매핑 누락 | `api/*/routers/router.py` | `detail.code` 매핑 추가 |
 | 응답 detail 필드가 비어 있음 | `to_dict()` 미사용 | 라우터 예외 변환 구간 | `error.to_dict()` 사용 |
 | 원인 추적이 어려움 | `cause` 미기록 | 예외 생성 지점 | `ExceptionDetail.cause` 채우기 |
 
@@ -99,4 +98,3 @@ if not session_id:
 
 - `docs/shared/overview.md`
 - `docs/api/agent.md`
-- `docs/api/ui.md`

@@ -1,6 +1,6 @@
 # Single Request Agent Template
 
-LLM 기반 1회성 Agent 실행 템플릿이다. 기존 `chat + session + SSE` 구조를 제거하고, `POST /agent` 한 번으로 의도를 분류한 뒤 최종 응답만 반환하는 형태로 축소되어 있다.
+LLM 기반 1회성 Agent 실행 템플릿이다. 기존 대화형 세션 구조를 제거하고, `POST /agent` 한 번으로 의도를 분류한 뒤 최종 결과만 단일 JSON으로 반환하는 형태로 축소되어 있다.
 
 ## 빠른 시작
 
@@ -65,13 +65,13 @@ AGENT_REQUEST_TIMEOUT_SECONDS=180
 
 1. 세션/대화 이력 저장소를 사용하지 않는다.
 2. Tool 호출, 재시도, safeguard 차단 분기를 사용하지 않는다.
-3. JobQueue/EventBuffer/SSE를 사용하지 않는다.
-4. `AgentService`가 그래프 이벤트를 직접 집계해 단일 JSON 응답으로 반환한다.
+3. 작업 큐와 이벤트 버퍼를 사용하지 않는다.
+4. `AgentService`가 내부 실행 결과를 직접 집계해 단일 JSON 응답으로 반환한다.
 
 ## 코드 기준 진입점
 
 - FastAPI 앱 엔트리 포인트: `src/single_request_agent/api/main.py`
-- Agent API 라우터: `src/single_request_agent/api/agent/routers/run_agent.py`
+- Agent API 라우터: `src/single_request_agent/api/agent/routers/router.py`
 - 정적 UI 진입점: `src/single_request_agent/static/index.html`
 - 정적 UI 요청 처리 로직: `src/single_request_agent/static/js/agent/app.js`
 

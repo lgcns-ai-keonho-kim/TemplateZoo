@@ -2,6 +2,14 @@
 
 `/agent` 단일 엔드포인트 계약을 정리한다.
 
+## 관련 스크립트
+
+| 파일 | 역할 |
+| --- | --- |
+| `src/single_request_agent/api/agent/routers/router.py` | `/agent` 라우터와 예외 매핑을 함께 제공 |
+| `src/single_request_agent/api/agent/models/run.py` | 요청/응답 DTO 정의 |
+| `src/single_request_agent/api/agent/services/runtime.py` | AgentService 런타임 조립 |
+
 ## 요청
 
 - Method: `POST`
@@ -41,4 +49,6 @@
 | --- | --- |
 | `AGENT_REQUEST_EMPTY` | `400` |
 | `AGENT_REQUEST_TIMEOUT` | `504` |
+| `AGENT_RESPONSE_EMPTY` | `500` |
+| `AGENT_EXECUTION_CONFIG_INVALID` | `500` |
 | 기타 내부 예외 | `500` |
