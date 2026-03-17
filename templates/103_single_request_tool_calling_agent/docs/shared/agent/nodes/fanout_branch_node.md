@@ -24,4 +24,4 @@
 ## 관련 문서
 
 - `docs/shared/agent/nodes/tool_exec_node.md`
-- `docs/shared/agent/services/service_executor.md`
+- `docs/shared/agent/graph/base_chat_graph.md`

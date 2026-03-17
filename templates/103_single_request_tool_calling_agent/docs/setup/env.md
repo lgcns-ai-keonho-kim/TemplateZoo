@@ -34,27 +34,17 @@ GEMINI_API_KEY=
 AGENT_REQUEST_TIMEOUT_SECONDS=180
 ```
 
-## 3. 현재 기본 런타임에서 사용하지 않는 구 Chat 변수
+## 3. 기본 `/agent` 실행에 직접 필요하지 않은 세션/메모리 변수
 
-아래 `CHAT_*` 변수는 과거 세션/SSE/큐 기반 경로의 흔적이며, 현재 기본 `/agent` 런타임에서는 직접 사용하지 않는다.
+아래 `CHAT_*` 변수는 기본 `/agent` 실행 경로에서 직접 참조하지 않으며, 세션 저장소 기반 채팅 서비스나 메모리 보관 정책을 별도로 조립할 때만 의미가 있다.
 
 1. `CHAT_DB_PATH`
 2. `CHAT_MEMORY_MAX_MESSAGES`
-3. `CHAT_STREAM_TIMEOUT_SECONDS`
-4. `CHAT_PERSIST_RETRY_LIMIT`
-5. `CHAT_PERSIST_RETRY_DELAY_SECONDS`
-6. `CHAT_JOB_QUEUE_MAX_SIZE`
-7. `CHAT_JOB_QUEUE_POLL_TIMEOUT`
-8. `CHAT_EVENT_BUFFER_MAX_SIZE`
-9. `CHAT_EVENT_BUFFER_POLL_TIMEOUT`
-10. `CHAT_EVENT_BUFFER_TTL_SECONDS`
-11. `CHAT_EVENT_BUFFER_GC_INTERVAL_SECONDS`
-12. `CHAT_REDIS_EVENT_BUFFER_KEY_PREFIX`
 
 주의:
 
-1. 이 변수들은 `src`에 남아 있는 보조/레거시 모듈에서만 의미가 있을 수 있다.
-2. 현재 공개 API와 기본 실행 경로는 위 변수 없이 동작한다.
+1. 이 변수들은 `ChatHistoryRepository`, `ChatSessionMemoryStore`, `ChatService`를 별도로 조립할 때 사용 여부를 검토한다.
+2. 기본 `/agent` 실행은 위 변수 없이 동작한다.
 
 ## 4. 선택적 인프라/테스트 변수
 

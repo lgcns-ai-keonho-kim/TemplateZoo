@@ -199,7 +199,7 @@ class LLMNode:
                 continue
             if writer is not None:
                 # LangGraph custom stream 이벤트 형식으로 토큰을 전달한다.
-                # downstream(Service/Executor)에서 event="token" 기반으로 SSE 변환한다.
+                # 상위 서비스가 event="token" 기준으로 내부 집계할 수 있게 한다.
                 writer({"node": self._node_name, "event": "token", "data": text})
             yield text
 

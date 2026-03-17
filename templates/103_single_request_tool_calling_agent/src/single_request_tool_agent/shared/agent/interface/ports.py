@@ -1,8 +1,8 @@
 """
 목적: Chat 실행 계층 공통 추상체를 정의한다.
-설명: 그래프/서비스/실행기 인터페이스를 Protocol로 제공한다.
+설명: 그래프와 서비스 인터페이스를 Protocol로 제공한다.
 디자인 패턴: 포트-어댑터(Port/Protocol)
-참조: src/single_request_tool_agent/shared/agent/services/chat_service.py, src/single_request_tool_agent/shared/agent/services/service_executor.py
+참조: src/single_request_tool_agent/shared/agent/services/chat_service.py
 """
 
 from __future__ import annotations
@@ -98,37 +98,3 @@ class ChatServicePort(Protocol):
         self, session_id: str, user_query: str, context_window: int = 20
     ) -> Any:
         """비동기 실행 결과를 반환한다."""
-
-    def stream(
-        self,
-        session_id: str,
-        user_query: str,
-        context_window: int = 20,
-    ) -> Iterator[dict[str, Any]]:
-        """동기 스트림 이벤트를 반환한다."""
-
-    def astream(
-        self,
-        session_id: str,
-        user_query: str,
-        context_window: int = 20,
-    ) -> AsyncIterator[dict[str, Any]]:
-        """비동기 스트림 이벤트를 반환한다."""
-
-
-class ServiceExecutorPort(Protocol):
-    """실행 오케스트레이터 포트."""
-
-    def submit_job(
-        self,
-        session_id: str | None,
-        user_query: str,
-        context_window: int,
-    ) -> dict[str, str]:
-        """작업 큐에 채팅 실행 요청을 적재한다."""
-
-    def stream_events(self, session_id: str, request_id: str) -> Iterator[str]:
-        """요청 단위 SSE 스트림을 생성한다."""
-
-    def get_session_status(self, session_id: str) -> str | None:
-        """세션의 최근 실행 상태를 반환한다."""

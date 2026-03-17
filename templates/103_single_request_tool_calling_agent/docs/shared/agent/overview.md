@@ -13,11 +13,11 @@
 
 ## AgentService 역할
 
-`AgentService`는 다음 작업만 수행한다.
+`AgentService`는 다음 작업을 수행한다.
 
 1. 요청 1건에 대해 `run_id` 생성
 2. 그래프 스트림 이벤트 직접 소비
 3. `token`, `assistant_message`, `tool_result`, `tool_error` 집계
 4. 최종 `output_text`, `status`, `tool_results` 반환
 
-세션 저장, 메시지 저장, SSE 전송, 작업 큐 소비는 하지 않는다.
+즉, `AgentService`는 요청 실행 결과를 집계하고 최종 응답 모델을 구성하는 역할에 집중한다.

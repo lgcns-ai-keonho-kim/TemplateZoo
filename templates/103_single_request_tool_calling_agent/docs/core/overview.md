@@ -10,8 +10,8 @@
 4. `prompts`: 각 LLM 노드용 프롬프트
 5. `models`: 실행 결과/그래프 호환 모델
 
-## 유지된 흐름
+## 실행 흐름
 
 `safeguard -> tool selector -> tool execute -> retry -> response`
 
-달라진 점은 `chat session/history` 없이 이 그래프를 요청 1건마다 독립적으로 실행한다는 점이다.
+이 그래프는 요청 단위로 독립 실행되며 Tool 선택, 실행, 재시도, 응답 생성을 순서대로 수행한다.
