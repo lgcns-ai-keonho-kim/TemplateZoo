@@ -16,6 +16,7 @@ docs/
     agent.md
   shared/
     overview.md
+    runtime.md
     agent/
       overview.md
   static/
@@ -30,6 +31,7 @@ docs/
 | `src/single_request_agent/api/agent` | `docs/api/agent.md` |
 | `src/single_request_agent/core/agent` | `docs/core/agent.md` |
 | `src/single_request_agent/shared/agent` | `docs/shared/agent/overview.md` |
+| `src/single_request_agent/shared/runtime` | `docs/shared/runtime.md` |
 | `src/single_request_agent/static` | `docs/static/ui.md` |
 
 ## 확인 순서
@@ -38,3 +40,4 @@ docs/
 2. 그래프 구조는 `docs/core/agent.md`
 3. 공용 조립과 범용 Node는 `docs/shared/agent/overview.md`
 4. 화면 동작은 `docs/static/ui.md`
+5. 선택 유틸이 필요할 때만 `docs/shared/runtime.md`

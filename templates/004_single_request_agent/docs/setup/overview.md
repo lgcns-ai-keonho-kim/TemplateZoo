@@ -16,6 +16,7 @@
 
 - 현재 템플릿의 기본 런타임은 단일 요청 Agent와 API 서버 구성에 집중되어 있다.
 - DB/벡터/임베딩 관련 문서는 기본 런타임이 아니라 optional integrations 검증 경로다.
+- `shared/runtime`의 `queue`, `worker`, `thread_pool`는 보존 유틸이며 기본 `/agent` 런타임 조립에는 포함되지 않는다.
 
 ## 2. 핵심 문서 흐름
 

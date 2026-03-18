@@ -56,6 +56,7 @@ AGENT_REQUEST_TIMEOUT_SECONDS=180
 1. 위 키들은 `api/agent/services/runtime.py`가 직접 읽지 않는다.
 2. 엔진 테스트는 `tests/integrations/db/*`에서 별도로 사용한다.
 3. 기본 런타임 설명과 optional integrations 설명을 혼동하지 않는 것이 핵심이다.
+4. `shared/runtime` 보존 유틸은 환경 변수 없이 직접 조립해 사용하는 범용 코드이며, 기본 `/agent` 런타임 설정 표면에는 포함되지 않는다.
 
 ## 4. 제거된 런타임 키
 
