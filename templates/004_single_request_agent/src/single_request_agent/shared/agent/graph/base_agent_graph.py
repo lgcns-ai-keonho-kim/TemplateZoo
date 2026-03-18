@@ -1,8 +1,8 @@
 """
-목적: Chat 그래프 공통 실행 구현체를 제공한다.
+목적: Agent 그래프 공통 실행 구현체를 제공한다.
 설명: 그래프 컴파일/실행/이벤트 표준화/스트림 노드 정책 필터를 공통화한다.
 디자인 패턴: 합성(Builder 주입)
-참조: src/single_request_agent/core/agent/graphs/chat_graph.py
+참조: src/single_request_agent/core/agent/graphs/agent_graph.py
 """
 
 from __future__ import annotations
@@ -20,19 +20,19 @@ from single_request_agent.shared.exceptions import (
 from single_request_agent.shared.logging import Logger, create_default_logger
 
 
-class DefaultChatGraphInput(BaseModel):
+class DefaultAgentGraphInput(BaseModel):
     """기본 그래프 입력 모델."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    session_id: str
+    run_id: str
     user_message: str
     history: list[Any]
     assistant_message: str = ""
 
 
-class BaseChatGraph:
-    """Builder 주입형 Chat 그래프 실행 구현체."""
+class BaseAgentGraph:
+    """Builder 주입형 Agent 그래프 실행 구현체."""
 
     def __init__(
         self,
@@ -43,9 +43,9 @@ class BaseChatGraph:
         logger: Logger | None = None,
         input_model: type[BaseModel] | None = None,
     ) -> None:
-        self._logger = logger or create_default_logger("BaseChatGraph")
+        self._logger = logger or create_default_logger("BaseAgentGraph")
         self._builder = builder
-        self._input_model = input_model or DefaultChatGraphInput
+        self._input_model = input_model or DefaultAgentGraphInput
         self._compiled_graph: Any | None = None
         self._stream_node: dict[str, set[str]] = {}
         self.set_stream_node(stream_node or {})
@@ -64,7 +64,7 @@ class BaseChatGraph:
 
     def invoke(
         self,
-        session_id: str,
+        run_id: str,
         user_message: str,
         history: list[Any],
         config: dict[str, Any] | None = None,
@@ -72,21 +72,21 @@ class BaseChatGraph:
         """그래프를 동기 실행해 최종 답변 문자열을 반환한다."""
 
         result = self._require_compiled().invoke(
-            self._build_input(session_id, user_message, history),
-            config=self._merge_config(session_id, config),
+            self._build_input(run_id, user_message, history),
+            config=self._merge_config(run_id, config),
         )
         content = self._extract_assistant_message(result)
         if content:
             return content
         detail = ExceptionDetail(
-            code="CHAT_STREAM_EMPTY",
-            cause="BaseChatGraph.invoke produced empty assistant_message",
+            code="AGENT_STREAM_EMPTY",
+            cause="BaseAgentGraph.invoke produced empty assistant_message",
         )
-        raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)
+        raise BaseAppException("Agent 응답이 비어 있습니다.", detail)
 
     async def ainvoke(
         self,
-        session_id: str,
+        run_id: str,
         user_message: str,
         history: list[Any],
         config: dict[str, Any] | None = None,
@@ -94,30 +94,30 @@ class BaseChatGraph:
         """그래프를 비동기 실행해 최종 답변 문자열을 반환한다."""
 
         result = await self._require_compiled().ainvoke(
-            self._build_input(session_id, user_message, history),
-            config=self._merge_config(session_id, config),
+            self._build_input(run_id, user_message, history),
+            config=self._merge_config(run_id, config),
         )
         content = self._extract_assistant_message(result)
         if content:
             return content
         detail = ExceptionDetail(
-            code="CHAT_STREAM_EMPTY",
-            cause="BaseChatGraph.ainvoke produced empty assistant_message",
+            code="AGENT_STREAM_EMPTY",
+            cause="BaseAgentGraph.ainvoke produced empty assistant_message",
         )
-        raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)
+        raise BaseAppException("Agent 응답이 비어 있습니다.", detail)
 
     def stream_events(
         self,
-        session_id: str,
+        run_id: str,
         user_message: str,
         history: list[Any],
         config: dict[str, Any] | None = None,
     ) -> Iterator[dict[str, Any]]:
         """그래프 스트리밍 이벤트(custom/updates)를 표준 이벤트로 반환한다."""
 
-        stream_config = self._merge_config(session_id, config)
+        stream_config = self._merge_config(run_id, config)
         for mode, payload in self._require_compiled().stream(
-            self._build_input(session_id, user_message, history),
+            self._build_input(run_id, user_message, history),
             config=stream_config,
             stream_mode=["custom", "updates"],
         ):
@@ -129,16 +129,16 @@ class BaseChatGraph:
 
     async def astream_events(
         self,
-        session_id: str,
+        run_id: str,
         user_message: str,
         history: list[Any],
         config: dict[str, Any] | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
         """그래프 비동기 스트리밍 이벤트(custom/updates)를 표준 이벤트로 반환한다."""
 
-        stream_config = self._merge_config(session_id, config)
+        stream_config = self._merge_config(run_id, config)
         async for mode, payload in self._require_compiled().astream(
-            self._build_input(session_id, user_message, history),
+            self._build_input(run_id, user_message, history),
             config=stream_config,
             stream_mode=["custom", "updates"],
         ):
@@ -155,7 +155,7 @@ class BaseChatGraph:
 
     def _merge_config(
         self,
-        session_id: str,
+        run_id: str,
         config: dict[str, Any] | None,
     ) -> dict[str, Any]:
         merged: dict[str, Any] = {}
@@ -165,7 +165,7 @@ class BaseChatGraph:
         if not isinstance(configurable, dict):
             configurable = {}
         if not configurable.get("thread_id"):
-            configurable["thread_id"] = session_id
+            configurable["thread_id"] = run_id
         merged["configurable"] = configurable
         return merged
 
@@ -197,19 +197,18 @@ class BaseChatGraph:
         if isinstance(result, Mapping):
             result_map = {str(key): value for key, value in result.items()}
             raw = result_map.get("assistant_message")
-            if isinstance(raw, str):
-                if raw.strip():
-                    return raw
+            if isinstance(raw, str) and raw.strip():
+                return raw
         return ""
 
     def _build_input(
         self,
-        session_id: str,
+        run_id: str,
         user_message: str,
         history: list[Any],
     ) -> dict[str, Any]:
         payload = self._input_model(
-            session_id=session_id,
+            run_id=run_id,
             user_message=user_message,
             history=history,
             assistant_message="",
@@ -228,7 +227,7 @@ class BaseChatGraph:
                 continue
             if not isinstance(events, Sequence):
                 detail = ExceptionDetail(
-                    code="CHAT_STREAM_NODE_INVALID",
+                    code="AGENT_STREAM_NODE_INVALID",
                     cause=f"node={node_name}, value_type={type(events).__name__}",
                 )
                 raise BaseAppException(
@@ -243,3 +242,6 @@ class BaseChatGraph:
         if not allowed:
             return False
         return event_name in allowed
+
+
+__all__ = ["BaseAgentGraph"]

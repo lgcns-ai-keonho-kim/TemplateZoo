@@ -1,6 +1,6 @@
 """
 목적: shared 패키지의 공개 API를 제공한다.
-설명: 예외/로깅/런타임 유틸과 Agent 공통 모듈 접근 포인트를 제공한다.
+설명: 예외/로깅과 Agent 공통 모듈 접근 포인트를 제공한다.
 디자인 패턴: 퍼사드
 참조: src/single_request_agent/shared/exceptions, src/single_request_agent/shared/logging, src/single_request_agent/shared/agent
 """
@@ -15,6 +15,7 @@ from single_request_agent.shared.exceptions import (
 )
 from single_request_agent.shared.logging import (
     DBLogRepository,
+    EmbeddingLogRepository,
     InMemoryLogger,
     LLMLogRepository,
     LogContext,
@@ -24,28 +25,11 @@ from single_request_agent.shared.logging import (
     LogRepository,
     create_default_logger,
 )
-from single_request_agent.shared.runtime import (
-    EventBufferConfig,
-    InMemoryQueue,
-    InMemoryEventBuffer,
-    QueueConfig,
-    QueueItem,
-    RedisEventBuffer,
-    RedisQueue,
-    StreamEventItem,
-    TaskRecord,
-    ThreadPool,
-    ThreadPoolConfig,
-    Worker,
-    WorkerConfig,
-    WorkerState,
-)
 
 if TYPE_CHECKING:
     from single_request_agent.shared.agent import (
         AgentService,
         BaseAgentGraph,
-        BaseChatGraph,
         GraphPort,
         StreamNodeConfig,
     )
@@ -54,7 +38,6 @@ if TYPE_CHECKING:
 _AGENT_EXPORT_NAMES = {
     "StreamNodeConfig",
     "BaseAgentGraph",
-    "BaseChatGraph",
     "GraphPort",
     "AgentService",
 }
@@ -80,25 +63,11 @@ __all__ = [
     "LogRepository",
     "InMemoryLogger",
     "DBLogRepository",
+    "EmbeddingLogRepository",
     "LLMLogRepository",
     "create_default_logger",
     "StreamNodeConfig",
     "BaseAgentGraph",
-    "BaseChatGraph",
     "GraphPort",
     "AgentService",
-    "QueueConfig",
-    "QueueItem",
-    "InMemoryQueue",
-    "RedisQueue",
-    "EventBufferConfig",
-    "StreamEventItem",
-    "InMemoryEventBuffer",
-    "RedisEventBuffer",
-    "WorkerConfig",
-    "WorkerState",
-    "Worker",
-    "ThreadPoolConfig",
-    "TaskRecord",
-    "ThreadPool",
 ]

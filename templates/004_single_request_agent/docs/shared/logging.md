@@ -131,4 +131,3 @@ stdout JSON 출력 필드:
 
 - `docs/shared/overview.md`
 - `docs/shared/exceptions.md`
-- `docs/shared/runtime.md`

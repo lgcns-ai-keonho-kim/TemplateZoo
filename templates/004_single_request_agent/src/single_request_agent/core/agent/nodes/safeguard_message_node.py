@@ -2,7 +2,7 @@
 목적: Safeguard 차단 메시지 노드 조립체를 제공한다.
 설명: safeguard_result 값을 SafeguardRejectionMessage Enum 문구로 변환해 assistant_message로 기록한다.
 디자인 패턴: 모듈 조립
-참조: src/single_request_agent/core/agent/graphs/chat_graph.py
+참조: src/single_request_agent/core/agent/graphs/agent_graph.py
 """
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 """
 목적: 테스트 공통 환경/픽스처/로깅 훅을 단일화해 제공한다.
-설명: .env 로딩, DB 기본 env 준비, Ollama fixture, Chat E2E 서버 fixture를 함께 제공한다.
+설명: .env 로딩, DB 기본 env 준비, Ollama fixture, Agent E2E 서버 fixture를 함께 제공한다.
 디자인 패턴: 테스트 픽스처 + 테스트 훅
 참조: tests/e2e/test_agent_api_server_e2e.py, pyproject.toml
 """
@@ -13,7 +13,6 @@ import os
 import socket
 import subprocess
 import sys
-import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,8 +30,6 @@ _LOGGER = logging.getLogger("tests")
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _OLLAMA_BASE_URL = "http://127.0.0.1:11434"
 _OLLAMA_EMBED_MODEL = "embeddinggemma:300m-qat-q8_0"
-_E2E_CLIENT_TIMEOUT = httpx.Timeout(connect=10.0, read=60.0, write=30.0, pool=10.0)
-
 
 def _load_env_files() -> None:
     """환경 변수 파일을 로딩한다."""
@@ -119,11 +116,10 @@ _prepare_default_env()
 
 
 @dataclass(frozen=True)
-class ChatServerContext:
+class AgentServerContext:
     """E2E 서버 실행 컨텍스트."""
 
     base_url: str
-    chat_db_path: Path
 
 
 @dataclass(frozen=True)
@@ -251,16 +247,13 @@ def gemini_llm_client_factory(
 
 
 @pytest.fixture(scope="session")
-def chat_server_context(
+def agent_server_context(
     gemini_runtime_config: GeminiRuntimeConfig,
-) -> Iterator[ChatServerContext]:
+) -> Iterator[AgentServerContext]:
     """Agent API 서버를 실제 프로세스로 띄운 뒤 컨텍스트를 반환한다."""
 
     port = _find_free_port()
     base_url = f"http://127.0.0.1:{port}"
-
-    tmp_dir = tempfile.TemporaryDirectory(prefix="chat-e2e-")
-    chat_db_path = Path(tmp_dir.name) / "chat_history.sqlite"
 
     command = [
         sys.executable,
@@ -273,7 +266,6 @@ def chat_server_context(
         str(port),
     ]
     env = os.environ.copy()
-    env["CHAT_DB_PATH"] = str(chat_db_path)
     env["GEMINI_PROJECT"] = gemini_runtime_config.project
     env["GEMINI_MODEL"] = gemini_runtime_config.model
     env["PYTHONUNBUFFERED"] = "1"
@@ -289,7 +281,7 @@ def chat_server_context(
     )
     try:
         _wait_for_server_ready(process=process, base_url=base_url)
-        yield ChatServerContext(base_url=base_url, chat_db_path=chat_db_path)
+        yield AgentServerContext(base_url=base_url)
     finally:
         if process.poll() is None:
             process.terminate()
@@ -303,15 +295,6 @@ def chat_server_context(
         except subprocess.TimeoutExpired:
             process.kill()
             process.communicate(timeout=5)
-        tmp_dir.cleanup()
-
-
-@pytest.fixture
-def chat_api_client(chat_server_context: ChatServerContext) -> Iterator[httpx.Client]:
-    """Chat API 호출용 HTTP 클라이언트를 반환한다."""
-
-    with httpx.Client(base_url=chat_server_context.base_url, timeout=_E2E_CLIENT_TIMEOUT) as client:
-        yield client
 
 
 def pytest_sessionstart(session) -> None:  # noqa: D401 - pytest 훅 시그니처 유지

@@ -5,6 +5,7 @@ LLM 기반 1회성 Agent 실행 애플리케이션이다.
 
 `RuntimeEnvironmentLoader`로 환경을 로드한 뒤 `intent_classify -> intent_prepare -> response` 그래프를 실행한다.
 기본 런타임은 `Gemini LLM 노드 + AgentService` 조합이며, `POST /agent` 요청 1건에 대해 `run_id`, `status`, `output_text`를 반환한다.
+기본 런타임은 세션 저장, Tool 실행, SSE 중계, 임베딩/벡터 검색을 사용하지 않는다.
 
 ## 1. 빠른 시작
 
@@ -146,6 +147,7 @@ uv run python -m uvicorn --app-dir src single_request_agent.api.main:app --host 
 
 기본 샘플은 `.env.sample`이다.
 전체 키 설명과 로딩 우선순위는 `docs/setup/env.md`를 참고한다.
+DB/벡터/임베딩 엔진은 `integrations` 레이어에 남아 있으며, 기본 런타임이 아니라 optional integrations 검증 경로로 본다.
 
 ### 4-1. 런타임/로그
 
@@ -167,6 +169,18 @@ uv run python -m uvicorn --app-dir src single_request_agent.api.main:app --host 
 | 변수 | 기본값 | 설명 |
 | --- | --- | --- |
 | `AGENT_REQUEST_TIMEOUT_SECONDS` | `180` | 요청 처리 타임아웃(초) |
+
+### 4-4. 선택적 통합/테스트 키
+
+아래 값은 기본 `/agent` 런타임이 아니라 optional integrations 검증에서만 사용한다.
+
+| 범주 | 키 |
+| --- | --- |
+| PostgreSQL | `POSTGRES_*`, `POSTGRES_DSN`, `POSTGRES_ENABLE_VECTOR` |
+| MongoDB | `MONGODB_*`, `MONGODB_URI` |
+| Redis | `REDIS_*`, `REDIS_URL` |
+| Elasticsearch | `ELASTICSEARCH_*`, `ELASTICSEARCH_HOSTS` |
+| SQLite | `SQLITE_BUSY_TIMEOUT_MS` |
 
 ## 5. 프로젝트 구조
 

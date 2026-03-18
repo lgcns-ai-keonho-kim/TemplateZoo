@@ -2,7 +2,7 @@
 목적: LLM 기반 safeguard 노드 조립체를 제공한다.
 설명: shared LLMNode를 사용해 사용자 입력을 PASS 또는 차단 라벨(PII/HARMFUL/PROMPT_INJECTION)로 판정한다.
 디자인 패턴: 모듈 조립
-참조: src/single_request_agent/core/agent/graphs/chat_graph.py
+참조: src/single_request_agent/core/agent/graphs/agent_graph.py
 """
 
 from __future__ import annotations

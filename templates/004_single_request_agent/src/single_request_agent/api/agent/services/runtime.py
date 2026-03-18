@@ -2,7 +2,7 @@
 목적: Agent API 런타임 조립 인스턴스를 제공한다.
 설명: 그래프와 1회성 실행 서비스를 모듈 레벨에서 조립해 라우터에 주입한다.
 디자인 패턴: 모듈 조립 + 싱글턴
-참조: src/single_request_agent/core/agent/graphs/chat_graph.py
+참조: src/single_request_agent/core/agent/graphs/agent_graph.py
 """
 
 from __future__ import annotations

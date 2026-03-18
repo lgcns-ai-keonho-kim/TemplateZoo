@@ -2,7 +2,7 @@
 목적: 1회성 Agent 실행 서비스를 제공한다.
 설명: 그래프 스트림 이벤트를 직접 소비해 최종 응답을 단건으로 집계한다.
 디자인 패턴: 서비스 레이어
-참조: src/single_request_agent/core/agent/graphs/chat_graph.py
+참조: src/single_request_agent/core/agent/graphs/agent_graph.py
 """
 
 from __future__ import annotations
@@ -108,7 +108,7 @@ class AgentService:
         request: str,
     ) -> AsyncIterator[dict[str, Any]]:
         async for event in self._graph.astream_events(
-            session_id=run_id,
+            run_id=run_id,
             user_message=request,
             history=[],
             config={"configurable": {"thread_id": run_id}},

@@ -15,7 +15,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables.config import RunnableConfig
 from langgraph.config import get_stream_writer
 
-from single_request_agent.core.agent.models import ChatMessage, ChatRole
+from single_request_agent.core.agent.models import AgentMessage, AgentRole
 from single_request_agent.integrations.llm import LLMClient
 from single_request_agent.shared.agent.nodes._state_adapter import (
     coerce_state_mapping,
@@ -94,14 +94,14 @@ class LLMNode:
         normalized_node_name = node_name.strip()
         if not normalized_node_name:
             detail = ExceptionDetail(
-                code="CHAT_NODE_CONFIG_ERROR", cause="node_name is empty"
+                code="AGENT_NODE_CONFIG_ERROR", cause="node_name is empty"
             )
             raise BaseAppException("LLM 노드 이름은 비어 있을 수 없습니다.", detail)
 
         prompt_input_variables = [value for value in prompt.input_variables if value]
         if not prompt_input_variables:
             detail = ExceptionDetail(
-                code="CHAT_NODE_CONFIG_ERROR", cause="prompt has no input variables"
+                code="AGENT_NODE_CONFIG_ERROR", cause="prompt has no input variables"
             )
             raise BaseAppException(
                 "프롬프트 입력 변수는 최소 1개 이상이어야 합니다.", detail
@@ -228,7 +228,7 @@ class LLMNode:
         if text:
             return text
         detail = ExceptionDetail(
-            code="CHAT_STREAM_EMPTY",
+            code="AGENT_STREAM_EMPTY",
             cause=f"{self._node_name} node invoke produced empty content",
         )
         raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)
@@ -241,7 +241,7 @@ class LLMNode:
         if text:
             return text
         detail = ExceptionDetail(
-            code="CHAT_STREAM_EMPTY",
+            code="AGENT_STREAM_EMPTY",
             cause=f"{self._node_name} node ainvoke produced empty content",
         )
         raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)
@@ -250,7 +250,7 @@ class LLMNode:
         user_message = str(state.get(self._user_message_key, "") or "").strip()
         if not user_message:
             detail = ExceptionDetail(
-                code="CHAT_NODE_INPUT_INVALID",
+                code="AGENT_NODE_INPUT_INVALID",
                 cause=f"{self._user_message_key} is missing or empty",
             )
             raise BaseAppException("노드 입력 메시지가 비어 있습니다.", detail)
@@ -274,7 +274,7 @@ class LLMNode:
         for variable in self._prompt_input_variables:
             if variable not in state:
                 detail = ExceptionDetail(
-                    code="CHAT_NODE_PROMPT_INPUT_INVALID",
+                    code="AGENT_NODE_PROMPT_INPUT_INVALID",
                     cause=f"prompt variable '{variable}' is missing in state",
                 )
                 raise BaseAppException("프롬프트 입력 변수가 누락되었습니다.", detail)
@@ -284,7 +284,7 @@ class LLMNode:
             return self._prompt.format(**prompt_args)
         except Exception as error:
             detail = ExceptionDetail(
-                code="CHAT_NODE_PROMPT_FORMAT_ERROR",
+                code="AGENT_NODE_PROMPT_FORMAT_ERROR",
                 cause=f"{self._node_name} node prompt format failed",
             )
             raise BaseAppException(
@@ -306,15 +306,15 @@ class LLMNode:
         return lc_messages
 
     def _resolve_role_and_content(self, item: Any) -> tuple[str, str]:
-        if isinstance(item, ChatMessage):
+        if isinstance(item, AgentMessage):
             return item.role.value, item.content
         if isinstance(item, dict):
             role = str(item.get("role") or "system").strip().lower()
             content = str(item.get("content") or "")
             return role, content
 
-        raw_role = getattr(item, "role", ChatRole.SYSTEM)
-        if isinstance(raw_role, ChatRole):
+        raw_role = getattr(item, "role", AgentRole.SYSTEM)
+        if isinstance(raw_role, AgentRole):
             role = raw_role.value
         else:
             role = str(raw_role or "system").strip().lower()
@@ -368,7 +368,7 @@ class LLMNode:
         content = "".join(chunks)
         if not content.strip():
             detail = ExceptionDetail(
-                code="CHAT_STREAM_EMPTY",
+                code="AGENT_STREAM_EMPTY",
                 cause=f"{self._node_name} node stream produced empty content",
             )
             raise BaseAppException("스트리밍 응답이 비어 있습니다.", detail)

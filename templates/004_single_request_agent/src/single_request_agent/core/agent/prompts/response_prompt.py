@@ -1,5 +1,5 @@
 """
-목적: Chat 기본 시스템 프롬프트를 정의한다.
+목적: Agent 최종 응답 시스템 프롬프트를 정의한다.
 설명: 의도 분류 결과를 반영해 최종 응답을 생성하는 모듈 싱글턴 프롬프트를 제공한다.
 디자인 패턴: 모듈 싱글턴
 참조: src/single_request_agent/core/agent/nodes/response_node.py
@@ -11,7 +11,7 @@ import textwrap
 
 from langchain_core.prompts import PromptTemplate
 
-_CHAT_PROMPT = textwrap.dedent(
+_RESPONSE_PROMPT = textwrap.dedent(
     """
     당신은 단일 요청 Agent의 최종 응답 생성기입니다.
 
@@ -33,4 +33,6 @@ _CHAT_PROMPT = textwrap.dedent(
     """
 ).strip()
 
-CHAT_PROMPT = PromptTemplate.from_template(_CHAT_PROMPT)
+RESPONSE_PROMPT = PromptTemplate.from_template(_RESPONSE_PROMPT)
+
+__all__ = ["RESPONSE_PROMPT"]

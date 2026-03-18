@@ -7,6 +7,3 @@
 1. `shared/agent`: 그래프 베이스, 공용 노드, AgentService
 2. `shared/logging`: 로거/로그 저장소
 3. `shared/exceptions`: 공통 예외
-4. `shared/runtime`: 범용 런타임 유틸
-
-`shared/runtime`는 현재 Agent 요청 경로에서 직접 쓰이지 않지만, 템플릿 공용 자산으로 남아 있다.

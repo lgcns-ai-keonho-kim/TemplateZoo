@@ -6,9 +6,6 @@
 """
 
 from single_request_agent.shared.config.loader import ConfigLoader
-from single_request_agent.shared.config.runtime_env_loader import (
-    RuntimeEnvironmentLoader,
-    resolve_gemini_embedding_dim,
-)
+from single_request_agent.shared.config.runtime_env_loader import RuntimeEnvironmentLoader
 
-__all__ = ["ConfigLoader", "RuntimeEnvironmentLoader", "resolve_gemini_embedding_dim"]
+__all__ = ["ConfigLoader", "RuntimeEnvironmentLoader"]

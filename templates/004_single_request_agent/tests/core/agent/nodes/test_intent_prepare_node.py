@@ -17,7 +17,7 @@ def test_intent_prepare_node_maps_translation_label() -> None:
 
     result = intent_prepare_node.run(
         {
-            "session_id": "session-1",
+            "run_id": "run-1",
             "user_message": "이 문장을 한국어로 번역해줘.",
             "history": [],
             "intent_type_raw": "translate",
@@ -33,7 +33,7 @@ def test_intent_prepare_node_falls_back_to_general_for_unknown_label() -> None:
 
     result = intent_prepare_node.run(
         {
-            "session_id": "session-2",
+            "run_id": "run-2",
             "user_message": "오늘 해야 할 일을 정리해줘.",
             "history": [],
             "intent_type_raw": "unexpected_label",

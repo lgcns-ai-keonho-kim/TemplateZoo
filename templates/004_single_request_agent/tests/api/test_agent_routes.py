@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+from fastapi.testclient import TestClient
+
 from single_request_agent.api.agent.models import RunAgentResponse
 from single_request_agent.api.main import app
 
@@ -23,10 +25,11 @@ def test_public_routes_are_reduced_to_agent_health_and_ui() -> None:
     assert "/ui-api/chat/sessions" not in route_paths
 
 
-def test_agent_request_requires_request_body_field(chat_api_client) -> None:
+def test_agent_request_requires_request_body_field() -> None:
     """`/agent`는 request 필드가 없으면 422를 반환해야 한다."""
 
-    response = chat_api_client.post("/agent", json={})
+    with TestClient(app) as client:
+        response = client.post("/agent", json={})
 
     assert response.status_code == 422
 
@@ -40,10 +43,11 @@ def test_agent_response_schema_does_not_expose_tool_results() -> None:
     assert "tool_results" not in properties
 
 
-def test_ui_mount_serves_single_request_page(chat_api_client) -> None:
+def test_ui_mount_serves_single_request_page() -> None:
     """`/ui`는 정적 단일 요청 화면을 반환해야 한다."""
 
-    response = chat_api_client.get("/ui", follow_redirects=True)
+    with TestClient(app) as client:
+        response = client.get("/ui", follow_redirects=True)
 
     assert response.status_code == 200
     assert "Single Request Agent" in response.text

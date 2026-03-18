@@ -31,7 +31,7 @@ def _to_public_error(error: BaseAppException) -> dict[str, Any]:
     """내부 오류를 외부 공개용 오류 형식으로 정리한다."""
 
     code = error.detail.code
-    if code == "CHAT_STREAM_NODE_INVALID":
+    if code == "AGENT_STREAM_NODE_INVALID":
         public_error = BaseAppException(
             message="Agent 실행 설정이 올바르지 않습니다.",
             detail=ExceptionDetail(code="AGENT_EXECUTION_CONFIG_INVALID"),

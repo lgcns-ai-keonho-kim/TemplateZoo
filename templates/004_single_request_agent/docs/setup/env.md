@@ -1,92 +1,30 @@
 # 환경 변수 상세 설명
 
-`.env.sample` 선언값과 코드 소비 지점을 함께 정리한 환경 변수 사전이다.
+루트 `.env.sample`과 현재 코드 소비 지점을 기준으로 정리한 환경 변수 안내서다.
 
 ## 1. 로딩 순서
 
 `RuntimeEnvironmentLoader` 기준:
 
 1. 프로젝트 루트 `.env` 로드
-2. `ENV`/`APP_ENV`/`APP_STAGE`로 런타임 환경 결정
+2. `ENV` / `APP_ENV` / `APP_STAGE`로 런타임 환경 결정
 3. 값이 비어 있으면 `local`
 4. `dev/stg/prod`면 `src/single_request_agent/resources/<env>/.env` 추가 로드
 
-## 2. 런타임 핵심 변수
+## 2. 기본 런타임 키
 
-| 변수 | 코드 기본값 | `.env.sample` 예시 | 주요 사용 위치 |
+기본 `/agent` 실행 경로가 직접 소비하는 키만 정리한다.
+
+| 변수 | 기본값 | 사용 위치 | 설명 |
 | --- | --- | --- | --- |
-| `ENV` | `local`(빈값일 때) | 빈값 | `shared/config/runtime_env_loader.py` |
-| `LOG_STDOUT` | `False` | `1` | `shared/logging/logger.py`, `shared/logging/_in_memory_logger.py` |
-| `GEMINI_MODEL` | 없음(빈 문자열) | `gemini-3.1-flash-lite-preview` | `core/chat/nodes/*.py` |
-| `GEMINI_PROJECT` | 없음(빈 문자열) | 빈값 | `core/chat/nodes/*.py` |
-| `CHAT_DB_PATH` | `data/db/chat/chat_history.sqlite` | 동일 | `core/chat/const/settings.py`, `history_repository.py` |
-| `CHAT_MEMORY_MAX_MESSAGES` | `200` | `200` | `shared/chat/services/chat_service.py` |
-| `CHAT_STREAM_TIMEOUT_SECONDS` | `180` | `180` | `api/chat/services/runtime.py` |
-| `CHAT_PERSIST_RETRY_LIMIT` | `2` | `2` | `api/chat/services/runtime.py` |
-| `CHAT_PERSIST_RETRY_DELAY_SECONDS` | `0.5` | `0.5` | `api/chat/services/runtime.py` |
-| `CHAT_JOB_QUEUE_MAX_SIZE` | `0` | 미선언 | `api/chat/services/runtime.py` |
-| `CHAT_QUEUE_MAX_SIZE` | `0` | 미선언 | `api/chat/services/runtime.py` (호환 fallback) |
-| `CHAT_JOB_QUEUE_POLL_TIMEOUT` | `0.2` | 미선언 | `api/chat/services/runtime.py` |
-| `CHAT_QUEUE_POLL_TIMEOUT` | `0.2` | 미선언 | `api/chat/services/runtime.py` (호환 fallback) |
-| `CHAT_EVENT_BUFFER_MAX_SIZE` | `0` | 미선언 | `api/chat/services/runtime.py` |
-| `CHAT_EVENT_BUFFER_POLL_TIMEOUT` | `0.2` | `0.2` | `api/chat/services/runtime.py` |
-| `CHAT_EVENT_BUFFER_TTL_SECONDS` | `600` | `600` | `api/chat/services/runtime.py` |
-| `CHAT_EVENT_BUFFER_GC_INTERVAL_SECONDS` | `30` | `30` | `api/chat/services/runtime.py` |
-| `CHAT_REDIS_EVENT_BUFFER_KEY_PREFIX` | `chat:stream` | 미선언 | `api/chat/services/runtime.py` |
-| `SQLITE_BUSY_TIMEOUT_MS` | `5000` | `5000` | `integrations/db/engines/sqlite/connection.py` |
+| `ENV` | `local` | `shared/config/runtime_env_loader.py` | 실행 환경 선택 |
+| `LOG_STDOUT` | `False` | `shared/logging/_in_memory_logger.py` | stdout 로그 출력 여부 |
+| `GEMINI_MODEL` | 빈 문자열 | `core/agent/nodes/*.py` | Gemini 모델명 |
+| `GEMINI_PROJECT` | 빈 문자열 | `core/agent/nodes/*.py` | Gemini 프로젝트 식별자 |
+| `GEMINI_API_KEY` | 직접 소비 없음 | 외부 Gemini SDK/실행 환경 | Gemini 인증용 키 |
+| `AGENT_REQUEST_TIMEOUT_SECONDS` | `180.0` | `api/agent/services/runtime.py` | 1회성 Agent 요청 timeout |
 
-## 3. 벡터/엔진 확장 관련 변수
-
-현재 기본 Chat 런타임은 아래 키를 직접 사용하지 않는다.
-아래 값은 엔진 실험, 테스트 준비 코드, 수동 조립 경로에서 의미가 있다.
-
-| 변수 | 코드 기본값 | `.env.sample` 예시 | 실제 반영 위치 |
-| --- | --- | --- | --- |
-| `GEMINI_EMBEDDING_MODEL` | 없음 | `gemini-embedding-001` | 현재 `src/`와 `tests/` 기준 직접 소비 지점 없음 |
-| `GEMINI_EMBEDDING_DIM` | `1024` | `1024` | `shared/config/runtime_env_loader.py`의 검증 헬퍼 `resolve_gemini_embedding_dim()` |
-| `LANCEDB_URI` | `data/db/vector` | `data/db/vector` | 현재 엔진 생성자 기본값 예시이며 env 직접 소비 지점 없음 |
-| `ELASTICSEARCH_SCHEME` | 엔진 기본값 참조 | `https` | Elasticsearch 테스트 준비 코드와 테스트 케이스 |
-| `ELASTICSEARCH_HOST` | 엔진 기본값 참조 | `127.0.0.1` | Elasticsearch 테스트 준비 코드와 테스트 케이스 |
-| `ELASTICSEARCH_PORT` | 엔진 기본값 참조 | `9200` | Elasticsearch 테스트 준비 코드와 테스트 케이스 |
-| `ELASTICSEARCH_VERIFY_CERTS` | 엔진 기본값 참조 | `true` | Elasticsearch 테스트 케이스 |
-
-주의:
-
-1. `GEMINI_EMBEDDING_MODEL`은 현재 템플릿 소스와 테스트 기준으로 참조되지 않는다.
-2. `GEMINI_EMBEDDING_DIM`은 검증 헬퍼만 정의되어 있고, 기본 Chat 런타임이 직접 호출하지 않는다.
-3. `LANCEDB_URI`는 문서상 기본 경로 예시이며, 자동 env 로딩으로 LanceDB 엔진이 구성되지는 않는다.
-4. `ELASTICSEARCH_*`는 기본 Chat 런타임이 아니라 테스트 준비 코드와 테스트 케이스에서 주로 사용한다.
-
-## 4. PostgreSQL/MongoDB/Redis 선택 변수
-
-| 변수 | `.env.sample` 예시 | 사용 맥락 |
-| --- | --- | --- |
-| `POSTGRES_*` | `127.0.0.1`, `5432`, `postgres` 등 | PostgreSQL 엔진 수동 주입 예시와 테스트 |
-| `POSTGRES_DSN` | 주석 처리 | DSN 직접 주입 |
-| `MONGODB_*` | `127.0.0.1`, `27017` 등 | MongoDB 엔진 수동 주입 예시와 테스트 |
-| `MONGODB_URI` | 주석 처리 | URI 직접 주입 |
-| `REDIS_*` | `127.0.0.1`, `6379` 등 | Redis 엔진 테스트와 URL 조합 |
-| `REDIS_URL` | 주석 처리 | URL 직접 주입 |
-
-주의:
-
-1. 위 키들은 기본 Chat 런타임이 자동으로 외부 엔진을 활성화하는 스위치가 아니다.
-2. 현재 기본 조립은 SQLite 저장소 + InMemoryQueue + InMemoryEventBuffer다.
-3. PostgreSQL, MongoDB, Redis 전환은 `api/chat/services/runtime.py` 같은 조립 코드 변경이 필요하다.
-
-## 5. `.env.sample`에는 있지만 현재 런타임 미반영인 키
-
-아래 키는 현재 `api/chat/services/runtime.py`가 직접 소비하지 않습니다.
-
-1. `CHAT_TASK_MAX_WORKERS`
-2. `CHAT_TASK_QUEUE_MAX_SIZE`
-3. `CHAT_BUFFER_BACKEND`
-4. `CHAT_TASK_STREAM_MAX_CHUNKS`
-5. `CHAT_TASK_RESULT_TTL_SECONDS`
-6. `CHAT_TASK_MAX_STORED`
-7. `CHAT_TASK_CLEANUP_INTERVAL_SECONDS`
-
-## 6. 권장 `.env` 예시 (로컬)
+권장 최소 예시:
 
 ```env
 ENV=local
@@ -94,32 +32,57 @@ LOG_STDOUT=1
 
 GEMINI_MODEL=gemini-3.1-flash-lite-preview
 GEMINI_PROJECT=my-gcp-project
+GEMINI_API_KEY=
 
-CHAT_DB_PATH=data/db/chat/chat_history.sqlite
-CHAT_MEMORY_MAX_MESSAGES=200
-CHAT_STREAM_TIMEOUT_SECONDS=180
-CHAT_PERSIST_RETRY_LIMIT=2
-CHAT_PERSIST_RETRY_DELAY_SECONDS=0.5
-
-CHAT_JOB_QUEUE_MAX_SIZE=0
-CHAT_JOB_QUEUE_POLL_TIMEOUT=0.2
-CHAT_EVENT_BUFFER_MAX_SIZE=0
-CHAT_EVENT_BUFFER_POLL_TIMEOUT=0.2
-CHAT_EVENT_BUFFER_TTL_SECONDS=600
-CHAT_EVENT_BUFFER_GC_INTERVAL_SECONDS=30
-CHAT_REDIS_EVENT_BUFFER_KEY_PREFIX=chat:stream
+AGENT_REQUEST_TIMEOUT_SECONDS=180
 ```
 
-## 7. 장애 징후 빠른 매핑
+## 3. 선택적 통합/테스트 키
+
+아래 키는 기본 `/agent` 런타임이 자동으로 사용하지 않는다.
+`integrations` 레이어의 엔진 테스트나 수동 검증에서만 의미가 있다.
+
+| 변수 | 사용 맥락 |
+| --- | --- |
+| `POSTGRES_*`, `POSTGRES_DSN` | PostgreSQL CRUD/벡터 테스트와 수동 엔진 검증 |
+| `POSTGRES_ENABLE_VECTOR` | PostgreSQL Vector 테스트 활성화 |
+| `MONGODB_*`, `MONGODB_URI` | MongoDB CRUD 테스트와 수동 엔진 검증 |
+| `REDIS_*`, `REDIS_URL` | Redis CRUD/벡터 테스트와 수동 엔진 검증 |
+| `ELASTICSEARCH_*`, `ELASTICSEARCH_HOSTS` | Elasticsearch CRUD/벡터 테스트와 수동 엔진 검증 |
+| `SQLITE_BUSY_TIMEOUT_MS` | SQLite 엔진 연결 옵션 |
+
+주의:
+
+1. 위 키들은 `api/agent/services/runtime.py`가 직접 읽지 않는다.
+2. 엔진 테스트는 `tests/integrations/db/*`에서 별도로 사용한다.
+3. 기본 런타임 설명과 optional integrations 설명을 혼동하지 않는 것이 핵심이다.
+
+## 4. 제거된 런타임 키
+
+아래 키는 현재 단일 요청 Agent 런타임에서 제거되었다.
+
+1. 모든 `CHAT_*`
+2. `GEMINI_EMBEDDING_MODEL`
+3. `GEMINI_EMBEDDING_DIM`
+4. `LANCEDB_URI`
+5. `SQLITE_DB_DIR`
+6. `SQLITE_DB_PATH`
+
+설명:
+
+1. `CHAT_*`는 과거 세션/SSE/작업 큐 경로 잔재였다.
+2. `GEMINI_EMBEDDING_*`는 기본 런타임이 직접 사용하지 않는다.
+3. `LANCEDB_URI`는 코드가 자동 소비하지 않으므로 root `.env.sample`에서 제외했다.
+
+## 5. 장애 징후 빠른 매핑
 
 | 증상 | 우선 점검 변수 | 확인 포인트 |
 | --- | --- | --- |
-| 채팅 응답 실패 | `GEMINI_MODEL`, `GEMINI_PROJECT` | 값 누락/오타 여부 |
-| 스트림 timeout 빈발 | `CHAT_STREAM_TIMEOUT_SECONDS` | 값이 과도하게 작은지 확인 |
-| SQLite 잠금 오류 | `CHAT_DB_PATH`, `SQLITE_BUSY_TIMEOUT_MS` | 경로 충돌/timeout 과소 여부 |
-| Elasticsearch TLS 검증 실패 | `ELASTICSEARCH_SCHEME`, `ELASTICSEARCH_CA_CERTS`, `ELASTICSEARCH_VERIFY_CERTS` | HTTPS 사용 시 인증서 경로/검증 설정 확인 |
+| Agent 응답 timeout | `AGENT_REQUEST_TIMEOUT_SECONDS` | 값이 과도하게 작은지 확인 |
+| Gemini 호출 실패 | `GEMINI_MODEL`, `GEMINI_PROJECT`, `GEMINI_API_KEY` | 누락/오타 여부 확인 |
+| SQLite 잠금 오류 | `SQLITE_BUSY_TIMEOUT_MS` | optional SQLite 엔진 테스트 시 timeout 과소 여부 확인 |
 
-## 8. 관련 문서
+## 6. 관련 문서
 
 - `docs/setup/overview.md`
 - `docs/setup/lancedb.md`

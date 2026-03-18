@@ -19,7 +19,7 @@ def test_agent_http_exception_rewrites_stream_config_error_to_public_code() -> N
     error = BaseAppException(
         message="stream_node 설정 형식이 올바르지 않습니다.",
         detail=ExceptionDetail(
-            code="CHAT_STREAM_NODE_INVALID",
+            code="AGENT_STREAM_NODE_INVALID",
             cause="stream_node must be mapping[str, set[str]]",
         ),
     )

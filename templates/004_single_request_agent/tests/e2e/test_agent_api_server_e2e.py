@@ -35,10 +35,10 @@ def _assert_single_response_shape(payload: dict) -> None:
     assert "tool_results" not in payload
 
 
-def test_agent_api_returns_single_json_response(chat_server_context) -> None:
+def test_agent_api_returns_single_json_response(agent_server_context) -> None:
     """요약 요청은 단일 JSON 응답으로 완료되어야 한다."""
 
-    with httpx.Client(base_url=chat_server_context.base_url, timeout=_REQUEST_TIMEOUT) as client:
+    with httpx.Client(base_url=agent_server_context.base_url, timeout=_REQUEST_TIMEOUT) as client:
         response = client.post("/agent", json={"request": SUMMARY_QUERY})
 
     assert response.status_code == 200, response.text
@@ -49,10 +49,10 @@ def test_agent_api_returns_single_json_response(chat_server_context) -> None:
     _LOGGER.info("agent 단건 응답 요약: %s", payload.get("status"))
 
 
-def test_agent_api_returns_translation_response(chat_server_context) -> None:
+def test_agent_api_returns_translation_response(agent_server_context) -> None:
     """번역 요청도 동일한 단일 JSON 응답 계약을 따라야 한다."""
 
-    with httpx.Client(base_url=chat_server_context.base_url, timeout=_REQUEST_TIMEOUT) as client:
+    with httpx.Client(base_url=agent_server_context.base_url, timeout=_REQUEST_TIMEOUT) as client:
         response = client.post("/agent", json={"request": TRANSLATION_QUERY})
 
     assert response.status_code == 200, response.text

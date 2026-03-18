@@ -2,7 +2,7 @@
 목적: 리스트 기반 fan-out 분기 라우터 노드를 제공한다.
 설명: state의 목록 입력을 검증해 Send 목록으로 변환하거나 기본 분기로 폴백한다.
 디자인 패턴: 규칙 기반 라우터
-참조: src/single_request_agent/core/agent/graphs/chat_graph.py, src/single_request_agent/shared/agent/nodes/_state_adapter.py
+참조: src/single_request_agent/core/agent/graphs/agent_graph.py, src/single_request_agent/shared/agent/nodes/_state_adapter.py
 """
 
 from __future__ import annotations

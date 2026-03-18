@@ -6,15 +6,16 @@
 
 | 문서 | 목적 | 사용 맥락 |
 | --- | --- | --- |
-| `docs/setup/env.md` | `.env` 키 설명과 실제 반영 위치 확인 | 프로젝트 초기 부트스트랩, 배포 전 변수 점검 |
-| `docs/setup/lancedb.md` | LanceDB 구성과 파일 기반 벡터 저장 경로 정리 | 로컬 벡터 엔진 실험 시 |
-| `docs/setup/postgresql_pgvector.md` | PostgreSQL + pgvector 설치/초기화/연동 절차 | 운영형 DB/벡터 저장 전환 시 |
-| `docs/setup/mongodb.md` | MongoDB 설치, 인증, 엔진 연동 절차 | MongoDB 엔진 검증/전환 시 |
+| `docs/setup/env.md` | 루트 `.env`와 optional integration 키 설명 | 프로젝트 초기 부트스트랩, 배포 전 변수 점검 |
+| `docs/setup/lancedb.md` | LanceDB 엔진 실험 절차 | optional integration 검증 시 |
+| `docs/setup/postgresql_pgvector.md` | PostgreSQL + pgvector 설치/검증 절차 | optional integration 검증 시 |
+| `docs/setup/mongodb.md` | MongoDB 설치, 인증, 엔진 연동 절차 | optional integration 검증 시 |
 | `docs/setup/filesystem.md` | 파일 시스템 기반 로그 저장소 연동 방식 | 로그 영속화/파일 백엔드 확장 시 |
 
 주의:
 
-- 현재 템플릿은 단일 요청 Agent와 API 서버 구성에 집중되어 있다.
+- 현재 템플릿의 기본 런타임은 단일 요청 Agent와 API 서버 구성에 집중되어 있다.
+- DB/벡터/임베딩 관련 문서는 기본 런타임이 아니라 optional integrations 검증 경로다.
 
 ## 2. 핵심 문서 흐름
 
@@ -41,14 +42,14 @@ uv run uvicorn single_request_agent.api.main:app --host 0.0.0.0 --port 8000 --re
 
 1. PostgreSQL 서버와 pgvector 확장을 설치합니다.
 2. DB/계정/권한을 준비하고 `.env`에 `POSTGRES_*` 값을 넣습니다.
-3. 벡터 저장소를 PostgreSQL로 옮길 때는 `integrations/db/engines/postgres`를 주입합니다.
-4. 현재 기본 요청 경로는 DB 저장소를 사용하지 않으므로, 전환 시에는 별도 런타임 설계를 먼저 정의합니다.
+3. 현재 기본 `/agent` 런타임은 이 엔진을 자동으로 사용하지 않습니다.
+4. 엔진 검증이나 커스텀 조립이 필요할 때만 `integrations/db/engines/postgres`를 직접 사용합니다.
 
 ### 4-2. MongoDB
 
 1. MongoDB 서버와 계정/인증 DB를 준비합니다.
 2. `.env`에 `MONGODB_*` 값을 설정합니다.
-3. 향후 저장소 확장이 필요할 때 MongoDB 엔진 주입 경로를 설계합니다.
+3. 현재는 엔진 검증 또는 커스텀 조립 용도로만 사용합니다.
 
 ### 4-3. 파일 시스템 로그 저장
 

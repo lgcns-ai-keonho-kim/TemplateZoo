@@ -2,7 +2,7 @@
 목적: Safeguard 결과 라우팅 노드 조립체를 제공한다.
 설명: BranchNode를 직접 조립해 safeguard_result를 response/blocked 분기로 변환한다.
 디자인 패턴: 모듈 조립
-참조: src/single_request_agent/core/agent/graphs/chat_graph.py
+참조: src/single_request_agent/core/agent/graphs/agent_graph.py
 """
 
 from __future__ import annotations
