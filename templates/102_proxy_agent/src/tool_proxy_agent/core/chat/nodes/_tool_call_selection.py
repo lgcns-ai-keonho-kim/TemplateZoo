@@ -134,10 +134,17 @@ def build_tool_calls(
         else:
             retry_for = None
 
+        required = _resolve_required(
+            tool_name=tool_name,
+            default_required=spec.required,
+            raw_required=raw_item.get("required"),
+        )
+
         validated_calls.append(
             {
                 "tool_call_id": _build_tool_call_id(),
                 "tool_name": tool_name,
+                "required": required,
                 "args": validated_args,
                 "session_id": session_id,
                 "request_id": request_id,
@@ -158,6 +165,34 @@ def _normalize_retry_for(raw_retry_for: object) -> str | None:
     if not candidate:
         return None
     return candidate
+
+
+def _resolve_required(
+    *,
+    tool_name: str,
+    default_required: bool,
+    raw_required: object,
+) -> bool:
+    if raw_required is None:
+        return bool(default_required)
+    if not isinstance(raw_required, bool):
+        detail = ExceptionDetail(
+            code="TOOL_SELECTION_INVALID",
+            cause=(
+                f"tool_name={tool_name}, required_type="
+                f"{type(raw_required).__name__}"
+            ),
+        )
+        raise BaseAppException("Tool required 필드는 bool 이어야 합니다.", detail)
+    if default_required and raw_required is False:
+        detail = ExceptionDetail(
+            code="TOOL_REQUIRED_OVERRIDE_INVALID",
+            cause=f"tool_name={tool_name}, required downgrade is not allowed",
+        )
+        raise BaseAppException(
+            "기본 필수 Tool은 optional로 낮출 수 없습니다.", detail
+        )
+    return bool(default_required or raw_required)
 
 
 def _extract_json_candidate(text: str) -> str:

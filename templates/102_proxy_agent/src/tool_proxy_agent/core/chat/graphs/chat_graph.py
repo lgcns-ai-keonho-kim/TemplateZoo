@@ -70,10 +70,13 @@ class ChatGraphInput(BaseModel):
     batch_tool_failures: list[dict[str, object]] = Field(default_factory=list)
     completed_tool_results: list[dict[str, object]] = Field(default_factory=list)
     unresolved_tool_failures: list[dict[str, object]] = Field(default_factory=list)
+    unresolved_required_failures: list[dict[str, object]] = Field(default_factory=list)
+    unresolved_optional_failures: list[dict[str, object]] = Field(default_factory=list)
     retry_count: int = 0
     retry_decision: str = "response"
     retry_failure_summary: str = ""
     tool_execution_summary: str = "도구 실행 없음"
+    optional_tool_failure_summary: str = "부분 성공 경고 없음"
     rag_references: list[dict[str, object]] = Field(default_factory=list)
     assistant_message: str = ""
 

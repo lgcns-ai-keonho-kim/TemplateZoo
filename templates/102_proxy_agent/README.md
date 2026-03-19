@@ -127,8 +127,8 @@ uv run uvicorn tool_proxy_agent.api.main:app --host 0.0.0.0 --port 8000 --reload
 5. `ServiceExecutor`가 작업 큐를 소비하며 `start -> token/references/tool_* -> done|error` 이벤트를 EventBuffer와 SSE로 보낸다.
 6. `ChatService`는 사용자 메시지 저장, 그래프 실행, assistant 응답 영속화를 담당한다.
 7. 그래프는 `safeguard -> tool selector -> tool execute -> retry -> response` 순서로 진행한다.
-8. Tool selector는 `ToolRegistry`의 Tool 스펙을 바탕으로 `tool_calls[]` JSON을 생성한다.
-9. Execute 단계는 선택된 Tool만 fan-out으로 실행하고, 실패가 있으면 실패 항목만 1회 retry selector로 재검토한다.
+8. Tool selector는 `ToolRegistry`의 Tool 스펙을 바탕으로 `tool_calls[]` JSON을 생성하며, 필요 시 각 호출을 `required=true`로 필수 승격할 수 있다.
+9. Execute 단계는 선택된 Tool만 fan-out으로 실행하고, 실패가 있으면 실패 항목만 1회 retry selector로 재검토한다. retry 한도 뒤에도 `required=True` 실패가 남으면 요청은 실패로 종료되고, optional 실패만 남으면 가능한 범위에서 응답을 생성한다.
 10. 완료 시 assistant 응답은 `request_id` 멱등 기준으로 1회만 저장된다.
 11. 필요하면 `GET /chat/{session_id}`로 최종 스냅샷을 조회한다.
 
@@ -222,19 +222,19 @@ flowchart TD
 | `tool_selector_prepare` | Tool catalog payload 생성, 실행 누적 상태 초기화 | `ToolRegistry` | `tool_catalog_payload`, `completed_tool_results`, `unresolved_tool_failures` | `tool_selector_llm` |
 | `tool_selector_llm` | 실행할 Tool 호출 목록 JSON 생성 | `user_message`, `tool_catalog_payload` | `tool_selection_raw` | `tool_selector_parse` |
 | `tool_selector_parse` | selector 원문 JSON 파싱 | `tool_selection_raw` | `selection_obj` | `tool_selector_validate` |
-| `tool_selector_validate` | Tool 이름/args schema 검증, `tool_call_id` 생성 | `selection_obj`, `ToolRegistry` | `current_tool_calls` | `tool_execute_route` |
+| `tool_selector_validate` | Tool 이름/args schema 검증, `tool_call_id` 생성, step `required` 승격 적용 | `selection_obj`, `ToolRegistry` | `current_tool_calls` | `tool_execute_route` |
 | `tool_execute_route` | Tool 실행 여부 분기 | `current_tool_calls` | `tool_execution_route` | `tool_execute_prepare` 또는 `response_prepare` |
 | `tool_execute_prepare` | fan-out용 ToolCall 입력 목록 생성 | `current_tool_calls` | `batch_tool_exec_inputs` | `tool_execute_fanout_route` |
 | `tool_execute_fanout_route` | fan-out 라우팅(입력 있으면 fan-out, 없으면 기본 분기) | `batch_tool_exec_inputs` | 없음 | `tool_exec` 또는 `tool_execute_collect` |
-| `tool_exec` | Tool 실행(타임아웃/재시도/이벤트 발행) | `tool_call` | `batch_tool_results` 또는 `batch_tool_failures` | `tool_execute_collect` |
-| `tool_execute_collect` | Tool 성공/실패 결과를 누적 상태에 병합 | `batch_tool_results`, `batch_tool_failures` | `completed_tool_results`, `unresolved_tool_failures` | `retry_route` |
-| `retry_route` | 최근 batch 실패 기준 retry 여부 결정 | `batch_tool_failures`, `retry_count` | `retry_decision` | `retry_prepare` 또는 `response_prepare` |
+| `tool_exec` | Tool 실행(타임아웃/재시도/이벤트 발행, `required` 보존) | `tool_call` | `batch_tool_results` 또는 `batch_tool_failures` | `tool_execute_collect` |
+| `tool_execute_collect` | Tool 성공/실패 결과를 누적 상태에 병합하고 required/optional 실패를 분리 | `batch_tool_results`, `batch_tool_failures` | `completed_tool_results`, `unresolved_tool_failures`, `unresolved_required_failures`, `unresolved_optional_failures` | `retry_route` |
+| `retry_route` | 최근 batch 실패 기준 retry 여부를 결정하고, 한도 초과 뒤 required 실패가 남으면 요청 실패를 발생시킨다. | `batch_tool_failures`, `retry_count`, `unresolved_required_failures` | `retry_decision` | `retry_prepare` 또는 `response_prepare` |
 | `retry_prepare` | retry 프롬프트 입력 요약 생성, retry 횟수 증가 | `completed_tool_results`, `batch_tool_failures` | `tool_execution_summary`, `retry_failure_summary`, `retry_count` | `retry_llm` |
 | `retry_llm` | 실패 항목 대체 Tool 호출 JSON 생성 | `user_message`, `tool_execution_summary`, `retry_failure_summary`, `tool_catalog_payload` | `retry_selection_raw` | `retry_parse` |
 | `retry_parse` | retry 원문 JSON 파싱 | `retry_selection_raw` | `retry_selection_obj` | `retry_validate` |
 | `retry_validate` | retry 대상 식별자/args schema 검증, 새 `tool_call_id` 생성 | `retry_selection_obj`, `unresolved_tool_failures`, `ToolRegistry` | `current_tool_calls` | `tool_execute_route` |
-| `response_prepare` | Tool 실행 결과를 최종 답변 컨텍스트로 요약 | `completed_tool_results`, `unresolved_tool_failures` | `tool_execution_summary`, `rag_references` | `response_node` |
-| `response_node` | 최종 답변 생성 | `user_message`, `tool_execution_summary` | `assistant_message` | `END` |
+| `response_prepare` | 성공 Tool 결과와 optional 실패 경고를 최종 답변 컨텍스트로 요약 | `completed_tool_results`, `unresolved_optional_failures` | `tool_execution_summary`, `optional_tool_failure_summary`, `rag_references` | `response_node` |
+| `response_node` | 최종 답변 생성 | `user_message`, `tool_execution_summary`, `optional_tool_failure_summary` | `assistant_message` | `END` |
 
 ### 3-4. 기본 Tool 요약
 
@@ -265,6 +265,7 @@ SSE `data` 예시:
   "metadata": {
     "tool_name": "add_number",
     "tool_call_id": "tool_call_1234abcd",
+    "required": false,
     "retry_for": "",
     "attempt": 1
   }

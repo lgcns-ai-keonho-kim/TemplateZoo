@@ -73,6 +73,23 @@ def summarize_retry_targets(failures: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def summarize_optional_tool_failures(failures: list[dict[str, Any]]) -> str:
+    """부분 성공 경고용 optional 실패 항목을 간단히 요약한다."""
+
+    if not failures:
+        return "부분 성공 경고 없음"
+
+    lines = ["[부분 성공 경고]"]
+    for item in failures:
+        tool_name = str(item.get("tool_name") or "")
+        error_code = str(item.get("error_code") or "")
+        error_message = str(item.get("error") or "")
+        lines.append(
+            f"- tool_name={tool_name}, error_code={error_code}, error={error_message}"
+        )
+    return "\n".join(lines)
+
+
 def _compact_output(raw_output: object) -> str:
     if isinstance(raw_output, Mapping):
         normalized = {str(key): value for key, value in raw_output.items()}
@@ -87,4 +104,8 @@ def _compact_output(raw_output: object) -> str:
     return str(raw_output)
 
 
-__all__ = ["summarize_tool_execution", "summarize_retry_targets"]
+__all__ = [
+    "summarize_optional_tool_failures",
+    "summarize_retry_targets",
+    "summarize_tool_execution",
+]

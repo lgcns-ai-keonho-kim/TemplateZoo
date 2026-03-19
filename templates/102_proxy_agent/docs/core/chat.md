@@ -50,10 +50,17 @@ src/tool_proxy_agent/core/chat/
 1. 입력: `session_id`, `user_message`, `history`
 2. 분류/분기: `safeguard_result`, `safeguard_route`
 3. Planner: `planner_history_summary`, `planner_tools_payload`, `plan_raw`, `plan_steps`
-4. Execute: `execute_queue`, `current_batch`, `batch_tool_results`, `batch_tool_failures`
+4. Execute: `execute_queue`, `current_batch`, `batch_tool_results`, `batch_tool_failures`, `unresolved_required_failures`, `unresolved_optional_failures`
 5. Replan: `replan_raw`, `replan_count`, `replan_failure_summary`
-6. 응답 컨텍스트: `plan_execution_summary`, `rag_context`, `rag_references`
+6. 응답 컨텍스트: `plan_execution_summary`, `rag_context`, `rag_references`, `optional_tool_failure_summary`
 7. 최종 출력: `assistant_message`
+
+실패 정책:
+
+1. Tool은 기본 `required` 값을 가진다.
+2. step은 optional Tool만 `required=true`로 승격할 수 있다.
+3. retry 한도 초과 뒤 `required=True` 실패가 남으면 요청 전체를 실패로 종료한다.
+4. optional 실패만 남으면 응답 생성은 계속 진행하고, 최종 문구에서 부분 성공 사실을 명시한다.
 
 ## 4. 그래프 구조
 

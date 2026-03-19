@@ -28,7 +28,7 @@ def _dummy_tool(tool_call: ToolCall) -> ToolResult:
     }
 
 
-def _build_registry() -> ToolRegistry:
+def _build_registry(*, required_by_default: bool = False) -> ToolRegistry:
     registry = ToolRegistry(validate_module_prefix=False)
     registry.add_tool(
         name="sum_tool",
@@ -43,6 +43,7 @@ def _build_registry() -> ToolRegistry:
             "additionalProperties": False,
         },
         fn=_dummy_tool,
+        required=required_by_default,
     )
     return registry
 
@@ -79,7 +80,55 @@ def test_build_tool_calls_creates_tool_call_id_for_selector() -> None:
 
     assert len(calls) == 1
     assert calls[0]["tool_call_id"].startswith("tool_call_")
+    assert calls[0]["required"] is False
     assert calls[0]["retry_for"] is None
+
+
+def test_build_tool_calls_allows_optional_tool_to_be_promoted_required() -> None:
+    """optional Tool은 step required=true로 필수 승격할 수 있어야 한다."""
+
+    calls = build_tool_calls(
+        payload={
+            "tool_calls": [
+                {
+                    "tool_name": "sum_tool",
+                    "required": True,
+                    "args": {"a": 1, "b": 2},
+                }
+            ]
+        },
+        registry=_build_registry(),
+        session_id="session-1",
+        request_id="request-1",
+        state={"user_message": "합계를 계산해줘"},
+        allow_retry_for=False,
+    )
+
+    assert calls[0]["required"] is True
+
+
+def test_build_tool_calls_rejects_required_downgrade_for_required_tool() -> None:
+    """기본 필수 Tool은 step required=false로 낮출 수 없어야 한다."""
+
+    with pytest.raises(BaseAppException) as error_info:
+        build_tool_calls(
+            payload={
+                "tool_calls": [
+                    {
+                        "tool_name": "sum_tool",
+                        "required": False,
+                        "args": {"a": 1, "b": 2},
+                    }
+                ]
+            },
+            registry=_build_registry(required_by_default=True),
+            session_id="session-1",
+            request_id="request-1",
+            state={"user_message": "합계를 계산해줘"},
+            allow_retry_for=False,
+        )
+
+    assert error_info.value.detail.code == "TOOL_REQUIRED_OVERRIDE_INVALID"
 
 
 def test_build_tool_calls_rejects_unknown_retry_target() -> None:

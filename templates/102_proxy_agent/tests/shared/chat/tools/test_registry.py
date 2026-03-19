@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from tool_proxy_agent.shared.chat.tools.registry import ToolRegistry
-from tool_proxy_agent.shared.chat.tools.types import ToolCall, ToolResult
+from tool_proxy_agent.shared.chat.tools.types import ToolCall, ToolResult, ToolSpec
 
 
 def _dummy_tool(tool_call: ToolCall) -> ToolResult:
@@ -41,6 +41,7 @@ def test_get_tools_returns_tuple_snapshot_in_registration_order() -> None:
     tools = registry.get_tools()
     assert isinstance(tools, tuple)
     assert [spec.name for spec in tools] == ["alpha", "beta"]
+    assert all(spec.required is False for spec in tools)
 
 
 def test_list_specs_keeps_backward_compatible_result() -> None:
@@ -97,3 +98,25 @@ def test_list_for_planner_keeps_backward_compatible_alias() -> None:
     planner_specs = registry.list_for_planner()
     assert len(planner_specs) == 1
     assert planner_specs[0]["name"] == "echo_tool"
+
+
+def test_register_spec_keeps_required_flag() -> None:
+    """register_spec는 ToolSpec.required를 보존해야 한다."""
+
+    registry = ToolRegistry(validate_module_prefix=False)
+    registry.register_spec(
+        ToolSpec(
+            name="required_tool",
+            description="required tool",
+            args_schema={
+                "type": "object",
+                "properties": {},
+                "additionalProperties": False,
+            },
+            fn=_dummy_tool,
+            required=True,
+        )
+    )
+
+    spec = registry.resolve("required_tool")
+    assert spec.required is True

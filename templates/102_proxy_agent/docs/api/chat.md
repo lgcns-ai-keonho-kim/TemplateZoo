@@ -140,7 +140,8 @@ sequenceDiagram
 
 1. `done`이면 `status=COMPLETED`
 2. `error`이면 `status=FAILED`, `error_message` 포함
-3. `metadata`가 있으면 그대로 전달
+3. optional Tool 실패만 남은 부분 성공도 스트림 상태는 `COMPLETED`를 유지하고, 실패 사실은 assistant 응답 문구로 전달한다.
+4. `metadata`가 있으면 그대로 전달
 
 ### 5-4. tool_* payload 표시 규칙
 
@@ -149,7 +150,7 @@ sequenceDiagram
 주요 필드 예시:
 
 1. `tool_name`, `step_id`, `plan_id`
-2. `attempt`, `duration_ms`
+2. `attempt`, `duration_ms`, `required`
 3. `ok`, `error`, `error_code`, `output`
 
 표시 규칙:

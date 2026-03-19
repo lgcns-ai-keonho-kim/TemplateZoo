@@ -17,6 +17,7 @@ class ToolCall(TypedDict):
 
     tool_call_id: str
     tool_name: str
+    required: bool
     args: dict[str, Any]
     session_id: str
     request_id: str
@@ -54,6 +55,7 @@ class ToolSpec:
     description: str
     args_schema: dict[str, Any]
     fn: ToolFn
+    required: bool = False
     timeout_seconds: float = 30.0
     retry_count: int = 2
     retry_backoff_seconds: tuple[float, ...] = (0.5, 1.0)
@@ -66,6 +68,8 @@ class ToolSpec:
             raise ValueError("tool fn은 callable 이어야 합니다.")
         if not isinstance(self.args_schema, dict):
             raise ValueError("args_schema는 dict 이어야 합니다.")
+        if not isinstance(self.required, bool):
+            raise ValueError("required는 bool 이어야 합니다.")
         if float(self.timeout_seconds) <= 0:
             raise ValueError("timeout_seconds는 0보다 커야 합니다.")
         if int(self.retry_count) < 0:

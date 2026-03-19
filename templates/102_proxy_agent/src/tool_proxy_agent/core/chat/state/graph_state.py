@@ -53,9 +53,12 @@ class ChatGraphState(TypedDict):
     ]
     completed_tool_results: NotRequired[list[dict[str, object]]]
     unresolved_tool_failures: NotRequired[list[dict[str, object]]]
+    unresolved_required_failures: NotRequired[list[dict[str, object]]]
+    unresolved_optional_failures: NotRequired[list[dict[str, object]]]
     retry_count: NotRequired[int]
     retry_decision: NotRequired[str]
     retry_failure_summary: NotRequired[str]
     tool_execution_summary: NotRequired[str]
+    optional_tool_failure_summary: NotRequired[str]
     rag_references: NotRequired[list[dict[str, object]]]
     assistant_message: str

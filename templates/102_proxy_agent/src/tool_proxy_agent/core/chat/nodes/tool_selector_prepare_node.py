@@ -27,8 +27,11 @@ def _run_tool_selector_prepare_step(state: Mapping[str, Any]) -> dict[str, Any]:
         "batch_tool_failures": [],
         "completed_tool_results": [],
         "unresolved_tool_failures": [],
+        "unresolved_required_failures": [],
+        "unresolved_optional_failures": [],
         "retry_count": 0,
         "tool_execution_summary": "도구 실행 없음",
+        "optional_tool_failure_summary": "부분 성공 경고 없음",
         "retry_failure_summary": "",
     }
 

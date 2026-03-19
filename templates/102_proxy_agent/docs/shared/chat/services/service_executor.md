@@ -28,6 +28,8 @@
 
 - `CHAT_JOB_QUEUE_FAILED`: 큐 put 실패
 - timeout 시 `type=error`, `status=FAILED` payload 반환
+- 필수 Tool 실패가 retry 한도 뒤에도 남으면 `type=error`, `status=FAILED`로 종료됩니다.
+- optional Tool 실패만 남은 경우에는 `done`, `status=COMPLETED`로 종료되고 부분 성공 사실은 응답 문구에 반영됩니다.
 
 ## 관련 문서
 

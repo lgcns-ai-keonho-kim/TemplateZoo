@@ -23,6 +23,7 @@ registry = ToolRegistry()
 # `description`: selector 프롬프트에 노출되는 기능 설명
 # `args_schema`: selector가 생성해야 할 인자 JSON 스키마
 # `fn`: 실제 실행 함수(ToolCall -> ToolResult)
+# `required`: 기본 실행 중요도 (False면 step에서만 필수 승격 가능)
 # `timeout_seconds`: 단일 시도 최대 실행 시간(초)
 # `retry_count`: 실패 시 재시도 횟수 (총 시도 횟수 = retry_count + 1)
 # `retry_backoff_seconds`: 재시도 간 대기 시간(초) 튜플
@@ -42,6 +43,7 @@ registry.add_tool(
         "additionalProperties": False,
     },
     fn=get_weather,
+    required=False,
     timeout_seconds=30.0,
     retry_count=2,
     retry_backoff_seconds=(0.5, 1.0),
@@ -51,6 +53,7 @@ registry.add_tool(
 # `description`: selector 프롬프트에 노출되는 기능 설명
 # `args_schema`: selector가 생성해야 할 인자 JSON 스키마
 # `fn`: 실제 실행 함수(ToolCall -> ToolResult)
+# `required`: 기본 실행 중요도 (False면 step에서만 필수 승격 가능)
 # `timeout_seconds`: 단일 시도 최대 실행 시간(초)
 # `retry_count`: 실패 시 재시도 횟수 (총 시도 횟수 = retry_count + 1)
 # `retry_backoff_seconds`: 재시도 간 대기 시간(초) 튜플
@@ -72,6 +75,7 @@ registry.add_tool(
         "additionalProperties": False,
     },
     fn=add_number,
+    required=False,
     timeout_seconds=30.0,
     retry_count=2,
     retry_backoff_seconds=(0.5, 1.0),
@@ -81,6 +85,7 @@ registry.add_tool(
 # `description`: selector 프롬프트에 노출되는 기능 설명
 # `args_schema`: selector가 생성해야 할 인자 JSON 스키마
 # `fn`: 실제 실행 함수(ToolCall -> ToolResult)
+# `required`: 기본 실행 중요도 (False면 step에서만 필수 승격 가능)
 # `timeout_seconds`: 단일 시도 최대 실행 시간(초)
 # `retry_count`: 실패 시 재시도 횟수 (총 시도 횟수 = retry_count + 1)
 # `retry_backoff_seconds`: 재시도 간 대기 시간(초) 튜플
@@ -110,6 +115,7 @@ registry.add_tool(
         "additionalProperties": False,
     },
     fn=api_agent_response,
+    required=False,
     timeout_seconds=30.0,
     retry_count=2,
     retry_backoff_seconds=(0.5, 1.0),

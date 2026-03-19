@@ -42,6 +42,7 @@ class ToolRegistry:
         description: str,
         args_schema: dict[str, Any],
         fn: ToolFn,
+        required: bool = False,
         timeout_seconds: float = 30.0,
         retry_count: int = 2,
         retry_backoff_seconds: tuple[float, ...] = (0.5, 1.0),
@@ -71,6 +72,7 @@ class ToolRegistry:
                 description=str(description or "").strip(),
                 args_schema=dict(args_schema),
                 fn=fn,
+                required=required,
                 timeout_seconds=float(timeout_seconds),
                 retry_count=int(retry_count),
                 retry_backoff_seconds=tuple(
@@ -97,6 +99,7 @@ class ToolRegistry:
             description=spec.description,
             args_schema=spec.args_schema,
             fn=spec.fn,
+            required=spec.required,
             timeout_seconds=spec.timeout_seconds,
             retry_count=spec.retry_count,
             retry_backoff_seconds=spec.retry_backoff_seconds,

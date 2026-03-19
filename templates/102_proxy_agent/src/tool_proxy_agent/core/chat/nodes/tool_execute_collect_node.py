@@ -1,6 +1,6 @@
 """
 목적: Tool batch 실행 결과 수집 노드를 제공한다.
-설명: batch ToolExec 결과를 누적 성공/미해결 실패 목록으로 병합한다.
+설명: batch ToolExec 결과를 누적 성공/미해결 실패 목록으로 병합하고 required/optional 실패를 분리한다.
 디자인 패턴: 모듈 조립 + 함수 주입
 참조: src/tool_proxy_agent/core/chat/nodes/retry_route_node.py
 """
@@ -27,6 +27,10 @@ def _resolve_failure_identity(item: Mapping[str, Any]) -> str:
     if retry_for:
         return retry_for
     return str(item.get("tool_call_id") or "").strip()
+
+
+def _is_required_failure(item: Mapping[str, Any]) -> bool:
+    return bool(item.get("required") is True)
 
 
 def _run_tool_execute_collect_step(state: Mapping[str, Any]) -> dict[str, Any]:
@@ -59,9 +63,19 @@ def _run_tool_execute_collect_step(state: Mapping[str, Any]) -> dict[str, Any]:
         if identity:
             unresolved_by_identity[identity] = item
 
+    unresolved_failures = list(unresolved_by_identity.values())
+    unresolved_required_failures = [
+        item for item in unresolved_failures if _is_required_failure(item)
+    ]
+    unresolved_optional_failures = [
+        item for item in unresolved_failures if not _is_required_failure(item)
+    ]
+
     return {
         "completed_tool_results": list(completed_by_call_id.values()),
-        "unresolved_tool_failures": list(unresolved_by_identity.values()),
+        "unresolved_tool_failures": unresolved_failures,
+        "unresolved_required_failures": unresolved_required_failures,
+        "unresolved_optional_failures": unresolved_optional_failures,
     }
 
 

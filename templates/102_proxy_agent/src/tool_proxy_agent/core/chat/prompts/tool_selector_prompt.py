@@ -24,9 +24,12 @@ _TOOL_SELECTOR_PROMPT = textwrap.dedent(
     4) Each object must include:
        - "tool_name": string
        - "args": object
-    5) Use only tool names listed in <tool_catalog>.
-    6) If no tool is needed, return {{"tool_calls": []}}.
-    7) Do not include explanations, markdown, comments, or extra fields.
+    5) Each object may optionally include:
+       - "required": boolean
+       - Use "required": true only when the tool result is essential to answer correctly.
+    6) Use only tool names listed in <tool_catalog>.
+    7) If no tool is needed, return {{"tool_calls": []}}.
+    8) Do not include explanations, markdown, comments, or extra fields.
 
     <tool_catalog>
     {tool_catalog_payload}

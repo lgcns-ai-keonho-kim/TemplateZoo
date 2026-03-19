@@ -41,6 +41,7 @@ class _ToolExecSupportMixin:
         writer: Any | None,
         tool_call_id: str,
         tool_name: str,
+        required: bool,
         retry_for: str | None,
         attempt: int,
     ) -> None:
@@ -53,6 +54,7 @@ class _ToolExecSupportMixin:
                 "data": {
                     "tool_call_id": tool_call_id,
                     "tool_name": tool_name,
+                    "required": bool(required),
                     "retry_for": retry_for,
                     "attempt": attempt,
                 },

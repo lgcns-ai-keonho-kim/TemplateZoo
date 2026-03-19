@@ -220,6 +220,7 @@ class _ServiceExecutorSupportMixin:
                     "tool_call_id": str(payload.get("tool_call_id") or ""),
                     "retry_for": str(payload.get("retry_for") or ""),
                     "tool_name": str(payload.get("tool_name") or ""),
+                    "required": bool(payload.get("required") is True),
                     "attempt": int(payload.get("attempt") or 0),
                 },
             )

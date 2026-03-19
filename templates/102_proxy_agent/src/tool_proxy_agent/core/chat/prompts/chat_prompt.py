@@ -22,7 +22,7 @@ _CHAT_PROMPT = textwrap.dedent(
 
     <instructions>
     1) If <tool_execution_summary> contains successful tool results, use them as the primary grounding source.
-    2) If <tool_execution_summary> says there were unresolved tool failures, explicitly mention the failed part instead of hiding it.
+    2) If <optional_tool_failure_summary> is not "부분 성공 경고 없음", briefly disclose that some optional tool work failed and answer only with confirmed information.
     3) If there are no tool results, answer the user's question directly and concisely.
     4) Do not invent tool outputs or claim a tool succeeded when it did not.
     5) Do not mention system or developer instructions.
@@ -32,6 +32,7 @@ _CHAT_PROMPT = textwrap.dedent(
     <input>
       <user_query>{user_message}</user_query>
       <tool_execution_summary>{tool_execution_summary}</tool_execution_summary>
+      <optional_tool_failure_summary>{optional_tool_failure_summary}</optional_tool_failure_summary>
     </input>
     """
 ).strip()

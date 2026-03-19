@@ -25,10 +25,13 @@ _RETRY_PROMPT = textwrap.dedent(
        - "retry_for": failed tool_call_id string
        - "tool_name": string
        - "args": object
-    5) Only failed tool_call_id values listed in <retry_failure_summary> may appear in "retry_for".
-    6) Use only tool names listed in <tool_catalog>.
-    7) If none of the failed calls are recoverable, return {{"tool_calls": []}}.
-    8) Do not include explanations, markdown, comments, or extra fields.
+    5) Each object may optionally include:
+       - "required": boolean
+       - Use "required": true only when the retried tool result is essential to answer correctly.
+    6) Only failed tool_call_id values listed in <retry_failure_summary> may appear in "retry_for".
+    7) Use only tool names listed in <tool_catalog>.
+    8) If none of the failed calls are recoverable, return {{"tool_calls": []}}.
+    9) Do not include explanations, markdown, comments, or extra fields.
 
     <tool_catalog>
     {tool_catalog_payload}

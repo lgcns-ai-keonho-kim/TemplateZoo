@@ -99,6 +99,7 @@ class ToolExecNode(_ToolExecSupportMixin):
         tool_call = self._extract_tool_call(state)
         tool_call_id = str(tool_call.get("tool_call_id") or "")
         tool_name = str(tool_call.get("tool_name") or "")
+        required = bool(tool_call.get("required") is True)
         retry_for = self._normalize_retry_for(tool_call.get("retry_for"))
 
         try:
@@ -123,6 +124,7 @@ class ToolExecNode(_ToolExecSupportMixin):
                 writer=writer,
                 tool_call_id=tool_call_id,
                 tool_name=tool_name,
+                required=required,
                 retry_for=retry_for,
                 attempt=attempt,
             )
@@ -202,6 +204,7 @@ class ToolExecNode(_ToolExecSupportMixin):
         tool_call = self._extract_tool_call(state)
         tool_call_id = str(tool_call.get("tool_call_id") or "")
         tool_name = str(tool_call.get("tool_name") or "")
+        required = bool(tool_call.get("required") is True)
         retry_for = self._normalize_retry_for(tool_call.get("retry_for"))
 
         try:
@@ -226,6 +229,7 @@ class ToolExecNode(_ToolExecSupportMixin):
                 writer=writer,
                 tool_call_id=tool_call_id,
                 tool_name=tool_name,
+                required=required,
                 retry_for=retry_for,
                 attempt=attempt,
             )
@@ -326,9 +330,17 @@ class ToolExecNode(_ToolExecSupportMixin):
 
         args = raw_tool_call.get("args")
         tool_args = dict(args) if isinstance(args, Mapping) else {}
+        raw_required = raw_tool_call.get("required")
+        if raw_required is not None and not isinstance(raw_required, bool):
+            detail = ExceptionDetail(
+                code="TOOL_EXEC_INPUT_INVALID",
+                cause=f"required_type={type(raw_required).__name__}",
+            )
+            raise BaseAppException("Tool required 입력 형식이 올바르지 않습니다.", detail)
         return {
             "tool_call_id": tool_call_id,
             "tool_name": tool_name,
+            "required": bool(raw_required is True),
             "args": tool_args,
             "session_id": str(raw_tool_call.get("session_id") or ""),
             "request_id": str(raw_tool_call.get("request_id") or ""),
@@ -424,6 +436,7 @@ class ToolExecNode(_ToolExecSupportMixin):
             "tool_call_id": str(tool_call.get("tool_call_id") or ""),
             "retry_for": self._normalize_retry_for(tool_call.get("retry_for")),
             "tool_name": str(tool_call.get("tool_name") or ""),
+            "required": bool(tool_call.get("required") is True),
             "ok": True,
             "output": dict(normalized.get("output") or {}),
             "error": None,
@@ -444,6 +457,7 @@ class ToolExecNode(_ToolExecSupportMixin):
             "tool_call_id": str(tool_call.get("tool_call_id") or ""),
             "retry_for": self._normalize_retry_for(tool_call.get("retry_for")),
             "tool_name": str(tool_call.get("tool_name") or ""),
+            "required": bool(tool_call.get("required") is True),
             "ok": False,
             "output": {},
             "error": str(error_message),
