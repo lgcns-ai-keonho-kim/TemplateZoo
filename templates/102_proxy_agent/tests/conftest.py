@@ -12,6 +12,7 @@ import logging
 import os
 import socket
 import subprocess
+import sys
 import tempfile
 import time
 from dataclasses import dataclass
@@ -262,8 +263,8 @@ def chat_server_context(
     chat_db_path = Path(tmp_dir.name) / "chat_history.sqlite"
 
     command = [
-        "uv",
-        "run",
+        sys.executable,
+        "-m",
         "uvicorn",
         "tool_proxy_agent.api.main:app",
         "--host",
@@ -272,6 +273,11 @@ def chat_server_context(
         str(port),
     ]
     env = os.environ.copy()
+    src_path = str(_PROJECT_ROOT / "src")
+    existing_pythonpath = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = (
+        src_path if not existing_pythonpath else f"{src_path}{os.pathsep}{existing_pythonpath}"
+    )
     env["CHAT_DB_PATH"] = str(chat_db_path)
     env["GEMINI_PROJECT"] = gemini_runtime_config.project
     env["GEMINI_MODEL"] = gemini_runtime_config.model

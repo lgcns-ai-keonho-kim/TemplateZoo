@@ -68,3 +68,18 @@ uv run uvicorn tool_proxy_agent.api.main:app --host 0.0.0.0 --port 8000 --reload
 | PostgreSQL/pgvector | `integrations/db/engines/postgres/*.py` |
 | MongoDB | `integrations/db/engines/mongodb/*.py` |
 | 파일 시스템 연동 | `integrations/fs/*.py`, `shared/logging/logger.py`, `shared/logging/_log_repository_interface.py` |
+
+## 6. 커버리지 측정 메모
+
+E2E 테스트는 `uvicorn` 서버를 별도 프로세스로 띄우기 때문에, 단순 `pytest --cov-report=term-missing`만으로는 API 레이어 커버리지가 누락될 수 있다.
+
+권장 순서:
+
+```bash
+uv run coverage erase
+uv run coverage run -m pytest
+uv run coverage combine
+uv run coverage report -m
+```
+
+위 순서는 `pyproject.toml`의 `coverage` 서브프로세스 수집 설정과 E2E 서버의 파이썬 직접 실행 경로를 전제로 한다.

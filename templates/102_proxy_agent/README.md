@@ -620,6 +620,19 @@ src/tool_proxy_agent/integrations/
 uv run pytest
 ```
 
+서브프로세스(`uvicorn`)까지 포함한 커버리지 측정:
+
+```bash
+uv run coverage erase
+uv run coverage run -m pytest
+uv run coverage combine
+uv run coverage report -m
+```
+
+설명:
+
+- 현재 E2E는 실제 `uvicorn` 서버를 별도 파이썬 프로세스로 띄우므로 `coverage run -m pytest`와 `combine` 단계를 함께 사용해야 API 라우터/런타임 코드가 집계된다.
+
 E2E 예시:
 
 ```bash
