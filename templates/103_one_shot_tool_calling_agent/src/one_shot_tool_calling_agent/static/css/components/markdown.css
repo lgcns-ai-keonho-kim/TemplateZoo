@@ -1,0 +1,79 @@
+/*
+  목적: 마크다운 렌더링 영역 스타일을 정의한다.
+  설명: 제목/문단/코드/블록/토큰 하이라이팅 표현을 담당한다.
+  디자인 패턴: 도메인 전용 스타일 모듈
+  참조: ../base/tokens.css, ../js/utils/markdown.js
+*/
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.markdown p {
+  margin: 0 0 8px;
+}
+
+.streaming-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.markdown ul {
+  margin: 0 0 8px 18px;
+  padding: 0;
+}
+
+.markdown blockquote {
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--accent);
+  background: rgba(131, 165, 199, 0.12);
+  border-radius: 10px;
+}
+
+.markdown code {
+  font-family: var(--mono-family);
+  background: rgba(131, 165, 199, 0.2);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.markdown pre {
+  margin: 8px 0;
+  padding: 12px 14px;
+  background: #0f1220;
+  color: #f5f7ff;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+
+.markdown pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.token-kw {
+  color: #ffb86b;
+  font-weight: 600;
+}
+
+.token-str {
+  color: #7edba1;
+}
+
+.token-num {
+  color: #8fb6ff;
+}
+
+.token-com {
+  color: #95a0b8;
+  font-style: italic;
+}
