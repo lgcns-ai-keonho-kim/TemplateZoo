@@ -43,7 +43,7 @@ def test_agent_response_schema_does_not_expose_tool_results() -> None:
     assert "tool_results" not in properties
 
 
-def test_ui_mount_serves_single_request_page() -> None:
+def test_ui_mount_serves_one_shot_page() -> None:
     """`/ui`는 정적 단일 요청 화면을 반환해야 한다."""
 
     with TestClient(app) as client:
