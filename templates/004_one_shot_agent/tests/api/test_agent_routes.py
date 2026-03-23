@@ -1,0 +1,53 @@
+"""
+목적: Agent 공개 라우트 구성을 검증한다.
+설명: `/agent`, `/health`, `/ui` 공개 경계와 단일 응답 계약을 실제 앱 기준으로 확인한다.
+디자인 패턴: 통합 테스트
+참조: src/one_shot_agent/api/main.py, tests/conftest.py
+"""
+
+from __future__ import annotations
+
+from fastapi.testclient import TestClient
+
+from one_shot_agent.api.agent.models import RunAgentResponse
+from one_shot_agent.api.main import app
+
+
+def test_public_routes_are_reduced_to_agent_health_and_ui() -> None:
+    """앱은 `/agent`, `/health`, `/ui` 중심 공개 경계만 가져야 한다."""
+
+    route_paths = {route.path for route in app.routes}
+
+    assert "/agent" in route_paths
+    assert "/health" in route_paths
+    assert "/ui" in route_paths
+    assert "/chat" not in route_paths
+    assert "/ui-api/chat/sessions" not in route_paths
+
+
+def test_agent_request_requires_request_body_field() -> None:
+    """`/agent`는 request 필드가 없으면 422를 반환해야 한다."""
+
+    with TestClient(app) as client:
+        response = client.post("/agent", json={})
+
+    assert response.status_code == 422
+
+
+def test_agent_response_schema_does_not_expose_tool_results() -> None:
+    """`/agent` 응답 모델은 최종 응답 본문만 노출해야 한다."""
+
+    properties = RunAgentResponse.model_json_schema()["properties"]
+
+    assert set(properties) == {"run_id", "status", "output_text"}
+    assert "tool_results" not in properties
+
+
+def test_ui_mount_serves_single_request_page() -> None:
+    """`/ui`는 정적 단일 요청 화면을 반환해야 한다."""
+
+    with TestClient(app) as client:
+        response = client.get("/ui", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert "One Shot Agent" in response.text
